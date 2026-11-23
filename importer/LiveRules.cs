@@ -25,6 +25,23 @@ public sealed class RulesCatalog
             else (_monsters.TryGetValue(entry.Name, out var list) ? list : _monsters[entry.Name] = []).Add(rules.MonsterRule(0));
         }
         _content = content ?? throw new InvalidDataException("規則目錄缺少內容表。");
+        string statics = Path.Combine(Path.GetDirectoryName(path)!, "monster-statics.json");
+        if (File.Exists(statics))
+            _statics = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, StaticGetter>>>(
+                File.ReadAllText(statics), new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? [];
+    }
+
+    // Integer getters of uncatalogued monsters, extracted from sts2.dll CIL by REA (tools/monster-statics).
+    public sealed record StaticGetter(int? Value, int? Ascension, int? High, int? Low);
+    readonly Dictionary<string, Dictionary<string, StaticGetter>> _statics = [];
+
+    internal bool TryStatic(string monster, string name, int ascension, out int value)
+    {
+        value = 0;
+        if (!_statics.TryGetValue(monster, out var getters) || !getters.TryGetValue(name, out var g)) return false;
+        if (g.Value is int constant) { value = constant; return true; }
+        if (g is { Ascension: int level, High: int high, Low: int low }) { value = ascension >= level ? high : low; return true; }
+        return false;
     }
 
     internal Rules Content => _content;
@@ -150,7 +167,7 @@ internal static class LiveRules
             draft.HasTheftContent |= monsterId is "GREMLIN_MERC" or "THIEVING_HOPPER" or "FAT_GREMLIN";
             infiniteHp |= def.HasInfiniteHpDisplay;
             Require(def.SpawnedMonsterIds.Count == 0, $"{monsterId} 會召喚其他敵人，暫不支援");
-            draft.SetMonster(index, PickVariant(catalog, creature, monster, monsterId, def, notes));
+            draft.SetMonster(index, PickVariant(catalog, creature, monster, monsterId, def, notes, Get<int>(live.Run, "AscensionLevel")));
         }
         draft.HasInfiniteHpDisplayMonster = infiniteHp;
         return draft.Build().WithRelics(RelicRoster.Create(rosterRows.ToArray()));
@@ -310,10 +327,10 @@ internal static class LiveRules
     }
 
     static MonsterRules PickVariant(RulesCatalog catalog, ClrObject creature, ClrObject monster, string monsterId,
-        MonsterDef def, List<string> notes)
+        MonsterDef def, List<string> notes, int ascension)
     {
         var variants = catalog.Variants(monsterId);
-        Require(variants.Count > 0, $"規則目錄沒有敵人 {monsterId}");
+        if (variants.Count == 0) return LiveMonsterRules.Compile(creature, monster, monsterId, def, notes, catalog, ascension);
         int baseHp = Nullable<int>(creature, "MonsterMaxHpBeforeModification") ?? Get<int>(creature, "_maxHp");
         var matching = variants.Where(v => baseHp >= v.InitialHpMin && baseHp <= v.InitialHpMax).ToList();
         Require(matching.Count > 0, $"{monsterId} 的生命上限 {baseHp} 不符合任何已知數值變體");
