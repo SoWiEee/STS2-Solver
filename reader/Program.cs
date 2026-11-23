@@ -45,6 +45,7 @@ IResult ReadSnapshot(HttpContext request, Func<object> read)
 app.MapGet("/capture", (HttpContext request) => ReadSnapshot(request, GameReader.Capture));
 app.MapGet("/map", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureMap));
 app.MapGet("/rewards", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureRewards));
+app.MapGet("/import", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureImport));
 app.Run();
 
 static class GameReader
@@ -55,6 +56,13 @@ static class GameReader
     public static object Capture() => WithRuntime(ReadCombat);
     public static object CaptureMap() => WithRuntime(ReadMap);
     public static object CaptureRewards() => WithRuntime(ReadRewards);
+
+    static readonly Lazy<Sts2Solver.LiveImport.RulesCatalog> Catalog = new(() =>
+        new Sts2Solver.LiveImport.RulesCatalog(Path.Combine(AppContext.BaseDirectory, "data", "rules-catalog.br")));
+
+    // rank-Yu solver import of the current root (Battle + Rules), with the kernel's end-turn prediction.
+    public static object CaptureImport() => WithRuntime(runtime =>
+        Sts2Solver.LiveImport.LiveImporter.Describe(Sts2Solver.LiveImport.LiveImporter.Import(runtime, Catalog.Value)));
 
     static object WithRuntime(Func<ClrRuntime, object> read)
     {

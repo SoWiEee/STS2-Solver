@@ -45,5 +45,8 @@ dotnet run --project reader
 | [reward-policy.js](reward-policy.js) | 卡牌與已知遺物效果的啟發式評分 |
 | [multi-turn.js](multi-turn.js) | 跨回合搜尋與排名 |
 | [index.html](index.html) | 即時建議畫面與離線沙盒 |
+| [importer/](importer/) | 從程序快照組出 rank-Yu 求解器的 `Battle`／`Rules`（[說明](docs/live-import.md)） |
+| [tools/rules-catalog/](tools/rules-catalog/) | 由上游凍結規則表產生 `reader/data/rules-catalog.br`（[涵蓋率](docs/rules-catalog.md)） |
+| `vendor/sts2-solver` | rank-Yu/sts2-solver 子模組（MIT，見 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |
 | [docs/game.md](docs/game.md) | REA 逆向分析、版本與實機證據 |
 | [docs/policy.md](docs/policy.md) | 模型範圍、搜尋規則和報告實驗方向 |
