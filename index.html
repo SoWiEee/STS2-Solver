@@ -36,7 +36,7 @@
       <div class="panel-body">
         <p id="liveStatus" role="status">正在讀取遊戲…</p>
         <div id="liveResults" aria-live="polite"></div>
-        <p class="row-caption">初版模型支援縮小甲蟲與已建模的鐵甲戰士起始牌。請依最新建議在遊戲中出牌。<a href="docs/policy.md">搜尋政策</a></p>
+        <p class="row-caption">請依最新建議在遊戲中出牌。<a href="docs/policy.md">支援範圍與搜尋政策</a></p>
       </div>
     </section>
     <section class="panel" id="mapPanel" hidden style="margin-top:16px" aria-labelledby="mapTitle">
@@ -267,19 +267,22 @@
       const plan=result.plans[0];
       if(!plan)throw new Error("目前找不到可比較的路線。");
       const turns=plan.turns.map((turn,i)=>{
-        const actions=turn.actions.map(({card,targetIds})=>{
+        const actions=turn.actions.map(({card,potion,targetIds})=>{
+          if(potion==="StrengthPotion")return "<li>喝下力量藥水 <small>（+2 力量）</small></li>";
           const targets=targetIds.map(id=>result.enemies.find(e=>e.id===id)?.name||id);
           return `<li>${esc(card.name)}${targets.length?` → ${esc(targets.join("、"))}`:""} <small>（${card.cost} 能量）</small></li>`;
         }).join("");
         const enemyHp=result.enemies.map(e=>`${e.name} ${turn.enemyHp[e.id]} HP`).join("、");
         return `<article class="row-card"><strong>第 ${snapshot.round+i} 回合${i===0?" · 現在":""}</strong>
           ${actions?`<ol>${actions}</ol>`:"<p>本回合不出牌。</p>"}
-          <p class="row-caption">回合結束預測：玩家 ${turn.hp} HP，${esc(enemyHp)}，受傷 ${turn.damageTaken}。</p></article>`;
+          <p class="row-caption">回合結束預測：玩家 ${turn.hp} HP，${esc(enemyHp)}，受傷 ${turn.damageTaken}。${turn.energyLeft>0&&turn.actions.at(-1)?.card?.endsSequence?" 餘燼會隨機消耗剩餘手牌，請等結算後重算。":""}</p></article>`;
       }).join("");
-      const next=plan.turns[0]?.actions[0]?.card.name;
-      const headline=next?`現在先打出${next}`:"本回合建議不出牌";
+      const next=plan.turns[0]?.actions[0];
+      const headline=next?.potion==="StrengthPotion"?"現在先喝力量藥水":
+        next?.card?`現在先打出${next.card.name}`:"本回合建議不出牌";
       $("#liveResults").innerHTML=`<div class="recommendation"><div class="kicker">${result.truncated?"搜尋預算內的最高分路線":"支援模型中的最高分路線"}</div>
-        <h2>${esc(headline)}</h2><p>${plan.won?"預測可擊敗敵人。":plan.dead?"目前搜尋到的路線預測會倒下。":"路線涵蓋目前可預測的回合。"} ${esc(result.stop)}</p></div>
+        <h2>${esc(headline)}</h2><p>${plan.won?"預測可擊敗敵人。":plan.dead?"目前搜尋到的路線預測會倒下。":"路線涵蓋目前可預測的回合。"} ${esc(result.stop)}</p>
+        ${result.omitted.length?`<p>以下動作未列入比較：${esc(result.omitted.join("、"))}。</p>`:""}</div>
         <div class="rows" style="margin-top:12px">${turns}</div>`;
     }
 

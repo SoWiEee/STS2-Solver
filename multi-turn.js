@@ -28,8 +28,10 @@
         isWon(state) ? 1 : 0,
         state.hp > 0 ? 1 : 0,
         state.hp,
+        state.strengthPotion ? 1 : 0,
         initialBossHp - state.enemies.filter(e => e.boss).reduce((sum, e) => sum + e.hp, 0),
-        initialEnemyHp - state.enemies.reduce((sum, e) => sum + e.hp, 0)
+        initialEnemyHp - state.enemies.reduce((sum, e) => sum + e.hp, 0),
+        state.potionUsedAt
       ];
       const x = rank(a), y = rank(b);
       for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] > y[i] ? 1 : -1;
@@ -58,6 +60,9 @@
       const next = {
         hp: state.hp,
         block: state.block,
+        strength: state.strength,
+        strengthPotion: state.strengthPotion,
+        potionUsedAt: state.potionUsedAt,
         enemies: state.enemies.map(e => ({ ...e })),
         turns: state.turns,
         key: state.key
@@ -92,6 +97,9 @@
     let frontier = [{
       hp: player.hp,
       block: player.block,
+      strength: Number(player.strength) || 0,
+      strengthPotion: !!player.strengthPotion,
+      potionUsedAt: -1,
       enemies: enemies.map(e => ({ ...e })),
       turns: [],
       key: ""
@@ -101,7 +109,8 @@
     for (let turnIndex = 0; turnIndex < turns.length && frontier.length; turnIndex++) {
       const turn = turns[turnIndex];
       const cards = turn.cards || [];
-      const nextFrontier = [];
+      const savedFrontier = [];
+      const spentFrontier = [];
       for (const start of frontier) {
         if (isWon(start) || start.hp <= 0) {
           keep(results, start, maxPlans, false);
@@ -114,7 +123,8 @@
           if (isWon(outcome) || outcome.hp <= 0 || turnIndex === turns.length - 1) {
             keep(results, outcome, maxPlans, false);
           } else {
-            keep(nextFrontier, outcome, beamWidth, true);
+            keep(outcome.strengthPotion ? savedFrontier : spentFrontier,
+              outcome, beamWidth, true);
           }
         }
 
@@ -134,7 +144,8 @@
           for (const enemy of played.enemies) {
             if (!targetIds.includes(enemy.id) || enemy.hp <= 0) continue;
             for (let hit = 0; hit < (card.hits || 1) && enemy.hp > 0; hit++) {
-              const damage = Math.floor(Math.max(0, card.damage || 0) *
+              const powered = card.damage ? (card.damage + state.strength) : 0;
+              const damage = Math.floor(Math.max(0, powered * (card.damageMultiplier ?? 1)) *
                 ((enemy.vulnerable || 0) > 0 ? 1.5 : 1));
               const absorbed = Math.min(enemy.block, damage);
               enemy.block -= absorbed;
@@ -143,7 +154,9 @@
             if (enemy.hp > 0) enemy.vulnerable = (enemy.vulnerable || 0) + (card.vulnerable || 0);
           }
           removeVanishing(played);
-          continueSearch(played, [...actions, { card, targetIds: [...targetIds] }], energyLeft - card.cost);
+          const chosen = [...actions, { card, targetIds: [...targetIds] }];
+          if (card.endsSequence) emit(played, chosen, energyLeft - card.cost);
+          else continueSearch(played, chosen, energyLeft - card.cost);
         }
 
         function targetSets(card, state) {
@@ -200,10 +213,30 @@
           }
         }
 
-        if (cards.some(card => !card.skip && card.vulnerable)) visitAny(new Set(), initial, [], turn.energy);
-        else visit(0, initial, [], turn.energy);
+        function search(state, actions) {
+          if (cards.some(card => !card.skip && (card.vulnerable || card.endsSequence))) {
+            visitAny(new Set(), state, actions, turn.energy);
+          } else {
+            visit(0, state, actions, turn.energy);
+          }
+        }
+
+        search(initial, []);
+        if (initial.strengthPotion) {
+          search({
+            ...initial,
+            strength: initial.strength + 2,
+            strengthPotion: false,
+            potionUsedAt: turnIndex,
+            key: initial.key + `${turnIndex}:potion;`
+          }, [{ potion: "StrengthPotion", targetIds: [] }]);
+        }
       }
-      frontier = nextFrontier;
+      frontier = [];
+      for (let i = 0; i < beamWidth; i++) {
+        if (savedFrontier[i]) frontier.push(savedFrontier[i]);
+        if (spentFrontier[i]) frontier.push(spentFrontier[i]);
+      }
     }
     for (const state of frontier) keep(results, state, maxPlans, false);
     return {
@@ -212,7 +245,8 @@
         hp: state.hp,
         enemyHp: enemyHp(state),
         won: isWon(state),
-        dead: state.hp <= 0
+        dead: state.hp <= 0,
+        potionRemaining: state.strengthPotion
       })),
       nodes,
       truncated

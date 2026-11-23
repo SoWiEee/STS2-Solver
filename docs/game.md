@@ -94,3 +94,10 @@ Windows companion 使用 ClrMD 的程序快照與遊戲附帶的 .NET 9 DAC。�
 REA 觀察到 `RunState._visitedMapCoords` 最後一筆是目前地圖座標。`ActMap.startMapPoints` 提供起點，`MapPoint.Children` 提供有方向的合法下一站，`MapPointType` 區分戰鬥、精英、營火、商店、寶箱、未知房間、先古之民與 Boss。Windows 讀取器只取節點位置、類型和連線，並使用當前 HP 和金幣排序。
 
 進階 2 的第一章實機快照讀到 68/80 HP、117 金幣。從座標 `1:2` 只有 `2:2` 可走，與遊戲畫面一致。進入 `2:2` 後，該節點有兩條向上分支。座標使用從 0 開始的列與欄，頁面把欄轉成從 1 開始。
+
+## 上游對手模型與本機對照
+
+在上游 `f0167be` 的對手目錄，找到 108 個直接繼承 `MonsterDef` 的類別，包含 Aeonglass、Queen、Test Subject。這是類別計數，實際遭遇覆蓋率仍需比對。核心使用 .NET 9，匯入器則另外從遊戲原生物件編譯移動規則、攻擊傷害、擊數與分支。外部讀取器若要重用核心，須補齊這些輸入，並提供牌堆和 RNG 等跨回合資訊。[對手實作](https://github.com/rank-Yu/sts2-solver/tree/f0167be96b65080f13c51b29489c0a724b913c5a/src/Core/Content/Monsters) · [規則編譯器](https://github.com/rank-Yu/sts2-solver/blob/f0167be96b65080f13c51b29489c0a724b913c5a/src/Import/Combat/RulesCompiler.cs)
+
+- 毛絨伏地蟲的酸液基礎傷害是 4，A9 起為 6。遊戲畫面實際觀察到吸氣後增加 7 力量。上一局讀到 20 HP 的敵人和一瓶力量藥水時，程式預測喝藥、痛擊、打擊可斬殺，該路線未在遊戲中執行。
+- 新局三史萊姆第一回合讀到玩家 48 HP、敵人 15／28／9 HP。按建議對左側打擊一次、右側打擊兩次，實際結果是剩餘敵人 9／28 HP、右側倒下，玩家仍為 48 HP。敵人施加的黏液進入棄牌堆，洗牌後可能抽到它。

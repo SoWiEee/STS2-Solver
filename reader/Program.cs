@@ -110,6 +110,7 @@ static class GameReader
                         maxEnergy = Field<int>(pair.player, Backing("MaxEnergy")),
                         powers = ReadPowers(pair.creature),
                         relics = List(Object(pair.player, "_relics"), 256).Select(ShortName).ToArray(),
+                        potions = List(Object(pair.player, "_potionSlots"), 32, allowEmpty: true).Select(ShortName).ToArray(),
                         drawPile = state.IsNull ? null : ReadPile(Object(state, Backing("DrawPile")), 256),
                         hand = hand.IsNull ? null : List(Object(hand, "_cards"), 10).Select(ReadCard).ToArray()
                     };
@@ -311,7 +312,7 @@ static class GameReader
     {
         if (!valid) throw new InvalidOperationException(message);
     }
-    static IEnumerable<ClrObject> List(ClrObject list, int limit)
+    static IEnumerable<ClrObject> List(ClrObject list, int limit, bool allowEmpty = false)
     {
         int size = Field<int>(list, "_size");
         var array = Object(list, "_items").AsArray();
@@ -319,6 +320,7 @@ static class GameReader
         for (int i = 0; i < size; i++)
         {
             var value = array.GetObjectValue(i);
+            if (value.IsNull && allowEmpty) continue;
             Require(!value.IsNull, "擷取到不完整的遊戲資料。");
             yield return value;
         }
