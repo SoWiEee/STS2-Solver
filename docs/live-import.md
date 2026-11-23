@@ -35,6 +35,6 @@ v0.113.1、進階 2、鐵甲戰士，第 4 層兩隻 Corpse Slug 戰第 1 回合
 
 1. `/import` 匯入成功，列出 11 個合法動作。核心預測直接結束回合後：玩家 51 HP、獲得 2 層虛弱、左右敵人下一招分別為鞭打（3×2）與吞噬（8）。
 2. 在遊戲中直接結束回合，畫面為 51/80、虛弱 2、意圖 3×2 與 8。
+3. 再次 `/import`，與預測的 `Battle` 逐欄比對：405 個欄位中 402 個相同（含抽牌順序、手牌、敵人行動記錄、能力與 9 條亂數）。3 個差異是上游在新根刻意歸零的累計帳本（`CumulativeHpLost`、`PlayerUnblockedDamageEvents`、`VitalSparkNormalizedAmount`），見上游 `docs/import.md` §3.1。
 4. 第 2 回合（51/80）執行 `/solve`：2.3 秒、14,042 個節點找到勝利路線，預測戰鬥結束時 40/80。照路線在遊戲中出牌，下一回合重新搜尋得到與原路線剩餘部分相同的步驟；戰鬥實際以 40/80 結束（燃燒之血再回 6）。
 5. Toadpole 與 Seapunk 戰：網頁正確顯示「規則目錄沒有敵人」並拒絕給建議。
-3. 再次 `/import`，與預測的 `Battle` 逐欄比對：405 個欄位中 402 個相同（含抽牌順序、手牌、敵人行動記錄、能力與 9 條亂數）。3 個差異是上游在新根刻意歸零的累計帳本（`CumulativeHpLost`、`PlayerUnblockedDamageEvents`、`VitalSparkNormalizedAmount`），見上游 `docs/import.md` §3.1。
