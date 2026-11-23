@@ -81,6 +81,15 @@
   },
   "TakeDamageSfxType": {
    "value": 1
+  },
+  "_oneTwoRepeat": {
+   "value": 2
+  },
+  "_initialStockAmount": {
+   "value": 2
+  },
+  "_respawnMaxHpBonus": {
+   "value": 10
   }
  },
  "AXE_RUBY_RAIDER": {
@@ -220,6 +229,9 @@
    "ascension": 9,
    "high": 5,
    "low": 4
+  },
+  "_thrashRepeat": {
+   "value": 2
   }
  },
  "BRUTE_RUBY_RAIDER": {
@@ -240,6 +252,9 @@
   },
   "TakeDamageSfxType": {
    "value": 1
+  },
+  "_roarStrength": {
+   "value": 3
   }
  },
  "BYGONE_EFFIGY": {
@@ -358,6 +373,12 @@
    "ascension": 9,
    "high": 9,
    "low": 8
+  },
+  "_screechStatusCount": {
+   "value": 3
+  },
+  "_clampRepeat": {
+   "value": 2
   }
  },
  "CORPSE_SLUG": {
@@ -473,6 +494,9 @@
   },
   "TakeDamageSfxType": {
    "value": 8
+  },
+  "_expelRepeats": {
+   "value": 2
   }
  },
  "DAMP_CULTIST": {
@@ -516,6 +540,9 @@
    "ascension": 9,
    "high": 15,
    "low": 12
+  },
+  "_ritualGain": {
+   "value": 9
   }
  },
  "ENTOMANCER": {
@@ -566,6 +593,9 @@
   },
   "TakeDamageSfxType": {
    "value": 4
+  },
+  "_buffAmount": {
+   "value": 2
   }
  },
  "EYE_WITH_TEETH": {
@@ -577,6 +607,9 @@
   },
   "ShouldDisappearFromDoom": {
    "value": 0
+  },
+  "_distractAmount": {
+   "value": 3
   }
  },
  "FABRICATOR": {
@@ -622,6 +655,12 @@
   },
   "TakeDamageSfxType": {
    "value": 7
+  },
+  "_spewCoinsDamage": {
+   "value": 2
+  },
+  "_spewCoinsRepeat": {
+   "value": 8
   }
  },
  "FAT_GREMLIN": {
@@ -657,6 +696,9 @@
    "ascension": 9,
    "high": 17,
    "low": 15
+  },
+  "_flailRepeat": {
+   "value": 2
   }
  },
  "FLYCONID": {
@@ -830,6 +872,15 @@
   },
   "TakeDamageSfxType": {
    "value": 1
+  },
+  "_thunderStrikeRepeat": {
+   "value": 3
+  },
+  "_shockingSlapFrail": {
+   "value": 2
+  },
+  "_galvanicBurstStr": {
+   "value": 2
   }
  },
  "GREMLIN_MERC": {
@@ -930,6 +981,9 @@
    "ascension": 9,
    "high": 8,
    "low": 7
+  },
+  "_punctureRepeat": {
+   "value": 3
   }
  },
  "INFESTED_PRISM": {
@@ -993,6 +1047,9 @@
   },
   "TakeDamageSfxType": {
    "value": 5
+  },
+  "_whirlwindRepeat": {
+   "value": 3
   }
  },
  "KIN_FOLLOWER": {
@@ -1023,6 +1080,9 @@
   },
   "TakeDamageSfxType": {
    "value": 3
+  },
+  "_boomerangRepeat": {
+   "value": 2
   }
  },
  "KIN_PRIEST": {
@@ -1053,6 +1113,9 @@
   },
   "TakeDamageSfxType": {
    "value": 3
+  },
+  "_beamRepeat": {
+   "value": 3
   }
  },
  "KNOWLEDGE_DEMON": {
@@ -1080,6 +1143,12 @@
    "ascension": 9,
    "high": 3,
    "low": 2
+  },
+  "_knowledgeOverwhelmingRepeat": {
+   "value": 3
+  },
+  "_ponderHeal": {
+   "value": 30
   }
  },
  "LAGAVULIN_MATRIARCH": {
@@ -1118,6 +1187,9 @@
   },
   "TakeDamageSfxType": {
    "value": 7
+  },
+  "_stickyAmount": {
+   "value": 2
   }
  },
  "LEAF_SLIME_S": {
@@ -1138,6 +1210,9 @@
   },
   "TakeDamageSfxType": {
    "value": 7
+  },
+  "_goopAmount": {
+   "value": 1
   }
  },
  "LIVING_FOG": {
@@ -1225,6 +1300,9 @@
    "ascension": 9,
    "high": 7,
    "low": 5
+  },
+  "_webFrail": {
+   "value": 2
   }
  },
  "MAGI_KNIGHT": {
@@ -1272,6 +1350,9 @@
    "ascension": 9,
    "high": 5,
    "low": 4
+  },
+  "_clawRepeat": {
+   "value": 2
   }
  },
  "MECHA_KNIGHT": {
@@ -1294,6 +1375,12 @@
    "ascension": 9,
    "high": 40,
    "low": 35
+  },
+  "_flamethrowerCardCount": {
+   "value": 4
+  },
+  "_windupBlock": {
+   "value": 15
   }
  },
  "MYSTERIOUS_KNIGHT": {},
@@ -1322,6 +1409,9 @@
    "ascension": 9,
    "high": 3,
    "low": 2
+  },
+  "_toxicCount": {
+   "value": 2
   }
  },
  "NIBBIT": {
@@ -1372,6 +1462,9 @@
   },
   "TakeDamageSfxType": {
    "value": 1
+  },
+  "_noiseStatusCount": {
+   "value": 2
   }
  },
  "OVICOPTER": {
@@ -1427,6 +1520,9 @@
   },
   "TakeDamageSfxType": {
    "value": 1
+  },
+  "_peckAssaultRepeat": {
+   "value": 6
   }
  },
  "PARAFRIGHT": {
@@ -1509,6 +1605,12 @@
   },
   "TakeDamageSfxType": {
    "value": 6
+  },
+  "_lashRepeat": {
+   "value": 4
+  },
+  "_infestAmt": {
+   "value": 3
   }
  },
  "PUNCH_CONSTRUCT": {
@@ -1555,6 +1657,9 @@
   },
   "ChainsOfBindingAmount": {
    "value": 3
+  },
+  "_offWithYourHeadRepeat": {
+   "value": 5
   }
  },
  "ROCKET": {
@@ -1611,6 +1716,12 @@
   },
   "HasDeathSfx": {
    "value": 1
+  },
+  "_chewRepeat": {
+   "value": 2
+  },
+  "_buffAmt": {
+   "value": 2
   }
  },
  "SEAPUNK": {
@@ -1746,6 +1857,15 @@
    "ascension": 9,
    "high": 33,
    "low": 30
+  },
+  "_pummelingRepeat": {
+   "value": 4
+  },
+  "_leechingDrain": {
+   "value": 3
+  },
+  "_vomitSlimeInDiscard": {
+   "value": 10
   }
  },
  "SLITHERING_STRANGLER": {
@@ -1942,6 +2062,9 @@
    "ascension": 9,
    "high": 4,
    "low": 3
+  },
+  "_soulFlameRepeat": {
+   "value": 3
   }
  },
  "SPINY_TOAD": {
@@ -2015,6 +2138,12 @@
   },
   "TakeDamageSfxType": {
    "value": 7
+  },
+  "_hpNormal": {
+   "value": 140
+  },
+  "_hpTough": {
+   "value": 150
   }
  },
  "TEST_SUBJECT": {
@@ -2063,6 +2192,12 @@
   },
   "TakeDamageSfxType": {
    "value": 1
+  },
+  "_baseTestSubjectNum": {
+   "value": 8
+  },
+  "_phase3LacerateRepeat": {
+   "value": 3
   }
  },
  "THE_FORGOTTEN": {
@@ -2098,6 +2233,15 @@
   },
   "TakeDamageSfxType": {
    "value": 4
+  },
+  "_liquifyStatusDrawCount": {
+   "value": 3
+  },
+  "_liquifyStatusDiscardCount": {
+   "value": 3
+  },
+  "_thrashRepeat": {
+   "value": 2
   }
  },
  "THE_LOST": {
@@ -2118,6 +2262,9 @@
   },
   "TakeDamageSfxType": {
    "value": 8
+  },
+  "_eyeLasersRepeat": {
+   "value": 2
   }
  },
  "THE_OBSCURA": {
@@ -2224,6 +2371,9 @@
   },
   "TakeDamageSfxType": {
    "value": 1
+  },
+  "_soulBeamRepeat": {
+   "value": 3
   }
  },
  "TOUGH_EGG": {
@@ -2316,6 +2466,9 @@
    "ascension": 9,
    "high": 4,
    "low": 3
+  },
+  "_fireRepeat": {
+   "value": 5
   }
  },
  "TWIG_SLIME_M": {
@@ -2339,6 +2492,9 @@
   },
   "TakeDamageSfxType": {
    "value": 7
+  },
+  "_stickyAmount": {
+   "value": 1
   }
  },
  "TWIG_SLIME_S": {
@@ -2387,6 +2543,9 @@
   },
   "TakeDamageSfxType": {
    "value": 7
+  },
+  "_callForBackupLimit": {
+   "value": 3
   }
  },
  "VANTOM": {
@@ -2415,6 +2574,12 @@
   },
   "ShouldDisappearFromDoom": {
    "value": 0
+  },
+  "_inkyLanceRepeat": {
+   "value": 2
+  },
+  "_dismemberWounds": {
+   "value": 3
   }
  },
  "VINE_SHAMBLER": {
@@ -2437,6 +2602,9 @@
    "ascension": 9,
    "high": 18,
    "low": 16
+  },
+  "_swipeRepeat": {
+   "value": 2
   }
  },
  "WATERFALL_GIANT": {
@@ -2483,6 +2651,27 @@
   },
   "HasDeathSfx": {
    "value": 0
+  },
+  "_endCombatBgmFlag": {
+   "value": 5
+  },
+  "_maxIntensityBgmFlag": {
+   "value": 2
+  },
+  "_increaseIntensityBgmFlag": {
+   "value": 1
+  },
+  "_increaseIntensityAmbienceFlag": {
+   "value": 1
+  },
+  "_maxIntensityAmbienceFlag": {
+   "value": 3
+  },
+  "_endAmbienceFlag": {
+   "value": 2
+  },
+  "_maxPressureBuildup": {
+   "value": 6
   }
  },
  "WRIGGLER": {
@@ -2503,6 +2692,9 @@
   },
   "TakeDamageSfxType": {
    "value": 6
+  },
+  "_wriggleStrength": {
+   "value": 2
   }
  },
  "ZAPBOT": {

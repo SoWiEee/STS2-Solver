@@ -89,6 +89,13 @@ internal sealed class LiveHistory
     public int LightningChannels => Of("OrbChanneledEntry").Count(e => e.Actor == _player
         && Id(Obj(e.Obj, "Orb")) == "LIGHTNING_ORB");
     public int EtherealPlays => Of("CardPlayFinishedEntry").Count(e => ByPlayer(Play(e)) && Get<bool>(e.Obj, "WasEthereal"));
+    // FoolImporter: melody plays this turn by native tag (catalog tags stand in for card.Tags).
+    bool Melody(ClrObject play, CardTag tag) => (Stats(Obj(play, "Card")).Tags & tag) != 0;
+    public int MelodyStarted(CardTag tag) => StartedThisTurn.Count(p => Melody(p, tag));
+    public int MelodyFinished(CardTag tag) => FinishedThisTurn.Count(p => Melody(p, tag));
+    public int MelodyCount => FinishedThisTurn.Count(p => Melody(p, CardTag.Wah | CardTag.Cho | CardTag.Ki));
+    public int SadnessGenerated => Of("CardGeneratedEntry").Count(e => Obj(e.Obj, "Creator").Address == _live.Player.Address
+        && Id(Obj(e.Obj, "Card")) == "SADNESS");
     public int CardsGenerated => Of("CardGeneratedEntry").Count(e => Obj(e.Obj, "Creator").Address == _live.Player.Address);
 
     public bool FinishedThisTurnContains(ulong card) => FinishedThisTurn.Any(p => Obj(p, "Card").Address == card);

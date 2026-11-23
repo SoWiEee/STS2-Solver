@@ -26,6 +26,9 @@ for (const type of nr.types) {
       && a[3].operand === ASCENSION_HELPER && a[4].opcode === "ret")
       getters[m.name.slice(4)] = { ascension: n[0], high: n[1], low: n[2] };
   }
+  // const int fields (e.g. DevotedSculptor._ritualGain) are compiled away; REA reads them from the Constant table.
+  for (const f of nr.fields.filter(f => f.declaring_type_token === type.token && f.constant?.state === "decoded" && f.constant.element_type === "i4"))
+    getters[f.name] ??= { value: f.constant.value };
   result[snake(type.name)] = getters;
 }
 }

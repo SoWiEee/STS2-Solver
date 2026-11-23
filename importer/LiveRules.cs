@@ -45,6 +45,19 @@ public sealed class RulesCatalog
     }
 
     internal Rules Content => _content;
+
+    /// <summary>Canonical stats of a card at an upgrade level, or null when the catalog lacks it.</summary>
+    public CardStats? CardStats(string nativeId, int upgrade)
+    {
+        if (!Registry.TryCard(nativeId, out ushort id)) return null;
+        try { return _content.Card(id, upgrade); } catch (UnsupportedException) { return CardSupplement.Stats(nativeId, upgrade); }
+    }
+    public CardStats? RewardCardStats(string nativeId, int upgrade)
+    {
+        if (!Registry.TryCard(nativeId, out ushort id)) return null;
+        try { return _content.Card(id, upgrade); }
+        catch (UnsupportedException) { return null; }
+    }
     internal IReadOnlyList<MonsterRules> Variants(string monster) =>
         _monsters.TryGetValue(monster, out var list) ? list : [];
 }
@@ -102,7 +115,6 @@ internal static class LiveRules
                 CardDef def = Registry.Card(cardId);
                 identity |= def.UsesIdentityLedger || def.TracksFetchPlay || def.MayGenerateIdentityContent || def.IsIdentityContent;
                 draft.HasDecimalCardVars |= def.UsesDecimalDamageVar;
-                Require(Obj(card, "Enchantment").IsNull, $"{Id(card)} 帶有附魔，暫不支援");
                 int upgrade = Get<int>(card, "_currentUpgradeLevel");
                 Require(draft.HasCard(cardId, upgrade), $"規則目錄沒有 {Id(card)}+{upgrade}");
             }
@@ -128,7 +140,11 @@ internal static class LiveRules
         foreach (ClrObject relic in live.Relics())
         {
             string relicId = Id(relic);
-            Require(Registry.TryRelic(relicId, out ushort rid), $"未支援的遺物 {relicId}");
+            if (!Registry.TryRelic(relicId, out ushort rid))
+            {
+                notes.Add($"近似預測略過遺物 {relicId}");
+                continue;
+            }
             RelicDef def = Registry.Relic(rid);
             identity |= def.MayGenerateIdentityContent || def.IsIdentityContent;
             if (def.IsUnsettlingLamp && lampId == ushort.MaxValue) lampId = rid;
@@ -240,8 +256,9 @@ internal static class LiveRules
 
         void AddStats(ushort id, int upgrade)
         {
-            CardStats? Stat(int level) => level < catalogCards[id].Length ? catalogCards[id][level] : null;
             string name = Registry.Card(id).NativeId;
+            CardStats? Stat(int level) => (level < catalogCards[id].Length ? catalogCards[id][level] : null)
+                ?? CardSupplement.Stats(name, level);
             if (name == "DINGY_DAGGER")
             {
                 for (int level = 0; level < catalogCards[id].Length; level++)
@@ -276,6 +293,12 @@ internal static class LiveRules
                 Require(Registry.TryCard(Id(card), out ushort id), $"未支援的卡牌 {Id(card)}");
                 AddStats(id, Get<int>(card, "_currentUpgradeLevel"));
                 Declare(Registry.Card(id));
+                ClrObject enchantment = Obj(card, "Enchantment");
+                if (!enchantment.IsNull && Registry.TryEnchantment(Id(enchantment), out ushort eid))
+                    Declare(Registry.Enchantment(eid));
+                ClrObject affliction = Obj(card, "Affliction");
+                if (!affliction.IsNull && Registry.TryAffliction(Id(affliction), out ushort aid))
+                    Declare(Registry.Affliction(aid));
             }
         foreach (ClrObject creature in new[] { live.Creature }.Concat(live.Enemies))
             foreach (ClrObject power in LiveState.Powers(creature))
@@ -345,6 +368,7 @@ internal static class LiveRules
         "DEFECT" => nameof(TransformPool.Defect),
         "NECROBINDER" => nameof(TransformPool.Necrobinder),
         "REGENT" => nameof(TransformPool.Regent),
+        "FOOL" => nameof(TransformPool.Fool),
         _ => throw new LiveUnsupportedException($"未支援的角色 {character}"),
     };
 
@@ -426,7 +450,8 @@ internal static class LiveRules
             }
         int[] registers = new int[def.AiRegisterNames.Count];
         for (int i = 0; i < registers.Length; i++)
-            Require(TryMonsterInt(monster, def.AiRegisterNames[i], out registers[i]),
+            Require(TryMonsterInt(monster, def.AiRegisterNames[i], out registers[i])
+                || catalog.TryStatic(monsterId, def.AiRegisterNames[i], ascension, out registers[i]),
                 $"{monsterId} 的 AI 狀態 {def.AiRegisterNames[i]} 無法讀取");
         int[] rootPowers = new int[def.RootPowerAmountNames.Count];
         var powers = LiveState.Powers(creature);

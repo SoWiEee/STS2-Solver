@@ -46,6 +46,7 @@ app.MapGet("/capture", (HttpContext request) => ReadSnapshot(request, GameReader
 app.MapGet("/map", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureMap));
 app.MapGet("/rewards", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureRewards));
 app.MapGet("/import", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureImport));
+app.MapGet("/names", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureNames));
 app.MapGet("/solve", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureSolve));
 app.Run();
 
@@ -67,13 +68,26 @@ static class GameReader
 
     // rank-Yu beam search over the whole remaining fight from the current root (~10 s).
     public static object CaptureSolve() => WithRuntime(runtime =>
-        Sts2Solver.LiveImport.LiveImporter.Solve(runtime, Catalog.Value, Templates, TimeSpan.FromSeconds(10)));
+        Sts2Solver.LiveImport.LiveImporter.Solve(runtime, Catalog.Value, Templates, TimeSpan.FromSeconds(30))); // easy fights end early (frontier empty); elites and bosses need the room
 
     // rank-Yu solver import of the current root (Battle + Rules), with the kernel's end-turn prediction.
+    // Chinese titles from the game's zht localization, keyed by content id: {cards, monsters, potions, powers, relics}.
+    static object? names;
+    public static object CaptureNames() => names ??= WithRuntime((_, gameDirectory) =>
+    {
+        Dictionary<string, string> Titles(string table, string suffix) => RelicText.Load(gameDirectory, table)
+            .Where(e => e.Key.EndsWith(suffix, StringComparison.Ordinal) && e.Key.IndexOf('.') == e.Key.Length - suffix.Length)
+            .ToDictionary(e => e.Key[..^suffix.Length], e => e.Value);
+        return new { cards = Titles("cards", ".title"), monsters = Titles("monsters", ".name"),
+            potions = Titles("potions", ".title"), powers = Titles("powers", ".title"), relics = Titles("relics", ".title") };
+    });
+
     public static object CaptureImport() => WithRuntime(runtime =>
         Sts2Solver.LiveImport.LiveImporter.Describe(Sts2Solver.LiveImport.LiveImporter.Import(runtime, Catalog.Value)));
 
-    static object WithRuntime(Func<ClrRuntime, object> read)
+    static object WithRuntime(Func<ClrRuntime, object> read) => WithRuntime((runtime, _) => read(runtime));
+
+    static object WithRuntime(Func<ClrRuntime, string, object> read)
     {
         var games = Process.GetProcessesByName("SlayTheSpire2");
         try
@@ -89,7 +103,7 @@ static class GameReader
 
             using var snapshot = DataTarget.CreateSnapshotAndAttach(active.Id);
             var runtime = snapshot.ClrVersions.Single().CreateRuntime(Path.Combine(data, "mscordaccore.dll"));
-            return read(runtime);
+            return read(runtime, dir);
         }
         finally { foreach (var game in games) game.Dispose(); }
     }
@@ -140,7 +154,7 @@ static class GameReader
                 }).ToArray();
             Require(players.Length is 1 or 2, "目前只支援單人或雙人戰鬥。");
             var enemies = List(Object(combat, "_enemies"), 32)
-                .Where(c => Field<int>(c, "_currentHp") > 0).Select(c =>
+                .Where(c => Field<int>(c, "_currentHp") > 0 || IsReviving(c)).Select(c =>
                 {
                     var monster = Object(c, Backing("Monster"));
                     var move = Object(monster, Backing("NextMove"));
@@ -156,13 +170,19 @@ static class GameReader
                         powers = ReadPowers(c)
                     };
                 }).ToArray();
-            Require(enemies.Length is >= 1 and <= 3, "目前支援同時 1 到 3 名存活敵人。");
+            Require(enemies.Length is >= 1 and <= Sts2Solver.Simulation.Combat.Limits.Enemies, "存活敵人數超出讀取範圍。");
             var run = Object(combat, Backing("RunState"));
             return new { schemaVersion = 1, version = Version, capturedAt = DateTimeOffset.Now,
                 round = Field<int>(combat, Backing("RoundNumber")), ascension = Field<int>(run, Backing("AscensionLevel")), players, enemies };
     }
 
-    static object ReadRewards(ClrRuntime runtime)
+    static bool IsReviving(ClrObject creature)
+    {
+        var move = Object(Object(creature, Backing("Monster")), Backing("NextMove"));
+        return !move.IsNull && move.ReadStringField(Backing("StateId")) is "REVIVE_MOVE" or "RESPAWN_MOVE";
+    }
+
+    static object ReadRewards(ClrRuntime runtime, string gameDirectory)
     {
         var runManager = FindManager(runtime, "MegaCrit.Sts2.Core.Runs.RunManager");
         var run = Object(runManager, Backing("State"));
@@ -175,6 +195,9 @@ static class GameReader
         var overlays = List(Object(stack, "_overlays"), 32).ToArray();
         var top = overlays.LastOrDefault();
         var options = new List<RewardOption>();
+        var relicText = new Lazy<Dictionary<string, string>>(() => RelicText.Load(gameDirectory));
+        var cardText = new Lazy<Dictionary<string, string>>(() => RelicText.Load(gameDirectory, "cards"));
+        bool shop = false;
         if (ShortName(top) == "NCardRewardSelectionScreen")
         {
             var active = runtime.Heap.EnumerateObjects().FirstOrDefault(obj =>
@@ -184,7 +207,7 @@ static class GameReader
             foreach (var choice in List(Object(active, "_cards"), 32))
             {
                 var card = Object(choice, "_modifiedCard");
-                options.Add(ReadRewardCard(card.IsNull ? Object(choice, "originalCard") : card));
+                options.Add(ReadRewardCard(card.IsNull ? Object(choice, "originalCard") : card, cardText.Value));
             }
             if (Field<bool>(active, Backing("CanSkip"))) options.Add(new RewardOption("略過", "skip"));
         }
@@ -197,7 +220,7 @@ static class GameReader
                 if (ShortName(reward) != "RelicReward" || Field<bool>(reward, "_wasTaken")) continue;
                 var relic = Object(reward, "_relic");
                 if (relic.IsNull) continue;
-                options.Add(ReadRelicReward(relic));
+                options.Add(ReadRelicReward(relic, relicText.Value));
             }
         }
         else if (top.IsNull)
@@ -211,45 +234,174 @@ static class GameReader
                     Field<bool>(obj, "_isRelicCollectionOpen") &&
                     Object(obj, "_runState").Address == run.Address))
                 {
-                    options.AddRange(List(relics, 16).Select(ReadRelicReward));
+                    options.AddRange(List(relics, 16).Select(relic => ReadRelicReward(relic, relicText.Value)));
+                    if (options.Count > 0) options.Add(new RewardOption("略過", "skip"));
                 }
             }
         }
-        Require(options.Count > 0, "未讀到可評估的獎勵。請開啟卡牌選擇、戰鬥獎勵或寶箱的遺物畫面。");
+        if (options.Count == 0)
+        {
+            foreach (var view in runtime.Heap.EnumerateObjects())
+            {
+                if (ShortName(view) != "NMerchantInventory" || !Field<bool>(view, Backing("IsOpen"))) continue;
+                var inventory = Object(view, Backing("Inventory"));
+                if (inventory.IsNull || Object(inventory, Backing("Player")).Address != player.Address) continue;
+                shop = true;
+                foreach (string field in new[] { "_characterCardEntries", "_colorlessCardEntries", "_relicEntries", "_potionEntries" })
+                    foreach (var entry in List(Object(inventory, field), 32))
+                    {
+                        var option = ReadMerchantEntry(entry, relicText, cardText);
+                        if (option != null) options.Add(option);
+                    }
+                var removal = Object(inventory, Backing("CardRemovalEntry"));
+                if (!removal.IsNull && !Field<bool>(removal, Backing("Used")))
+                    options.Add(new RewardOption("移除卡牌", "remove", Price: Field<int>(removal, "_cost")));
+                options.Add(new RewardOption("保留金幣", "skip", Price: 0));
+                break;
+            }
+        }
+        if (options.Count == 0 && List(Object(run, "_currentRooms"), 8).LastOrDefault() is { IsNull: false } room
+            && ShortName(room) == "RestSiteRoom")
+            return ReadRestSite(player, creature);
+        Require(options.Count > 0, "請在遊戲開啟卡牌選擇、戰利品、寶箱遺物、商店商品或營火畫面。");
         return new
         {
-            deck = List(Object(Object(player, Backing("Deck")), "_cards"), 256).Select(ReadRewardCard).ToArray(),
+            deck = List(Object(Object(player, Backing("Deck")), "_cards"), 256).Select(card => ReadRewardCard(card)).ToArray(),
             options,
+            shop,
+            gold = Field<int>(player, "_gold"),
+            character = ShortName(Object(player, Backing("Character"))),
             act = Field<int>(run, "_currentActIndex") + 1,
             hp = Field<int>(creature, "_currentHp"),
             maxHp = Field<int>(creature, "_maxHp")
         };
     }
 
-    sealed record RewardOption(string Name, string Kind, int? Cost = null, decimal? Damage = null,
-        decimal? Block = null, decimal? Draw = null, decimal? CombatStartHeal = null);
-
-    static RewardOption ReadRelicReward(ClrObject relic)
+    // Rest site: rest heals 30% of max HP (HealRestSiteOption.GetBaseHealAmount; relic hooks not applied).
+    // Smith candidates are ranked by what the upgrade changes in the rules catalog.
+    // shortcut: rest-vs-smith is an HP-threshold heuristic, not a search over future fights.
+    static object ReadRestSite(ClrObject player, ClrObject creature)
     {
-        string name = ShortName(relic);
-        return name switch
+        int hp = Field<int>(creature, "_currentHp"), maxHp = Field<int>(creature, "_maxHp");
+        int heal = Math.Min((int)(maxHp * 0.3m), maxHp - hp);
+        var upgrades = new List<(double Gain, object Row)>();
+        foreach (var card in List(Object(Object(player, Backing("Deck")), "_cards"), 256))
         {
-            "Anchor" => new RewardOption(name, "relic", Block: 10),
-            "BagOfPreparation" => new RewardOption(name, "relic", Draw: 2),
-            "BloodVial" => new RewardOption(name, "relic", CombatStartHeal: 2),
-            _ => new RewardOption(name, "relic")
+            string? id = Object(card, Backing("Id")).ReadStringField(Backing("Entry"));
+            int level = Field<int>(card, "_currentUpgradeLevel");
+            if (id == null || Catalog.Value.CardStats(id, level) is not { } now || level >= now.MaxUpgradeLevel
+                || Catalog.Value.CardStats(id, level + 1) is not { } next) continue;
+            var reasons = new List<string>();
+            double gain = 0;
+            if (!now.CostsX && next.EnergyCost < now.EnergyCost) { gain += 8 * (now.EnergyCost - next.EnergyCost); reasons.Add($"費用 {now.EnergyCost}→{next.EnergyCost}"); }
+            for (int i = 0; i < Math.Min(now.Vars.Length, next.Vars.Length); i++)
+                if (next.Vars[i] > now.Vars[i]) { gain += (double)(next.Vars[i] - now.Vars[i]); reasons.Add($"數值 {now.Vars[i]:0.#}→{next.Vars[i]:0.#}"); }
+            var lost = now.Keywords & ~next.Keywords & (Sts2Solver.Simulation.Combat.Keywords.Exhaust | Sts2Solver.Simulation.Combat.Keywords.Ethereal);
+            if (lost != 0) { gain += 4; reasons.Add($"移除 {lost}"); }
+            var added = next.Keywords & ~now.Keywords & (Sts2Solver.Simulation.Combat.Keywords.Innate | Sts2Solver.Simulation.Combat.Keywords.Retain);
+            if (added != 0) { gain += 2; reasons.Add($"獲得 {added}"); }
+            if (gain > 0) upgrades.Add((gain, new { name = ShortName(card), id, gain = Math.Round(gain, 1), reasons }));
+        }
+        bool rest = hp + heal <= maxHp && hp < maxHp * 0.6m;
+        return new
+        {
+            restSite = true, hp, maxHp, heal,
+            recommendation = rest ? "rest" : "smith",
+            upgrades = upgrades.OrderByDescending(u => u.Gain).Take(6).Select(u => u.Row).ToArray(),
         };
     }
 
-    static RewardOption ReadRewardCard(ClrObject card)
+    sealed record RewardOption(string Name, string Kind, int? Cost = null, decimal? Damage = null,
+        decimal? Block = null, decimal? Draw = null, decimal? CombatStartHeal = null, string? Title = null,
+        string? Description = null, decimal? OpeningEnergy = null, decimal? OpeningStrength = null,
+        decimal? OpeningDexterity = null, decimal? OpeningVigor = null, string? Pool = null,
+        int? StarCost = null, bool StarCostsX = false, decimal? DrawPutBack = null, bool GeneratesStars = false,
+        decimal? NextTurnEnergy = null, int? Price = null);
+
+    static RewardOption? ReadMerchantEntry(ClrObject entry, Lazy<Dictionary<string, string>> relicText,
+        Lazy<Dictionary<string, string>> cardText)
+    {
+        if (ShortName(entry) == "MerchantCardEntry")
+        {
+            var choice = Object(entry, Backing("CreationResult"));
+            if (choice.IsNull) return null;
+            var card = Object(choice, "_modifiedCard");
+            return ReadRewardCard(card.IsNull ? Object(choice, "originalCard") : card, cardText.Value)
+                with { Price = Field<int>(entry, "_cost") };
+        }
+        var model = Object(entry, Backing("Model"));
+        if (model.IsNull) return null;
+        var option = ShortName(entry) == "MerchantRelicEntry"
+            ? ReadRelicReward(model, relicText.Value)
+            : new RewardOption(ShortName(model), "potion");
+        return option with { Price = Field<int>(entry, "_cost") };
+    }
+
+    static RewardOption ReadRelicReward(ClrObject relic, Dictionary<string, string> text)
+    {
+        string name = ShortName(relic);
+        string id = Object(relic, Backing("Id")).ReadStringField(Backing("Entry")) ?? name;
+        var values = new Dictionary<string, decimal>(StringComparer.Ordinal);
+        foreach (var entry in DynamicVarEntries(relic))
+        {
+            var key = entry.ReadObjectField("key").AsString();
+            if (key != null && entry.ReadObjectField("value").TryReadField<decimal>("_baseValue", out var amount))
+                values[key] = amount;
+        }
+        decimal Value(string key, decimal canonical)
+        {
+            values.TryAdd(key, canonical);
+            return values[key];
+        }
+        var option = name switch
+        {
+            "Anchor" => new RewardOption(name, "relic", Block: Value("Block", 10)),
+            "FakeAnchor" => new RewardOption(name, "relic", Block: Value("Block", 4)),
+            "HornCleat" => new RewardOption(name, "relic", Block: Value("Block", 14)),
+            "BagOfPreparation" => new RewardOption(name, "relic", Draw: Value("Cards", 2)),
+            "BloodVial" => new RewardOption(name, "relic", CombatStartHeal: Value("Heal", 2)),
+            "Lantern" => new RewardOption(name, "relic", OpeningEnergy: Value("Energy", 1)),
+            "VeryHotCocoa" => new RewardOption(name, "relic", OpeningEnergy: Value("Energy", 4)),
+            "Vajra" => new RewardOption(name, "relic", OpeningStrength: Value("StrengthPower", 1)),
+            "SwordOfJade" => new RewardOption(name, "relic", OpeningStrength: Value("StrengthPower", 3)),
+            "OddlySmoothStone" => new RewardOption(name, "relic", OpeningDexterity: Value("DexterityPower", 1)),
+            "Akabeko" => new RewardOption(name, "relic", OpeningVigor: Value("VigorPower", 8)),
+            _ => new RewardOption(name, "relic")
+        };
+        return option with { Title = text.GetValueOrDefault(id + ".title"),
+            Description = RelicText.Describe(text.GetValueOrDefault(id + ".description"), values) };
+    }
+
+    static RewardOption ReadRewardCard(ClrObject card, Dictionary<string, string>? text = null)
     {
         var cost = Object(card, "_energyCost");
         var hints = ReadCardHints(card);
-        return new RewardOption(ShortName(card), "card",
-            cost.IsNull || Field<bool>(cost, Backing("CostsX")) ? null : Field<int>(cost, "_base"),
+        string name = ShortName(card);
+        string id = Object(card, Backing("Id")).ReadStringField(Backing("Entry")) ?? name;
+        var stats = Catalog.Value.RewardCardStats(id, Field<int>(card, "_currentUpgradeLevel"));
+        var pool = Object(card, "_pool");
+        int? energyCost = cost.IsNull
+            ? stats?.CostsX == false ? stats.EnergyCost : null
+            : Field<bool>(cost, Backing("CostsX")) ? null : Field<int>(cost, "_base");
+        // Cards whose numbers mean something other than plain damage or draw.
+        // shortcut: per-card fixes for cards seen in play, extend when a reward misreads another card.
+        if (id == "KI_CHANT" && hints.ContainsKey("draw")) hints["draw"] = 1; // look at N, keep 1
+        if (id == "FIEND_FIRE" && hints.TryGetValue("damage", out decimal perCard)) hints["damage"] = perCard * 4; // per exhausted card, ~4 in hand
+        var values = DynamicVarEntries(card).ToDictionary(e => e.ReadObjectField("key").AsString()!,
+            e => e.ReadObjectField("value").TryReadField<decimal>("_baseValue", out var v) ? v : 0m);
+        string? description = text == null ? null : RelicText.Describe(text.GetValueOrDefault(id + ".description"), values);
+        return new RewardOption(name, "card",
+            energyCost,
             hints.TryGetValue("damage", out decimal damage) ? damage : null,
             hints.TryGetValue("block", out decimal block) ? block : null,
-            hints.TryGetValue("draw", out decimal draw) ? draw : null);
+            hints.TryGetValue("draw", out decimal draw) ? draw : null,
+            Title: text?.GetValueOrDefault(id + ".title"), Description: description,
+            Pool: pool.IsNull ? null : ShortName(pool),
+            StarCost: Field<bool>(card, "_starCostSet") ? Field<int>(card, "_baseStarCost") : stats?.StarCost,
+            StarCostsX: stats?.StarCostsX == true,
+            DrawPutBack: id == "GLIMMER" ? 1 : null,
+            GeneratesStars: id is "SOLAR_STRIKE" or "SHINING_STRIKE" or "GATHER_LIGHT",
+            NextTurnEnergy: id == "CHARGE_BATTERY" ? hints.GetValueOrDefault("energy", 1) : null);
     }
 
     static object ReadMap(ClrRuntime runtime)
@@ -355,6 +507,11 @@ static class GameReader
     static object ReadCard(ClrObject card)
     {
         var cost = Object(card, "_energyCost");
+        var enchantment = Object(card, Backing("Enchantment"));
+        var affliction = Object(card, Backing("Affliction"));
+        bool otherModifiers =
+            (!cost.IsNull && !Object(cost, "_localModifiers").IsNull && Field<int>(Object(cost, "_localModifiers"), "_size") > 0) ||
+            Field<int>(card, "_baseReplayCount") != 0 || Field<int>(card, "_extraReplayThisTurn") != 0;
         int? baseCost = cost.IsNull || Field<bool>(cost, Backing("CostsX")) ? null : Field<int>(cost, "_base");
         return new
         {
@@ -363,9 +520,10 @@ static class GameReader
             baseCost = baseCost >= 0 ? baseCost : null,
             unplayable = baseCost == -1,
             targetType = Field<int>(card, Backing("TargetType")),
-            modified = !Object(card, Backing("Enchantment")).IsNull || !Object(card, Backing("Affliction")).IsNull ||
-                (!cost.IsNull && !Object(cost, "_localModifiers").IsNull && Field<int>(Object(cost, "_localModifiers"), "_size") > 0) ||
-                Field<int>(card, "_baseReplayCount") != 0 || Field<int>(card, "_extraReplayThisTurn") != 0,
+            modified = !enchantment.IsNull || !affliction.IsNull || otherModifiers,
+            enchantment = enchantment.IsNull ? null : ShortName(enchantment),
+            affliction = affliction.IsNull ? null : ShortName(affliction),
+            otherModifiers,
             vars = ReadCardHints(card)
         };
     }
@@ -373,24 +531,34 @@ static class GameReader
     static Dictionary<string, decimal> ReadCardHints(ClrObject card)
     {
         var hints = new Dictionary<string, decimal>();
-        if (!card.TryReadObjectField("_dynamicVars", out var vars) || vars.IsNull ||
-            !vars.TryReadObjectField("_vars", out var dictionary) || dictionary.IsNull ||
-            !dictionary.TryReadObjectField("_entries", out var entries) || entries.IsNull ||
-            !dictionary.TryReadField<int>("_count", out int count))
-            return hints;
-        var array = entries.AsArray();
-        if (count < 0 || count > 128 || count > array.Length) return hints;
-        for (int i = 0; i < count; i++)
+        foreach (var entry in DynamicVarEntries(card))
         {
-            var entry = array.GetStructValue(i);
             var value = entry.ReadObjectField("value");
             string? type = value.Type?.Name?.Split('.').Last();
-            string? key = type switch { "DamageVar" => "damage", "BlockVar" => "block", "CardsVar" => "draw", _ => null };
+            string? key = type switch { "DamageVar" => "damage", "BlockVar" => "block",
+                "EnergyVar" when entry.ReadObjectField("key").AsString() == "Energy" => "energy",
+                "CardsVar" when entry.ReadObjectField("key").AsString() == "Cards" => "draw", _ => null };
             if (key != null && value.TryReadField<decimal>("_baseValue", out var amount) &&
                 amount >= 0 && amount <= 999)
                 hints[key] = amount;
         }
         return hints;
+    }
+
+    static IEnumerable<ClrValueType> DynamicVarEntries(ClrObject model)
+    {
+        if (!model.TryReadObjectField("_dynamicVars", out var vars) || vars.IsNull ||
+            !vars.TryReadObjectField("_vars", out var dictionary) || dictionary.IsNull ||
+            !dictionary.TryReadObjectField("_entries", out var entries) || entries.IsNull ||
+            !dictionary.TryReadField<int>("_count", out int count))
+            yield break;
+        var array = entries.AsArray();
+        if (count < 0 || count > 128 || count > array.Length) yield break;
+        for (int i = 0; i < count; i++)
+        {
+            var entry = array.GetStructValue(i);
+            if (!entry.ReadObjectField("key").IsNull) yield return entry;
+        }
     }
 
     static bool? HasAttackIntent(ClrObject move)

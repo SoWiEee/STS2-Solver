@@ -17,7 +17,7 @@ public static class LiveImporter
         try
         {
             rules = LiveRules.Build(live, catalog, notes);
-            battle = LiveBattle.Import(live, rules);
+            battle = LiveBattle.Import(live, rules, notes);
             BattleCodec.Validate(battle);
         }
         catch (UnsupportedException error) { throw new LiveUnsupportedException(error.Message); }

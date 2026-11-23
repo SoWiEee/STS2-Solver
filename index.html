@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#111914">
   <title>尖塔戰術工作台｜STS2 Solver</title>
   <style>
-    :root{color-scheme:light;--ink:#1a241e;--muted:#65736a;--paper:#f3f3ec;--panel:#fffefa;--line:#d9ddd3;--deep:#111914;--deep2:#1b2820;--accent:#d5503b;--accent-soft:#fbebe6;--green:#247052;--green-soft:#e8f2eb;--gold:#c69235;--gold-soft:#f6efd9;--blue:#386b75;--shadow:0 12px 32px rgba(24,37,28,.07);font-family:Inter,"Segoe UI","Noto Sans TC",system-ui,sans-serif}
+    :root{color-scheme:light;--ink:#1a241e;--muted:#536357;--paper:#f3f3ec;--panel:#fffefa;--line:#d9ddd3;--deep:#111914;--deep2:#1b2820;--accent:#b84030;--accent-soft:#fbebe6;--green:#247052;--green-soft:#e8f2eb;--gold:#c69235;--gold-soft:#f6efd9;--blue:#386b75;--shadow:0 12px 32px rgba(24,37,28,.07);font-family:Inter,"Segoe UI","Noto Sans TC",system-ui,sans-serif}
     *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-size:14px;line-height:1.48}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #72aaa0;outline-offset:2px}a{color:inherit}
     .topbar{height:62px;background:var(--deep);color:#f6f3e8;display:flex;align-items:center;justify-content:space-between;padding:0 max(24px,calc((100vw - 1440px)/2));border-bottom:1px solid #2b3930}.brand{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.02em}.mark{width:27px;height:27px;border:1px solid #d3a447;display:grid;place-items:center;color:#e4b84f;border-radius:7px;font-weight:800;font-size:16px}.version{color:#b7c2b6;font-size:12px;display:flex;align-items:center;gap:8px}.dot{width:7px;height:7px;background:#7fc39b;border-radius:50%;box-shadow:0 0 0 3px #7fc39b25}
     .app{max-width:1440px;margin:0 auto;padding:26px 28px 54px}.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:22px}.hero h1{font-size:27px;line-height:1.2;margin:0 0 7px;letter-spacing:-.035em}.hero p{margin:0;color:var(--muted);max-width:670px}.hero-note{font-size:12px;color:#536259;background:#e6e9df;border:1px solid #d4dacf;border-radius:7px;padding:9px 12px;white-space:nowrap}
@@ -19,57 +19,96 @@
     .result-head{background:var(--deep2);color:#f4f2e9;padding:17px 18px 15px}.result-head .panel-title{font-size:17px}.result-head p{margin:6px 0 0;color:#b8c5ba;font-size:12px}.result-body{padding:15px 17px}.recommendation{border:1px solid #d9e6db;background:#f0f6ef;border-radius:9px;padding:13px 14px;margin-bottom:13px}.recommendation .kicker{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--green);font-weight:800}.recommendation h2{font-size:17px;margin:4px 0 5px;line-height:1.35}.recommendation p{font-size:12px;color:#536259;margin:0}.play-list{display:grid;gap:6px;margin:11px 0}.play-item{display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:8px;background:white;border:1px solid #e1e7dd;border-radius:6px;padding:7px 9px}.play-index{width:20px;height:20px;display:grid;place-items:center;background:#e8f2eb;color:#2e7652;border-radius:50%;font-size:10px;font-weight:800}.play-item strong{font-size:12px}.play-item small{font-size:10px;color:var(--muted)}.target{font-size:10px;color:#52645a;border:1px solid #d9e0d8;border-radius:4px;padding:3px 6px}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}.metric{border-top:1px solid #e2e6dd;padding:8px 2px 0}.metric b{display:block;font-size:17px;font-variant-numeric:tabular-nums}.metric span{font-size:10px;color:var(--muted)}.rank-list{margin-top:14px;border-top:1px solid #e5e8e1;padding-top:12px}.rank-row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #eff0eb;font-size:11px}.rank-row:last-child{border-bottom:0}.rank-row span:first-child{color:#46554a}.rank-row b{font-variant-numeric:tabular-nums}.reason{font-size:11px;color:#68766d;margin-top:10px;line-height:1.55}.state-warning{margin:0 17px 16px;padding:9px 11px;background:#fbf4e2;border:1px solid #e9dfc1;border-radius:6px;color:#725a22;font-size:11px}.state-warning strong{color:#584412}
     details{border-top:1px solid var(--line);background:#fafbf7}details summary{cursor:pointer;padding:14px 17px;font-weight:750;font-size:13px;list-style:none;display:flex;justify-content:space-between}details summary::-webkit-details-marker{display:none}details summary:after{content:"＋";color:#758278}details[open] summary:after{content:"−"}.info-content{padding:0 17px 17px;display:grid;gap:13px}.info-block{border-left:2px solid #cbd7ca;padding-left:11px}.info-block h3{font-size:12px;margin:0 0 4px}.info-block p,.info-block li{font-size:11px;color:#59685e;margin:0;line-height:1.6}.info-block ul{padding-left:17px;margin:4px 0}.refs{display:flex;flex-wrap:wrap;gap:8px}.refs a{font-size:11px;color:#356c5d;text-decoration-thickness:1px;text-underline-offset:2px}.footer{max-width:1440px;margin:0 auto;padding:0 28px 28px;color:#77837a;font-size:11px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.footer a{color:#406b59;text-underline-offset:2px}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
     @media(max-width:1000px){.layout{grid-template-columns:1fr}.rightcol{grid-row:1}.rightcol .panel:first-child{position:relative}.hero{align-items:flex-start;flex-direction:column}.hero-note{white-space:normal}.app{padding:22px 18px 44px}.topbar{padding:0 18px}}
-    @media(max-width:620px){.app{padding:18px 12px 36px}.topbar{height:54px;padding:0 12px}.version{font-size:10px}.hero h1{font-size:23px}.toolbar{gap:10px;padding:10px}.toolbar .spacer{display:none}.tool-group{flex:1}.select{max-width:100%}.panel-head,.panel-body{padding-left:12px;padding-right:12px}.field-grid{grid-template-columns:repeat(2,minmax(70px,1fr))}.card-top{grid-template-columns:minmax(100px,1fr) minmax(72px,.72fr) 26px}.card-fields{grid-template-columns:repeat(3,minmax(55px,1fr))}.metrics{grid-template-columns:repeat(3,1fr)}.result-body{padding:12px}.footer{padding:0 12px 22px}.hero-note{font-size:11px}.tool-label{font-size:11px}}
+    @media(max-width:620px){.app{padding:18px 12px 36px}.topbar{height:54px;padding:0 12px}.version{font-size:12px}.hero h1{font-size:23px}.toolbar{gap:10px;padding:10px}.toolbar .spacer{display:none}.tool-group{flex:1}.select{max-width:100%}.panel-head,.panel-body{padding-left:12px;padding-right:12px}.field-grid{grid-template-columns:repeat(2,minmax(70px,1fr))}.card-top{grid-template-columns:minmax(100px,1fr) minmax(72px,.72fr) 26px}.card-fields{grid-template-columns:repeat(3,minmax(55px,1fr))}.metrics{grid-template-columns:repeat(3,1fr)}.result-body{padding:12px}.footer{padding:0 12px 22px}.hero-note{font-size:11px}.tool-label{font-size:11px}}
+    [hidden]{display:none!important}
+    ::selection{background:#d9e8da;color:#17281d}
+    .live-workspace{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(330px,1fr);align-items:start;gap:28px}
+    .live-rail{display:grid;gap:24px;min-width:0}
+    .live-workspace .panel{border-radius:14px;box-shadow:none;min-width:0}
+    .live-workspace .panel-head{padding:16px 20px;border-color:var(--line)}
+    .live-workspace .panel-body{padding:0 20px 16px}
+    .live-workspace .panel-body>p:first-child{margin:12px 0;color:#48594e;line-height:1.55;overflow-wrap:anywhere}
+    .live-workspace .head-action{min-height:40px;padding:6px 11px;border:1px solid var(--line);border-radius:7px;white-space:nowrap}
+    .live-workspace .head-action:hover:not(:disabled){background:var(--green-soft)}
+    .live-workspace .head-action:disabled{cursor:wait;opacity:.55}
+    #solvePanel .panel-head{background:var(--deep2);color:#f6f3e8}
+    #solvePanel .head-action{color:#f6f3e8;border-color:#6c8475}
+    #solvePanel .head-action:hover:not(:disabled){background:#31473a}
+    #solveTitle{font-size:21px}
+    #livePanel summary{padding:13px 20px;font-size:13px}
+    #livePanel .head-action{margin-top:10px}
+    #mapPanel .panel-title{color:#325c64}
+    #rewardPanel .panel-title{color:#76541c}
+    .live-workspace .rows{gap:0}
+    .live-workspace .row-card{background:transparent;border:0;border-top:1px solid var(--line);border-radius:0;padding:12px 0}
+    .live-workspace .row-card p{margin:5px 0 0}
+    .live-workspace .row-caption{font-size:12px;font-variant-numeric:tabular-nums}
+    .turn-now{padding:14px 16px;margin-bottom:10px;background:var(--green-soft);color:#163d2a;border-radius:9px}
+    .turn-title{margin:0;font-size:15px}
+    .turn-play{display:grid;gap:0;margin:7px 0 0;padding-inline-start:22px}
+    .turn-play li{padding:6px 0;overflow-wrap:anywhere}
+    .turn-play li+li{border-top:1px solid #80978742}
+    .turn-context{display:block;color:#3b5c4d;font-size:12px}
+    .turn-potion{color:#2d5d68}
+    .turn-end{margin:8px 0 0;font-size:12px;color:#3b5c4d}
+    .later-turns{margin:4px 0 0;background:transparent}
+    .later-turns summary{padding:12px 0;color:#385a48}
+    .live-notes{margin:10px 0;color:#685323;font-size:12px}
+    @media(max-width:800px){.live-workspace{grid-template-columns:minmax(0,1fr);gap:20px}.live-rail{gap:16px}}
+    @media(max-width:480px){.live-workspace .panel-head{padding:12px 14px}.live-workspace .panel-body{padding:0 14px 12px}}
   </style>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="mark" aria-hidden="true">S</span><span>尖塔戰術工作台</span></div>
-    <div class="version"><span class="dot" aria-hidden="true"></span><span>本機研究版 · 遊戲 v0.113.1</span></div>
+    <div class="brand">尖塔戰術工作台</div>
+    <span class="version">v0.113.1</span>
   </header>
   <main class="app">
+    <div class="live-workspace" id="liveWorkspace" hidden>
+    <div class="live-rail">
     <section class="panel" id="solvePanel" hidden aria-labelledby="solveTitle">
       <div class="panel-head">
-        <div><h1 class="panel-title" id="solveTitle">整場戰鬥出牌建議</h1><p class="panel-sub">rank-Yu 求解器：局面一變就自動搜尋到戰鬥結束（約 1–10 秒）</p></div>
+        <h1 class="panel-title" id="solveTitle">出牌建議</h1>
         <button type="button" class="head-action" id="solveRefresh">重新搜尋</button>
       </div>
       <div class="panel-body">
-        <p id="solveStatus" role="status">進入戰鬥並輪到你出牌時會自動搜尋；遇到尚未支援的局面會列出原因。</p>
+        <p id="solveStatus" role="status">等待玩家回合。</p>
         <div id="solveResults" class="rows"></div>
-        <p class="row-caption"><a href="docs/live-import.md">資料來源與支援範圍</a></p>
+        <p class="row-caption"><a href="docs/live-import.md">模型支援範圍</a></p>
       </div>
     </section>
-    <section class="panel" id="livePanel" hidden style="margin-top:16px" aria-labelledby="liveTitle">
-      <div class="panel-head">
-        <div><h2 class="panel-title" id="liveTitle">簡易模型（備用）</h2><p class="panel-sub">本專案的 JS 多回合模型，只涵蓋少數敵人；上方不支援時可參考</p></div>
-        <button type="button" class="head-action" id="liveToggle">暫停讀取</button>
-      </div>
+    <details class="panel" id="livePanel" hidden>
+      <summary>備用出牌模型</summary>
       <div class="panel-body">
         <p id="liveStatus" role="status">正在讀取遊戲…</p>
+        <button type="button" class="head-action" id="liveToggle">暫停讀取</button>
         <div id="liveResults" aria-live="polite"></div>
-        <p class="row-caption">請依最新建議在遊戲中出牌。<a href="docs/policy.md">支援範圍與搜尋政策</a></p>
       </div>
-    </section>
-    <section class="panel" id="mapPanel" hidden style="margin-top:16px" aria-labelledby="mapTitle">
+    </details>
+    </div>
+    <div class="live-rail">
+    <section class="panel" id="mapPanel" hidden aria-labelledby="mapTitle">
       <div class="panel-head">
-        <div><h2 class="panel-title" id="mapTitle">章節路線建議</h2><p class="panel-sub">比較從目前房間走到章節 Boss 的路線</p></div>
+        <h2 class="panel-title" id="mapTitle">章節路線</h2>
         <button type="button" class="head-action" id="mapRefresh">讀取地圖</button>
       </div>
       <div class="panel-body">
-        <p id="mapStatus" role="status">開啟遊戲地圖後，可以讀取目前的分岔。</p>
+        <p id="mapStatus" role="status">請在遊戲開啟地圖。</p>
         <div id="mapResults" class="rows"></div>
       </div>
     </section>
-    <section class="panel" id="rewardPanel" hidden style="margin-top:16px" aria-labelledby="rewardTitle">
+    <section class="panel" id="rewardPanel" hidden aria-labelledby="rewardTitle">
       <div class="panel-head">
-        <div><h2 class="panel-title" id="rewardTitle">獎勵建議</h2><p class="panel-sub">依現有牌組比較卡牌與已知遺物效果</p></div>
-        <button type="button" class="head-action" id="rewardRefresh">讀取獎勵</button>
+        <h2 class="panel-title" id="rewardTitle">獎勵與商店</h2>
+        <button type="button" class="head-action" id="rewardRefresh">比較選項</button>
       </div>
       <div class="panel-body">
-        <p id="rewardStatus" role="status">先在遊戲中開啟戰利品、卡牌選擇或寶箱遺物畫面。</p>
+        <p id="rewardStatus" role="status">請在遊戲開啟獎勵、商品清單或營火。</p>
         <div id="rewardResults" class="rows"></div>
       </div>
     </section>
+    </div>
+    </div>
     <div id="manualApp" hidden>
     <section class="hero" aria-labelledby="page-title">
       <div><h1 id="page-title">用當前局面，計算本回合出牌</h1><p>輸入玩家能量、手牌、生命與敵人意圖。搜尋所有可行的出牌組合和攻擊目標，優先保住隊伍，再比較 Boss 傷害。</p></div>
@@ -124,7 +163,7 @@
     </div>
     </div>
   </main>
-  <footer class="footer"><span>課程研究原型 · 建議用遊戲顯示數字覆核輸入 · 獨立於遊戲執行</span><span>資料快照 v0.113.1 · REA 結構證據與公開參考數據分開標註</span></footer>
+  <footer class="footer"><a href="docs/policy.md">評分規則</a></footer>
 
   <script src="multi-turn.js"></script>
   <script src="live-policy.js"></script>
@@ -304,12 +343,14 @@
         next?.card?`現在先打出${next.card.name}`:"本回合建議不出牌";
       $("#liveResults").innerHTML=`<div class="recommendation"><div class="kicker">${result.truncated?"搜尋預算內的最高分路線":"支援模型中的最高分路線"}</div>
         <h2>${esc(headline)}</h2><p>${plan.won?"預測可擊敗敵人。":plan.dead?"目前搜尋到的路線預測會倒下。":"路線涵蓋目前可預測的回合。"} ${esc(result.stop)}</p>
+        ${result.ignoredEffects?.length ? `<p>近似預測略過：${esc(result.ignoredEffects.join("、"))}</p>` : ""}
         ${result.estimatedShuffle?`<p>跨洗牌路線使用模擬牌序。${result.shuffleAgreement===3?"三個樣本的當回合建議一致。":"樣本的當回合建議有分歧。"}實際抽牌後會重新計算。</p>`:""}
         </div>
         <div class="rows" style="margin-top:12px">${turns}</div>`;
     }
 
     const livePage=location.protocol!=="file:";
+    $("#liveWorkspace").hidden=!livePage;
     $("#livePanel").hidden=!livePage;
     $("#mapPanel").hidden=!livePage;
     $("#solvePanel").hidden=!livePage;
@@ -343,6 +384,12 @@
         previousState="";
         $("#liveResults").replaceChildren();
         status.textContent=error.message;
+        // Out of combat or between turns: drop the finished fight's route so it is not followed by mistake.
+        if(solvedState&&!solveBusy){
+          solvedState="";
+          $("#solveResults").replaceChildren();
+          $("#solveStatus").textContent=`等待玩家回合（${error.message}）`;
+        }
       } finally {
         liveBusy=false;
       }
@@ -387,29 +434,48 @@
     }
     $("#mapRefresh").addEventListener("click",refreshMap);
     // Whole-fight search (rank-Yu solver). Runs on demand and whenever the live capture changes.
-    let solveBusy=false, solvePending=false;
+    let solveBusy=false, solvePending=false, gameNames=null;
     async function runSolve(){
       if(solveBusy){solvePending=true;return;}
       solveBusy=true;
       const button=$("#solveRefresh"),status=$("#solveStatus"),output=$("#solveResults");
       button.disabled=true;
-      status.textContent="正在搜尋整場戰鬥…";
-      const name=id=>id.toLowerCase().replace(/_/g," ");
+      status.textContent="正在搜尋出牌路線…";
+      // Chinese titles from the game's localization (/names); unknown ids fall back to a readable id.
+      if(!gameNames){try{const r=await fetch("/names",{headers:{"X-STS2-Capture":"1"}});if(r.ok)gameNames=await r.json();}catch{}}
+      const name=id=>{
+        const suffix=id.endsWith("+")?"+":"";
+        const [key,slot]=(suffix?id.slice(0,-1):id).split("#");
+        const tables=gameNames?[gameNames.cards,gameNames.monsters,gameNames.potions,gameNames.powers,gameNames.relics]:[];
+        const title=tables.map(t=>t?.[key]).find(Boolean)??key.toLowerCase().replace(/_/g," ");
+        return title+suffix+(slot&&slot!=="1"?` #${slot}`:"");
+      };
       try {
         const response=await fetch("/solve",{headers:{"X-STS2-Capture":"1"}});
         const plan=await response.json();
-        if(!response.ok)throw new Error(`未支援：${plan.error||"搜尋失敗。"}`);
+        if(!response.ok)throw new Error(plan.error||"搜尋失敗。");
         const turns=[];
         for(const step of plan.route){
-          (turns[step.turn-1]??=[]);
-          if(step.kind==="play")turns[step.turn-1].push(`${name(step.card)}${step.upgrade?"+":""}${step.target?`（目標：${name(step.target)}）`:""}${step.choices?.length?`（選擇：${step.choices.map(name).join("、")}）`:""}`);
+          const turn=turns[step.turn-1]??={plays:[],end:false};
+          if(step.kind==="play"||step.kind==="potion")turn.plays.push(step);
+          if(step.kind==="end")turn.end=true;
         }
-        output.innerHTML=turns.map((plays,index)=>`<article class="row-card">
-          <strong>${index===0?"本回合":`第 ${index+1} 回合（預測）`}</strong>
-          <p>${plays.length?plays.map(esc).join(" → "):"不出牌"}${index<turns.length-1||!plan.victory?" → 結束回合":""}</p>
-        </article>`).join("");
-        status.textContent=`${plan.victory?"找到勝利路線":"未找到勝利路線（顯示最高分路線）"} · 預測戰鬥結束時 ${plan.finalHp}/${plan.maxHp} HP · ${plan.seconds.toFixed(1)} 秒、${plan.expandedNodes} 個節點`
-          +(plan.notes.length?` · ${[...new Set(plan.notes)].join("；")}`:"");
+        const renderTurn=(turn,index)=>`<section class="${index===0?"turn-now":"row-card"}">
+          <h2 class="turn-title">${index===0?"本回合":`${index+1} 回合`}</h2>
+          ${turn.plays.length?`<ol class="turn-play">${turn.plays.map(step=>{
+            const potion=step.kind==="potion";
+            const context=[potion&&step.potionSlot!=null?`第 ${step.potionSlot+1} 格`:"",
+              step.target?`目標 ${name(step.target)}`:"",
+              step.choices?.length?`選擇 ${step.choices.map(name).join("、")}`:""].filter(Boolean).join(" · ");
+            return `<li><strong${potion?' class="turn-potion"':""}>${potion?"使用 ":""}${esc(name(potion?step.potion:step.card))}${step.upgrade?"+":""}</strong>${context?`<small class="turn-context">${esc(context)}</small>`:""}</li>`;
+          }).join("")}</ol>`:""}
+          ${turn.end?`<p class="turn-end">結束回合</p>`:""}
+        </section>`;
+        const notes=[...new Set(plan.notes)];
+        output.innerHTML=(turns.length?renderTurn(turns[0],0):"")
+          +(notes.length?`<p class="live-notes">${notes.map(esc).join("。")}</p>`:"")
+          +(turns.length>1?`<details class="later-turns"><summary>後續 ${turns.length-1} 回合預測</summary>${turns.slice(1).map((turn,i)=>renderTurn(turn,i+1)).join("")}</details>`:"");
+        status.textContent=plan.victory?`預測獲勝 · 剩餘 ${plan.finalHp}/${plan.maxHp} HP`:"搜尋未找到勝利路線。";
       } catch(error) {
         output.replaceChildren();
         status.textContent=error.message;
@@ -429,13 +495,32 @@
         const response=await fetch("/rewards",{headers:{"X-STS2-Capture":"1"}});
         const reward=await response.json();
         if(!response.ok)throw new Error(reward.error||"獎勵讀取失敗。");
+        if(reward.restSite){
+          const rest=reward.recommendation==="rest";
+          status.textContent=`營火 · ${reward.hp}/${reward.maxHp} HP · 休息可回復 ${reward.heal} HP。建議${rest?"休息":"鍛造"}（生命低於 60% 時休息）。`;
+          output.innerHTML=reward.upgrades.length?reward.upgrades.map((u,i)=>`<article class="row-card">
+            <strong>${i===0&&!rest?"推薦鍛造 · ":""}${esc(u.name)}</strong>
+            <p class="row-caption">升級收益 ${u.gain}</p><p>${u.reasons.map(esc).join("、")}</p></article>`).join("")
+            :`<p class="row-caption">牌組沒有可從規則目錄判斷收益的升級。</p>`;
+          return;
+        }
+        if(!gameNames){try{const r=await fetch("/names",{headers:{"X-STS2-Capture":"1"}});if(r.ok)gameNames=await r.json();}catch{}}
         const ranked=globalThis.planRewards(reward);
-        const labels={Cruelty:"殘酷",Inferno:"獄火",Unrelenting:"無情猛攻",MoltenFist:"熔融之拳",Anchor:"船錨",BagOfPreparation:"準備背包",BloodVial:"小血瓶"};
-        status.textContent="依可計分的效果排序。未知副作用、聯動與長期收益請參照遊戲牌面。";
+        const labels={Cruelty:"殘酷",Inferno:"獄火",Unrelenting:"無情猛攻",MoltenFist:"熔融之拳",Glimmer:"微光",Anchor:"船錨",BagOfPreparation:"準備背包",BloodVial:"小血瓶",
+          BattleTrance:"戰鬥專注",TrueGrit:"堅毅",Breakthrough:"突破",TheGambit:"孤注一擲",Salvo:"箭雨"};
+        const pools={IroncladCardPool:"鐵甲戰士",SilentCardPool:"靜默獵手",RegentCardPool:"攝政王",
+          NecrobinderCardPool:"亡靈契約師",DefectCardPool:"故障機器人",FoolCardPool:"愚者",ColorlessCardPool:"無色",
+          EventCardPool:"事件",CurseCardPool:"詛咒",StatusCardPool:"狀態"};
+        status.textContent=reward.shop
+          ? `持有 ${reward.gold} 金幣。依每 100 金幣的估計收益排序，實際成交價請以遊戲畫面為準。`
+          : "依可計分的效果排序。未知副作用、聯動與長期收益請參照遊戲牌面。";
         output.innerHTML=ranked.map(choice=>{
-          return `<article class="row-card"><strong>${esc(Object.hasOwn(labels,choice.name)?labels[choice.name]:choice.name)}</strong>
-            <p class="row-caption">${choice.evaluated?`評分 ${choice.score.toFixed(1)}`:"未評估"}</p>
-            <p>${choice.reasons.map(esc).join(" ")}</p></article>`;
+          const id=choice.name.replace(/([a-z0-9])([A-Z])/g,"$1_$2").toUpperCase();
+          const title=choice.title||gameNames?.cards?.[id]||gameNames?.relics?.[id]||gameNames?.potions?.[id]||(Object.hasOwn(labels,choice.name)?labels[choice.name]:choice.name);
+          return `<article class="row-card"><strong>${esc(title)}</strong>
+            <p class="row-caption">${Object.hasOwn(pools,choice.pool)?`${pools[choice.pool]} · `:""}${choice.price==null?"":`${choice.price} 金幣 · `}${choice.affordable===false?"金幣不足":choice.evaluated?`評分 ${choice.score.toFixed(1)}`:"未評估"}</p>
+            ${choice.description?`<p>${esc(choice.description)}</p>`:""}
+            ${choice.reasons.filter(reason=>!reason.endsWith("依 0 分排序。")).map(reason=>`<p>${esc(reason)}</p>`).join("")}</article>`;
         }).join("");
       } catch(error) {
         status.textContent=error.message;

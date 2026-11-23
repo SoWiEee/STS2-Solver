@@ -25,12 +25,12 @@
 
   function slimed(id, cost=1){return {id,owner:"p1",name:"黏液",cost,draw:1,exhaust:true};}
 
-  function normalizedPile(pile, prefix) {
+  function normalizedPile(pile, prefix, ignoredEffects) {
     const cards=[];
     for(let i=0;i<pile.length;i++){
       const card=pile[i];
       try {
-        const [modeled]=cardsFor([card],`${prefix}${i}`);
+        const [modeled]=cardsFor([card],`${prefix}${i}`,ignoredEffects);
         cards.push(modeled??{id:`${prefix}${i}`,owner:"p1",name:card.name,cost:0,skip:true});
       } catch(error) {
         return {cards,error:error.message};
@@ -39,17 +39,27 @@
     return {cards,error:""};
   }
 
-  function cardsFor(hand, turn) {
+  function cardsFor(hand, turn, ignoredEffects) {
     return hand.flatMap((card, index) => {
-      if (card.name === "Dowsing" && card.unplayable && !card.modified) return [];
-      if (card.name === "Slimed" && !card.modified && Number.isInteger(card.baseCost) && card.baseCost >= 0)
+      if (card.name === "Dowsing" && card.unplayable) return [];
+      if (card.name === "Slimed" && Number.isInteger(card.baseCost) && card.baseCost >= 0) {
+        if (card.otherModifiers) throw new Error(`未支援的費用或重複出牌修飾：${card.name}`);
+        if (card.modified) ignoredEffects.add(`${card.name} 的附魔或苦難效果`);
         return [slimed(`t${turn}-c${index}`,card.baseCost)];
+      }
       const isAttack = attack.has(card.name) && card.targetType === 2;
       const isDefend = card.name === "DefendIronclad" && card.targetType === 1;
       const value = isAttack ? card.vars.damage : card.vars.block;
-      if (card.modified || !(isAttack || isDefend) || !Number.isInteger(card.baseCost) ||
+      if (!(isAttack || isDefend) || !Number.isInteger(card.baseCost) ||
           card.baseCost < 0 || !Number.isInteger(value) || value < 0) {
-        throw new Error(`未支援的卡牌或卡牌修飾：${names[card.name] || card.name}`);
+        throw new Error(`沒有可安全套用的基礎牌效果：${names[card.name] || card.name}`);
+      }
+      if (card.otherModifiers) throw new Error(`未支援的費用或重複出牌修飾：${names[card.name]}`);
+      if (card.modified) {
+        for (const effect of [card.enchantment,card.affliction].filter(Boolean))
+          ignoredEffects.add(`${names[card.name]} 的 ${effect}`);
+        if (!card.enchantment && !card.affliction)
+          ignoredEffects.add(`${names[card.name]} 的附魔或苦難效果`);
       }
       return [{
         id: `t${turn}-c${index}`, owner: "p1",
@@ -70,9 +80,11 @@
     if (snapshot.players.length !== 1) throw new Error("即時多回合求解目前限單人。");
     const [player] = snapshot.players;
     if (!player.hand || !player.drawPile || !Number.isInteger(player.energy)) throw new Error("手牌、抽牌堆或能量尚未讀取。");
-    // inertRelics: relics the rank-Yu registry defines with no hooks (no combat effect), listed by the reader.
-    const relic = player.relics.find(name => !safeRelics.has(name) && !(player.inertRelics ?? []).includes(name));
-    if (relic) throw new Error(`目前尚未模擬遺物 ${relic}。`);
+    const ignoredEffects = new Set();
+    // Inert relics have no combat hooks; other unknown relic effects are omitted from this fallback.
+    for (const relic of player.relics)
+      if (!safeRelics.has(relic) && !(player.inertRelics ?? []).includes(relic))
+        ignoredEffects.add(`遺物 ${relic}`);
     if (player.powers.some(p => !["StrengthPower","FreeAttackPower"].includes(p.name) && (p.name !== "ShrinkPower" || p.amount !== -1)))
       throw new Error("玩家身上有尚未模擬的狀態。");
     const opponents = snapshot.enemies.map((enemy, index) => {
@@ -92,8 +104,8 @@
     let shrunk = player.powers.some(p => p.name === "ShrinkPower");
     let stop = "";
     const turns = [];
-    const draw = normalizedPile(player.drawPile,"draw");
-    const discard = Array.isArray(player.discardPile)?normalizedPile(player.discardPile,"discard"):null;
+    const draw = normalizedPile(player.drawPile,"draw",ignoredEffects);
+    const discard = Array.isArray(player.discardPile)?normalizedPile(player.discardPile,"discard",ignoredEffects):null;
     const canEstimate = discard!==null&&!draw.error&&!discard.error;
     const drawBoundary = draw.error || discard?.error || "超過可模擬的洗牌範圍。";
     for (let i = 0; i < horizon; i++) {
@@ -110,7 +122,7 @@
         stop = drawBoundary;
         break;
       }
-      const hand = i === 0 ? { cards: normalizedHand(player.hand) } : { drawCount: drawPerTurn };
+      const hand = i === 0 ? { cards: normalizedHand(player.hand,ignoredEffects) } : { drawCount: drawPerTurn };
       const damageMultiplier = shrunk ? 0.7 : 1;
       const intents = {};
       opponents.forEach((opponent, index) => {
@@ -149,16 +161,17 @@
       if(shuffleAgreement<scenarios.length){
         const immediate=globalThis.solveMultiTurn({...input,turns:input.turns.slice(0,1),discardPile:undefined});
         if(immediate.plans.length){
-          return {...immediate,turns:1,enemies,
+          return {...immediate,turns:1,enemies,ignoredEffects:[...ignoredEffects],
             stop:"模擬的洗牌結果對當前出牌有分歧，先採用只看本回合的路線。"};
         }
       }
     }
-    return { ...result, turns: input.turns.length, stop, enemies, shuffleAgreement };
+    return { ...result, turns: input.turns.length, stop, enemies, shuffleAgreement,
+      ignoredEffects:[...ignoredEffects] };
   }
 
-  function normalizedHand(hand){
-    const result=normalizedPile(hand,"hand");
+  function normalizedHand(hand,ignoredEffects){
+    const result=normalizedPile(hand,"hand",ignoredEffects);
     if(result.error)throw new Error(result.error);
     return result.cards;
   }
