@@ -226,13 +226,58 @@ internal static class LiveBattle
     static readonly HashSet<string> NoPrivateState = ["GIGANTIFICATION_POWER", "VIGOR_POWER", "RUPTURE_POWER",
         "CALAMITY_POWER", "AFTERIMAGE_POWER", "STRANGLE_POWER", "STORM_POWER", "SUBROUTINE_POWER", "OBLIVION_POWER",
         "SERPENT_FORM_POWER", "ROLLING_BOULDER_POWER"];
-    static readonly HashSet<string> ProjectedUnsupported = ["MYTHIC_FORM_POWER", "ENCORE_POWER", "ENNUI_POWER", "YAH_POWER",
-        "JUGGLING_POWER", "DARK_EMBRACE_POWER", "CRIMSON_MANTLE_POWER", "INFERNO_POWER", "SLOW_POWER", "VOID_FORM_POWER",
-        "HARDENED_SHELL_POWER", "THIEVERY_POWER", "HELLRAISER_POWER", "FERAL_POWER", "CHAINS_OF_BINDING_POWER",
-        "WITHERING_PRESENCE_POWER", "POSSESS_STRENGTH_POWER", "POSSESS_SPEED_POWER", "NEMESIS_POWER", "TENDER_POWER",
-        "AUTOMATION_POWER", "PANACHE_POWER", "THE_BOMB_POWER", "TORIC_TOUGHNESS_POWER", "MONOLOGUE_POWER", "ORBIT_POWER",
+    static readonly HashSet<string> ProjectedUnsupported = ["ENCORE_POWER", "THIEVERY_POWER", "CHAINS_OF_BINDING_POWER",
+        "POSSESS_STRENGTH_POWER", "POSSESS_SPEED_POWER", "NEMESIS_POWER", "TENDER_POWER",
+        "AUTOMATION_POWER", "TORIC_TOUGHNESS_POWER", "ORBIT_POWER",
         "PALE_BLUE_DOT_POWER", "NIGHTMARE_POWER", "SOULBOUND_POWER", "CACOPHONY_POWER", "SWIPE_POWER", "DAMPEN_POWER",
         "HEIST_POWER", "SURPRISE_POWER"];
+
+    // BattleProjections.ProjectPower cases whose private state is a DynamicVar or a PowerModel._internalData field.
+    static void ProjectPower(string powerId, ClrObject power, ref Power target)
+    {
+        switch (powerId)
+        {
+            case "LULLABY_POWER": target.Aux0 = Get<bool>(power, "_proccdThisTurn") ? 1 : 0; break;
+            case "SLOTH_POWER": target.Aux0 = Get<int>(power, "_cardsPlayedThisTurn"); break;
+            case "SKITTISH_POWER": target.Aux0 = Get<bool>(power, "HasGainedBlockThisTurn") ? 1 : 0; break;
+            case "SURROUNDED_POWER": target.Aux0 = Get<int>(power, "Facing"); break;
+            case "CURL_UP_POWER": target.Aux0 = 0; target.Aux1 = 0; break;
+            case "MYTHIC_FORM_POWER": target.Aux0 = Var(power, "Upgraded"); break;
+            case "ENNUI_POWER": target.Aux0 = Var(power, "Cards"); break;
+            case "CRIMSON_MANTLE_POWER": case "INFERNO_POWER": target.Aux0 = Var(power, "SelfDamage"); break;
+            case "SLOW_POWER": target.Aux0 = Var(power, "SlowAmount"); break;
+            case "WITHERING_PRESENCE_POWER": target.Aux0 = Var(power, "CardsLeft"); break;
+            case "THE_BOMB_POWER": target.Aux0 = Var(power, "Damage"); break;
+            case "MONOLOGUE_POWER": target.Aux0 = Var(power, "Strength"); target.Aux1 = Var(power, "StrengthApplied"); break;
+            case "PANACHE_POWER": target.Aux0 = Var(power, "CardsLeft"); target.Aux1 = Data(power, "alreadyApplied"); break;
+            case "YAH_POWER": target.Aux0 = Data(power, "triggeredThisTurn"); break;
+            case "JUGGLING_POWER": target.Aux0 = Data(power, "attacksPlayedThisTurn"); break;
+            case "DARK_EMBRACE_POWER": target.Aux0 = Data(power, "etherealCount"); break;
+            case "VOID_FORM_POWER": target.Aux0 = Data(power, "cardsPlayedThisTurn"); break;
+            case "HARDENED_SHELL_POWER": target.Aux0 = Data(power, "damageReceivedThisTurn"); break;
+            case "HELLRAISER_POWER": target.Aux0 = Data(power, "infiniteAutoPlaysThisTurn"); break;
+            case "FERAL_POWER": target.Aux0 = Data(power, "zeroCostAttacksPlayed"); break;
+        }
+    }
+
+    /// <summary>DynamicVars[name].IntValue, i.e. (int)BaseValue.</summary>
+    static int Var(ClrObject model, string name)
+    {
+        ClrObject vars = Obj(model, "_dynamicVars");
+        Require(!vars.IsNull, $"{Id(model)} 沒有動態變數");
+        foreach (ClrValueType entry in HashEntries(Obj(vars, "_vars")))
+            if (entry.ReadObjectField("key").AsString() == name)
+                return (int)Get<decimal>(entry.ReadObjectField("value"), "_baseValue");
+        throw new LiveUnsupportedException($"{Id(model)} 沒有變數 {name}");
+    }
+
+    /// <summary>A field of PowerModel._internalData (BattleProjections' PowerData&lt;T&gt;).</summary>
+    static int Data(ClrObject power, string field)
+    {
+        ClrObject data = Obj(power, "_internalData");
+        Require(!data.IsNull, $"{Id(power)} 的內部資料缺失");
+        return IntOrBool(data, field);
+    }
 
     static void ImportPowers(ref Battle battle, LiveState live, Dictionary<ulong, byte> ownerOf)
     {
@@ -265,14 +310,7 @@ internal static class LiveBattle
                 Amount = Get<int>(power, "_amount"),
                 AmountOnTurnStart = def.UsesAmountOnTurnStart ? Get<int>(power, "_amountOnTurnStart") : 0,
             };
-            switch (powerId)
-            {
-                case "LULLABY_POWER": battle.Powers[index].Aux0 = Get<bool>(power, "_proccdThisTurn") ? 1 : 0; break;
-                case "SLOTH_POWER": battle.Powers[index].Aux0 = Get<int>(power, "_cardsPlayedThisTurn"); break;
-                case "SKITTISH_POWER": battle.Powers[index].Aux0 = Get<bool>(power, "HasGainedBlockThisTurn") ? 1 : 0; break;
-                case "SURROUNDED_POWER": battle.Powers[index].Aux0 = Get<int>(power, "Facing"); break;
-                case "CURL_UP_POWER": battle.Powers[index].Aux0 = 0; battle.Powers[index].Aux1 = 0; break;
-            }
+            ProjectPower(powerId, power, ref battle.Powers[index]);
         }
     }
 

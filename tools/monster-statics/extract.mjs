@@ -1,12 +1,11 @@
 // Extracts constant and ascension-scaled integer getters of monster models from a REA
 // `inspect-managed-members` evidence file (CIL anchors), for monsters the rules catalog lacks.
-// Usage: node extract.mjs <rea-evidence.json> <out.json>
+// Usage: node extract.mjs <out.json> <rea-evidence.json>...  (REA limits metadata size, so batches are merged)
 // Recognized getter bodies:
 //   ldc.i4 K; ret                                   -> { value: K }
 //   ldc.i4 L; ldc.i4 H; ldc.i4 B; call GetValueIfAscension; ret -> { ascension: L, high: H, low: B }
 import fs from "node:fs";
-const [, , input, output] = process.argv;
-const nr = JSON.parse(fs.readFileSync(input, "utf8")).records[0].normalized_result;
+const [, , output, ...inputs] = process.argv;
 const ASCENSION_HELPER = "0x060053e9"; // AscensionHelper.GetValueIfAscension(level, high, low) in v0.113.1 (d09d48e5)
 const ldc = a => {
   if (a.opcode === "ldc.i4" || a.opcode === "ldc.i4.s") return Number(a.operand);
@@ -15,6 +14,8 @@ const ldc = a => {
 };
 const snake = s => s.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toUpperCase();
 const result = {};
+for (const input of inputs) {
+const nr = JSON.parse(fs.readFileSync(input, "utf8")).records[0].normalized_result;
 for (const type of nr.types) {
   const getters = {};
   for (const m of nr.methods.filter(m => m.declaring_type_token === type.token && m.name.startsWith("get_"))) {
@@ -26,6 +27,7 @@ for (const type of nr.types) {
       getters[m.name.slice(4)] = { ascension: n[0], high: n[1], low: n[2] };
   }
   result[snake(type.name)] = getters;
+}
 }
 fs.writeFileSync(output, JSON.stringify(result, null, 1) + "\n");
 console.log(Object.entries(result).map(([k, v]) => `${k}: ${Object.keys(v).length}`).join("\n"));

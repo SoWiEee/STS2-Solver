@@ -30,7 +30,11 @@ public sealed class ScoreTemplates(string normalPath, string act3BossPath)
     }
 }
 
-public sealed record LiveSearchStep(int Turn, string Kind, string Card, string? Target, int Upgrade);
+public sealed record LiveSearchStep(int Turn, string Kind, string Card, string? Target, int Upgrade)
+{
+    /// <summary>Cards selected by the card's choice (e.g. what Brand exhausts), or null.</summary>
+    public string[]? Choices { get; init; }
+}
 
 public sealed record LiveSearchResult(bool Victory, double Score, int ExpandedNodes, int Turns, double Seconds,
     string StopReason, IReadOnlyList<LiveSearchStep> Route, int FinalHp, int MaxHp, IReadOnlyList<string> Notes);
@@ -125,7 +129,8 @@ internal static class LiveSearch
                         : action.Target >= Limits.FirstEnemyOwner && action.Target < Limits.FirstEnemyOwner + state.EnemyCount
                             ? $"{Registry.Monster(state.Enemies[action.Target - Limits.FirstEnemyOwner].MonsterId).NativeId}#{action.Target - Limits.FirstEnemyOwner + 1}"
                             : null;
-                    steps.Add(new LiveSearchStep(turn, "play", Registry.Card(card.Id).NativeId, target, card.Upgrade));
+                    steps.Add(new LiveSearchStep(turn, "play", Registry.Card(card.Id).NativeId, target, card.Upgrade)
+                        { Choices = DescribeChoice(state, action, rules) });
                     break;
                 case PlayerActionKind.EndTurn:
                     steps.Add(new LiveSearchStep(turn, "end", "", null, 0));
@@ -140,6 +145,29 @@ internal static class LiveSearch
         return new LiveSearchResult(result.BestIsVictory, result.BestScore, (int)result.ExpandedNodesTotal,
             result.TurnsSearched, result.Elapsed.TotalSeconds, result.StopReason, steps,
             state.Player.CurrentHp, state.Player.MaxHp, notes);
+    }
+
+    /// <summary>
+    /// Names the cards picked by the action's first choice: replays the action without its
+    /// selections to get the kernel's ChoiceRequest, whose options are card rows; the selection is a
+    /// bit set over them. Generated or index-encoded options are reported as unnamed.
+    /// </summary>
+    static string[]? DescribeChoice(Battle state, PlayerAction action, Rules rules)
+    {
+        if (action.ChoiceCount == 0) return null;
+        Battle probe = state;
+        PlayerAction bare = PlayerAction.PlayCard(action.HandIndex, action.Target);
+        Kernel.Step(ref probe, bare, rules, out ChoiceRequest request);
+        if (request.OptionCount == 0 || request.OptionsAreGenerated || request.IndexSelection) return ["（未命名的選項）"];
+        ulong selection = action.Choices[0];
+        var picked = new List<string>();
+        for (int option = 0; option < request.OptionCount && option < 64; option++)
+            if ((selection & (1UL << option)) != 0)
+            {
+                Card card = probe.Cards[request.Options[option]];
+                picked.Add(Registry.Card(card.Id).NativeId + (card.Upgrade > 0 ? "+" : ""));
+            }
+        return [.. picked];
     }
 
     static void Set(ScoreRules target, string property, object? value) =>

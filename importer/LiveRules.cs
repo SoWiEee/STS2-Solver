@@ -333,15 +333,49 @@ internal static class LiveRules
         if (variants.Count == 0) return LiveMonsterRules.Compile(creature, monster, monsterId, def, notes, catalog, ascension);
         int baseHp = Nullable<int>(creature, "MonsterMaxHpBeforeModification") ?? Get<int>(creature, "_maxHp");
         var matching = variants.Where(v => baseHp >= v.InitialHpMin && baseHp <= v.InitialHpMax).ToList();
-        Require(matching.Count > 0, $"{monsterId} 的生命上限 {baseHp} 不符合任何已知數值變體");
-        MonsterRules chosen = matching[0];
-        if (matching.Select(m => System.Text.Json.JsonSerializer.Serialize(m.Nodes)).Distinct().Count() > 1)
-            notes.Add($"{monsterId} 有 {matching.Count} 個生命範圍相符的變體，招式數值可能不準（待 C4 依進階等級判定）");
+        // Variants differ mainly by ascension numbers, which are re-read below; the HP match only
+        // prefers the variant captured at a comparable ascension.
+        MonsterRules chosen = matching.Count > 0 ? matching[0] : variants[0];
+
+        // The catalog variant supplies the state-machine structure; ascension-dependent numbers are
+        // re-read for this run: attacks from the live intents, static ints from memory or REA.
+        var liveStates = HashEntries(Obj(Obj(monster, "_moveStateMachine"), "States"))
+            .Select(e => e.ReadObjectField("value")).Where(s => Has(s, "StateId"))
+            .ToDictionary(s => Str(s, "StateId")!, StringComparer.Ordinal);
+        var nodes = new MonsterNode[chosen.Nodes.Length];
+        for (int n = 0; n < nodes.Length; n++)
+        {
+            MonsterNode node = chosen.Nodes[n];
+            nodes[n] = node;
+            if (node.Kind != MonsterNodeKind.Move || node.Attacks.Length == 0 || !liveStates.TryGetValue(node.NativeId, out ClrObject move))
+                continue;
+            MonsterAttack[] live;
+            try { live = LiveMonsterRules.LiveAttacks(move, $"{monsterId}.{node.NativeId}", monsterId, catalog, ascension); }
+            catch (LiveUnsupportedException error)
+            {
+                notes.Add($"{error.Message}，沿用目錄值");
+                continue;
+            }
+            Require(live.Length == node.Attacks.Length, $"{monsterId}.{node.NativeId} 的攻擊段數與目錄不符");
+            // Upstream compiles Test Subject's MULTI_CLAW with its base count; the kernel adds the live extra.
+            if (monsterId == "TEST_SUBJECT" && node.NativeId == "MULTI_CLAW_MOVE")
+                live = live.Select((a, i) => a with { Repeats = node.Attacks[i].Repeats }).ToArray();
+            nodes[n] = new MonsterNode
+            {
+                NativeId = node.NativeId, Kind = node.Kind, FollowUp = node.FollowUp,
+                MustPerformOnceBeforeTransitioning = node.MustPerformOnceBeforeTransitioning,
+                Attacks = live, Options = node.Options, ConditionalTarget = node.ConditionalTarget,
+            };
+        }
 
         int[] staticInts = (int[])chosen.StaticInts.Clone();
         for (int i = 0; i < def.StaticIntNames.Count; i++)
-            if (TryMonsterInt(monster, def.StaticIntNames[i], out int value)) staticInts[i] = value;
-            else notes.Add($"{monsterId}.{def.StaticIntNames[i]} 無法從記憶體讀取，沿用目錄值 {staticInts[i]}");
+            if (!TryMonsterInt(monster, def.StaticIntNames[i], out staticInts[i])
+                && !catalog.TryStatic(monsterId, def.StaticIntNames[i], ascension, out staticInts[i]))
+            {
+                staticInts[i] = chosen.StaticInts[i];
+                notes.Add($"{monsterId}.{def.StaticIntNames[i]} 無法從記憶體或 REA 表取得，沿用目錄值 {staticInts[i]}");
+            }
         int[] registers = new int[def.AiRegisterNames.Count];
         for (int i = 0; i < registers.Length; i++)
             Require(TryMonsterInt(monster, def.AiRegisterNames[i], out registers[i]),
@@ -355,14 +389,15 @@ internal static class LiveRules
         return new MonsterRules
         {
             MonsterId = chosen.MonsterId,
-            Nodes = chosen.Nodes,
+            Nodes = nodes,
             InitialNode = chosen.InitialNode,
             PendingInitialMoveNode = chosen.PendingInitialMoveNode,
             InitialMoveLogged = chosen.InitialMoveLogged,
             StunnedNode = chosen.StunnedNode,
             ReviveNode = chosen.ReviveNode,
-            InitialHpMin = chosen.InitialHpMin,
-            InitialHpMax = chosen.InitialHpMax,
+            InitialHpMin = catalog.TryStatic(monsterId, "MinInitialHp", ascension, out int hpMin) ? hpMin : chosen.InitialHpMin,
+            InitialHpMax = catalog.TryStatic(monsterId, "MaxInitialHp", ascension, out int hpMax) ? hpMax
+                : Math.Max(hpMin == 0 ? chosen.InitialHpMin : hpMin, chosen.InitialHpMax),
             StaticInts = staticInts,
             RootPowerAmounts = rootPowers,
             InitialAiRegisters = registers,

@@ -394,7 +394,7 @@
         const turns=[];
         for(const step of plan.route){
           (turns[step.turn-1]??=[]);
-          if(step.kind==="play")turns[step.turn-1].push(`${name(step.card)}${step.upgrade?"+":""}${step.target?`（目標：${name(step.target)}）`:""}`);
+          if(step.kind==="play")turns[step.turn-1].push(`${name(step.card)}${step.upgrade?"+":""}${step.target?`（目標：${name(step.target)}）`:""}${step.choices?.length?`（選擇：${step.choices.map(name).join("、")}）`:""}`);
         }
         output.innerHTML=turns.map((plays,index)=>`<article class="row-card">
           <strong>${index===0?"本回合":`第 ${index+1} 回合（預測）`}</strong>

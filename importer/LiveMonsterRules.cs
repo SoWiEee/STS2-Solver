@@ -34,7 +34,7 @@ internal static class LiveMonsterRules
             string kind = TypeName(state);
             nodes[i] = kind switch
             {
-                "MoveState" => CompileMove(state, ids[i], index, monsterId),
+                "MoveState" => CompileMove(state, ids[i], index, monsterId, catalog, ascension),
                 "RandomBranchState" => new MonsterNode
                 {
                     NativeId = ids[i],
@@ -100,10 +100,28 @@ internal static class LiveMonsterRules
         };
     }
 
-    static MonsterNode CompileMove(ClrObject move, string id, Dictionary<string, int> index, string monsterId)
+    static MonsterNode CompileMove(ClrObject move, string id, Dictionary<string, int> index, string monsterId,
+        RulesCatalog catalog, int ascension)
     {
         ClrObject followState = Obj(move, "FollowUpState");
         string? followUp = followState.IsNull ? Str(move, "FollowUpStateId") : StateId(followState);
+        return new MonsterNode
+        {
+            NativeId = id,
+            Kind = MonsterNodeKind.Move,
+            FollowUp = followUp != null && index.TryGetValue(followUp, out int target) ? target : -1,
+            MustPerformOnceBeforeTransitioning = Get<bool>(move, "MustPerformOnceBeforeTransitioning"),
+            Attacks = LiveAttacks(move, $"{monsterId}.{id}", monsterId, catalog, ascension),
+        };
+    }
+
+    /// <summary>
+    /// The move's attack intents as (damage, repeats), the values upstream's CaptureAttacks gets by
+    /// invoking DamageCalc and Repeats. A delegate is resolved when it closes over a constant, or
+    /// when it is bound to one of the monster's integer getters listed in the REA statics table.
+    /// </summary>
+    internal static MonsterAttack[] LiveAttacks(ClrObject move, string what, string monsterId, RulesCatalog catalog, int ascension)
+    {
         var attacks = new List<MonsterAttack>();
         ClrObject intents = Obj(move, "Intents");
         IEnumerable<ClrObject> items = intents.Type!.IsArray
@@ -114,23 +132,32 @@ internal static class LiveMonsterRules
         foreach (ClrObject intent in items)
         {
             if (!Is(intent, "MegaCrit.Sts2.Core.MonsterMoves.Intents.AttackIntent")) continue;
-            int damage = (int)ConstantNumber(Obj(intent, "DamageCalc"), $"{monsterId}.{id} 的攻擊傷害");
+            int damage = Resolve(Obj(intent, "DamageCalc"), $"{what} 的攻擊傷害", monsterId, catalog, ascension);
             int repeats = TypeName(intent) switch
             {
                 "SingleAttackIntent" => 1,
-                "MultiAttackIntent" when Obj(intent, "_repeatCalc").IsNull => Get<int>(intent, "_repeat"),
-                _ => throw new LiveUnsupportedException($"{monsterId}.{id} 的攻擊次數需要在遊戲內求值"),
+                "MultiAttackIntent" => Obj(intent, "_repeatCalc").IsNull ? Get<int>(intent, "_repeat")
+                    : Resolve(Obj(intent, "_repeatCalc"), $"{what} 的攻擊次數", monsterId, catalog, ascension),
+                _ => throw new LiveUnsupportedException($"{what} 的攻擊意圖 {TypeName(intent)} 暫不支援"),
             };
             attacks.Add(new MonsterAttack(Math.Max(0, damage), Math.Max(1, repeats)));
         }
-        return new MonsterNode
-        {
-            NativeId = id,
-            Kind = MonsterNodeKind.Move,
-            FollowUp = followUp != null && index.TryGetValue(followUp, out int target) ? target : -1,
-            MustPerformOnceBeforeTransitioning = Get<bool>(move, "MustPerformOnceBeforeTransitioning"),
-            Attacks = [.. attacks],
-        };
+        return [.. attacks];
+    }
+
+    static int Resolve(ClrObject lambda, string what, string monsterId, RulesCatalog catalog, int ascension)
+    {
+        Require(!lambda.IsNull, $"{what} 沒有計算式");
+        ClrObject target = lambda.ReadObjectField("_target");
+        if (target.Type?.Name?.Contains("DisplayClass") == true) return (int)ConstantNumber(lambda, what);
+        ClrRuntime runtime = lambda.Type!.Heap.Runtime;
+        ClrMethod? method = runtime.GetMethodByInstructionPointer(lambda.ReadField<ulong>("_methodPtr"))
+            ?? runtime.GetMethodByInstructionPointer(lambda.ReadField<ulong>("_methodPtrAux"));
+        string? name = method?.Name;
+        Require(name is not null && name.StartsWith("get_", StringComparison.Ordinal)
+            && catalog.TryStatic(monsterId, name[4..], ascension, out _), $"{what} 由遊戲內的計算式（{name ?? "未知"}）決定，暫不支援");
+        catalog.TryStatic(monsterId, name![4..], ascension, out int value);
+        return value;
     }
 
     static string StateId(ClrObject state) =>
