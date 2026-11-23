@@ -27,7 +27,7 @@ app.MapGet("/multi-turn.js", () => Results.File(Path.Combine(root, "multi-turn.j
 app.MapGet("/live-policy.js", () => Results.File(Path.Combine(root, "live-policy.js"), "text/javascript; charset=utf-8"));
 app.MapGet("/map-policy.js", () => Results.File(Path.Combine(root, "map-policy.js"), "text/javascript; charset=utf-8"));
 app.MapGet("/reward-policy.js", () => Results.File(Path.Combine(root, "reward-policy.js"), "text/javascript; charset=utf-8"));
-foreach (string doc in new[] { "game", "policy" })
+foreach (string doc in new[] { "game", "policy", "live-import", "rules-catalog" })
     app.MapGet($"/docs/{doc}.md", () => Results.File(Path.Combine(root, "docs", doc + ".md"), "text/plain; charset=utf-8"));
 IResult ReadSnapshot(HttpContext request, Func<object> read)
 {
@@ -46,6 +46,7 @@ app.MapGet("/capture", (HttpContext request) => ReadSnapshot(request, GameReader
 app.MapGet("/map", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureMap));
 app.MapGet("/rewards", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureRewards));
 app.MapGet("/import", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureImport));
+app.MapGet("/solve", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureSolve));
 app.Run();
 
 static class GameReader
@@ -59,6 +60,14 @@ static class GameReader
 
     static readonly Lazy<Sts2Solver.LiveImport.RulesCatalog> Catalog = new(() =>
         new Sts2Solver.LiveImport.RulesCatalog(Path.Combine(AppContext.BaseDirectory, "data", "rules-catalog.br")));
+
+    static readonly Sts2Solver.LiveImport.ScoreTemplates Templates = new(
+        Path.Combine(AppContext.BaseDirectory, "data", "score-template-normal.br"),
+        Path.Combine(AppContext.BaseDirectory, "data", "score-template-act3-boss.br"));
+
+    // rank-Yu beam search over the whole remaining fight from the current root (~10 s).
+    public static object CaptureSolve() => WithRuntime(runtime =>
+        Sts2Solver.LiveImport.LiveImporter.Solve(runtime, Catalog.Value, Templates, TimeSpan.FromSeconds(10)));
 
     // rank-Yu solver import of the current root (Battle + Rules), with the kernel's end-turn prediction.
     public static object CaptureImport() => WithRuntime(runtime =>

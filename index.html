@@ -39,6 +39,17 @@
         <p class="row-caption">請依最新建議在遊戲中出牌。<a href="docs/policy.md">支援範圍與搜尋政策</a></p>
       </div>
     </section>
+    <section class="panel" id="solvePanel" hidden style="margin-top:16px" aria-labelledby="solveTitle">
+      <div class="panel-head">
+        <div><h2 class="panel-title" id="solveTitle">整場戰鬥搜尋</h2><p class="panel-sub">rank-Yu 求解器：涵蓋 90 種敵人，搜尋到戰鬥結束（約 10 秒）</p></div>
+        <button type="button" class="head-action" id="solveRefresh">搜尋整場戰鬥</button>
+      </div>
+      <div class="panel-body">
+        <p id="solveStatus" role="status">在可出牌時按下搜尋。遇到尚未支援的局面會列出原因。</p>
+        <div id="solveResults" class="rows"></div>
+        <p class="row-caption"><a href="docs/live-import.md">資料來源與支援範圍</a></p>
+      </div>
+    </section>
     <section class="panel" id="mapPanel" hidden style="margin-top:16px" aria-labelledby="mapTitle">
       <div class="panel-head">
         <div><h2 class="panel-title" id="mapTitle">章節路線建議</h2><p class="panel-sub">比較從目前房間走到章節 Boss 的路線</p></div>
@@ -301,6 +312,7 @@
     const livePage=location.protocol!=="file:";
     $("#livePanel").hidden=!livePage;
     $("#mapPanel").hidden=!livePage;
+    $("#solvePanel").hidden=!livePage;
     $("#rewardPanel").hidden=!livePage;
     $("#manualApp").hidden=livePage;
     let autoEnabled=livePage, liveBusy=false, previousState="";
@@ -369,6 +381,33 @@
       }
     }
     $("#mapRefresh").addEventListener("click",refreshMap);
+    $("#solveRefresh").addEventListener("click",async()=>{
+      const button=$("#solveRefresh"),status=$("#solveStatus"),output=$("#solveResults");
+      button.disabled=true;
+      output.replaceChildren();
+      status.textContent="正在搜尋整場戰鬥…";
+      const name=id=>id.toLowerCase().replace(/_/g," ");
+      try {
+        const response=await fetch("/solve",{headers:{"X-STS2-Capture":"1"}});
+        const plan=await response.json();
+        if(!response.ok)throw new Error(`未支援：${plan.error||"搜尋失敗。"}`);
+        const turns=[];
+        for(const step of plan.route){
+          (turns[step.turn-1]??=[]);
+          if(step.kind==="play")turns[step.turn-1].push(`${name(step.card)}${step.upgrade?"+":""}${step.target?`（目標：${name(step.target)}）`:""}`);
+        }
+        output.innerHTML=turns.map((plays,index)=>`<article class="row-card">
+          <strong>${index===0?"本回合":`第 ${index+1} 回合（預測）`}</strong>
+          <p>${plays.length?plays.map(esc).join(" → "):"不出牌"}${index<turns.length-1||!plan.victory?" → 結束回合":""}</p>
+        </article>`).join("");
+        status.textContent=`${plan.victory?"找到勝利路線":"未找到勝利路線（顯示最高分路線）"} · 預測戰鬥結束時 ${plan.finalHp}/${plan.maxHp} HP · ${plan.seconds.toFixed(1)} 秒、${plan.expandedNodes} 個節點`
+          +(plan.notes.length?` · ${[...new Set(plan.notes)].join("；")}`:"");
+      } catch(error) {
+        status.textContent=error.message;
+      } finally {
+        button.disabled=false;
+      }
+    });
     $("#rewardRefresh").addEventListener("click",async()=>{
       const button=$("#rewardRefresh"),status=$("#rewardStatus"),output=$("#rewardResults");
       button.disabled=true;

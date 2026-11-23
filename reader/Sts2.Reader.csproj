@@ -20,6 +20,6 @@
     <Content Include="../map-policy.js" Link="map-policy.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../reward-policy.js" Link="reward-policy.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../docs/*.md" Link="docs/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="data/rules-catalog.br" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="data/*.br" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

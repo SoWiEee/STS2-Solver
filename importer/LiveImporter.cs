@@ -25,6 +25,14 @@ public static class LiveImporter
         return new LiveImportResult(battle, rules, notes);
     }
 
+    /// <summary>Imports the current root and searches it with the rank-Yu beam solver.</summary>
+    public static LiveSearchResult Solve(ClrRuntime runtime, RulesCatalog catalog, ScoreTemplates templates, TimeSpan budget)
+    {
+        LiveImportResult import = Import(runtime, catalog);
+        try { return LiveSearch.Solve(runtime, import, templates, budget, CancellationToken.None); }
+        catch (UnsupportedException error) { throw new LiveUnsupportedException(error.Message); }
+    }
+
     /// <summary>Human-readable dump plus the kernel's prediction for ending the turn now.</summary>
     public static object Describe(LiveImportResult result)
     {

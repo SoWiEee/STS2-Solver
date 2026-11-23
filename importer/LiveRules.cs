@@ -290,6 +290,12 @@ internal static class LiveRules
         ClrObject withSlots = Obj(encounter, "_monstersWithSlots");
         if (withSlots.IsNull) return [];
         var slots = new List<string>();
+        if (Has(withSlots, "_item")) // <>z__ReadOnlySingleElementList<T>: one-monster encounters
+        {
+            ClrObject only = Struct(withSlots, "_item").ReadObjectField("Item2");
+            if (!only.IsNull && only.AsString() is { Length: > 0 } single) slots.Add(single);
+            return [.. slots];
+        }
         // A plain array, a List<T> (_items/_size), or the compiler's <>z__ReadOnlyArray<T> (_items only).
         ClrArray array = withSlots.Type!.IsArray ? withSlots.AsArray() : Obj(withSlots, "_items").AsArray();
         int count = Has(withSlots, "_size") ? Get<int>(withSlots, "_size") : array.Length;
