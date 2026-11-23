@@ -130,6 +130,8 @@ static class GameReader
                         maxEnergy = Field<int>(pair.player, Backing("MaxEnergy")),
                         powers = ReadPowers(pair.creature),
                         relics = List(Object(pair.player, "_relics"), 256).Select(ShortName).ToArray(),
+                        // Relics the rank-Yu registry defines with no hooks at all: no combat effect.
+                        inertRelics = List(Object(pair.player, "_relics"), 256).Where(IsInertRelic).Select(ShortName).ToArray(),
                         potions = List(Object(pair.player, "_potionSlots"), 32, allowEmpty: true).Select(ShortName).ToArray(),
                         drawPile = state.IsNull ? null : ReadPile(Object(state, Backing("DrawPile")), 256),
                         discardPile = state.IsNull ? null : ReadPile(Object(state, Backing("DiscardPile")), 256),
@@ -413,6 +415,14 @@ static class GameReader
             if (type.Name == "MegaCrit.Sts2.Core.MonsterMoves.Intents.AttackIntent")
                 return true;
         return false;
+    }
+
+    static bool IsInertRelic(ClrObject relic)
+    {
+        string? id = Object(relic, Backing("Id")).ReadStringField(Backing("Entry"));
+        if (id == null || !Sts2Solver.Simulation.Combat.Registry.TryRelic(id, out ushort rid)) return false;
+        var def = Sts2Solver.Simulation.Combat.Registry.Relic(rid);
+        return def.Hooks == 0 && def.HooksExt == 0;
     }
 
     static string ShortName(ClrObject obj) => obj.Type?.Name?.Split('.').Last() ?? "Unknown";

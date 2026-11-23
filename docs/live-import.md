@@ -21,7 +21,7 @@
 
 ## 目前明確拒絕的局面
 
-匯入失敗時回傳原因，不給出半成品建議：多人、非出牌階段、非標準模式、恐懼領域、目錄外敵人中需要遊戲內求值的部分（條件分支、由 getter 計算的攻擊傷害或次數、非常數的隨機權重）、附魔或苦難卡、充能球、召喚物、愚者機制、小數傷害卡、歷史課，以及上游有私有狀態投影但尚未移植的能力與遺物（清單見 `importer/LiveBattle.cs`）。
+匯入失敗時回傳原因，不給出半成品建議：多人、非出牌階段、非標準模式、恐懼領域、目錄外敵人中需要遊戲內求值的部分（條件分支、由 getter 計算的攻擊傷害或次數、非常數的隨機權重）、附魔或苦難卡、充能球、召喚物、愚者機制、小數傷害卡，以及上游有私有狀態投影但尚未移植的能力（清單見 `importer/LiveBattle.cs`）。上游有投影的遺物已全部移植，包括 Booming Conch、Tormentous Collar、Philosopher's Stone、Music Box、Pael's Legion、Emotion Chip、Velvet Choker、Fur Coat、Meat on the Bone 與 History Course；除 Meat on the Bone 外尚未實機遇到。
 
 ## 召喚物
 
@@ -33,7 +33,7 @@
 
 - 評分表：卡牌、能力、藥水的評分項目與根無關，取自上游 Golden 的凍結請求（`reader/data/score-template-*.br`，一般戰與第三幕 Boss 各一份）。根相關欄位依上游 `ScoreCompiler` 用即時狀態重算：生命上限、敵人數、戰後回血遺物、Boss 生命策略（預設「推進優先」：第一、二章 Boss 計入章節回血，終局 Boss 只看存活）與四個排名基線。
 - 未使用上游的剪枝下界（只影響速度）；搜尋不使用藥水；束寬 300、時限 10 秒。
-- 第三幕雙 Boss 的第二個 Boss 尚未區分，帶骨肉遺物會拒絕。
+- 第三幕雙 Boss 的第二個 Boss 尚未區分。
 
 ## 驗證
 

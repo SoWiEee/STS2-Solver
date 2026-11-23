@@ -137,7 +137,7 @@ internal static class LiveRules
             {
                 draft.HasHistoryCourse |= relicId == "HISTORY_COURSE";
                 draft.HasPaelsLegion |= def.IsPaelsLegion;
-                Require(relicId != "FUR_COAT", "毛皮大衣遺物暫不支援");
+                if (relicId == "FUR_COAT") draft.FurCoatSpawnHpOne |= FurCoatMarksCurrentRoom(relic, live);
             }
             rosterRows.Add(new Relic { Id = rid, Flags = melted ? RelicFlags.Melted : RelicFlags.None });
         }
@@ -192,6 +192,19 @@ internal static class LiveRules
     /// 0/current/next upgrade, then everything the root's cards, powers, relics, potions and enemies
     /// declare they can generate, transitively.
     /// </summary>
+    /// <summary>FurCoat.GetMarkedCoords() contains the current map coordinate (last visited coord).</summary>
+    static bool FurCoatMarksCurrentRoom(ClrObject relic, LiveState live)
+    {
+        if (!Get<bool>(relic, "FurCoatCoordsSet")) return false;
+        var visited = StructList(Obj(live.Run, "_visitedMapCoords"));
+        if (visited.Count == 0) return false;
+        int row = visited[^1].ReadField<int>("row"), col = visited[^1].ReadField<int>("col");
+        ClrArray cols = Obj(relic, "FurCoatCoordCols").AsArray(), rows = Obj(relic, "FurCoatCoordRows").AsArray();
+        for (int i = 0; i < cols.Length && i < rows.Length; i++)
+            if (cols.GetValue<int>(i) == col && rows.GetValue<int>(i) == row) return true;
+        return false;
+    }
+
     /// <summary>RulesCompiler.SpawnClosure: summonable types, transitively, in first-seen BFS order.</summary>
     static List<ushort> SpawnClosure(LiveState live)
     {

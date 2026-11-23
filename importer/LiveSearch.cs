@@ -65,7 +65,14 @@ internal static class LiveSearch
         foreach (ClrObject relic in live.Relics())
             if (!Get<bool>(relic, "_isMelted") && Id(relic) is "BURNING_BLOOD" or "BLACK_BLOOD")
                 heal += LiveVar(relic, "Heal");
-        Require(!live.Relics().Any(r => Id(r) == "MEAT_ON_THE_BONE"), "帶骨肉遺物的戰後回復暫不支援");
+        int woundedHeal = 0, woundedPercent = 0;
+        foreach (ClrObject relic in live.Relics())
+            if (!Get<bool>(relic, "_isMelted") && Id(relic) == "MEAT_ON_THE_BONE")
+            {
+                woundedHeal += LiveVar(relic, "Heal");
+                woundedPercent = Math.Max(woundedPercent, LiveVar(relic, "HpThreshold"));
+            }
+        var healProfile = new PostCombatRelicHealProfile(heal, woundedHeal, woundedPercent);
 
         ScoreRules Build(int persistent, int suppression, int weak, int retained)
         {
@@ -73,7 +80,7 @@ internal static class LiveSearch
                 .Invoke(source, null)!;
             Set(copy, nameof(ScoreRules.GrowthBudgets), default(GrowthValues));
             Set(copy, nameof(ScoreRules.RequiredGrowthRewards), default(GrowthValues));
-            Set(copy, nameof(ScoreRules.PostCombatRelicHeal), new PostCombatRelicHealProfile(heal, 0, 0));
+            Set(copy, nameof(ScoreRules.PostCombatRelicHeal), healProfile);
             Set(copy, nameof(ScoreRules.BossHpRelief), relief);
             Set(copy, nameof(ScoreRules.InitialPlayerMaxHp), root.Player.MaxHp);
             Set(copy, nameof(ScoreRules.IsActEndingBoss), relief != BossHpRelief.None);
@@ -105,7 +112,7 @@ internal static class LiveSearch
             MaxTurns = 64,
             SoftTimeBudget = budget,
             SearchThreads = Math.Max(1, Environment.ProcessorCount - 1),
-            Ordering = new RouteOrdering(root.Player.CurrentHp, relief, new PostCombatRelicHealProfile(heal, 0, 0)),
+            Ordering = new RouteOrdering(root.Player.CurrentHp, relief, healProfile),
             InitialPlayerTurn = root.PlayerTurn,
             Potions = PotionPolicy.Disabled,
             SearchMemoryBudgetBytes = 3L << 30,

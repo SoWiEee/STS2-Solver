@@ -41,11 +41,10 @@ internal static class LiveBattle
         ImportEnemies(ref battle, live, rules, history);
         ImportPowers(ref battle, live, ownerOf);
         ImportCards(ref battle, live, rules, history);
-        ImportRelics(ref battle, live, rules);
+        ImportRelics(ref battle, live, rules, history);
         ImportPotions(ref battle, live);
         ImportOrbs(ref battle, live);
         Require(!rules.HasDecimalCardVars, "小數傷害變數的卡牌暫不支援");
-        Require(!rules.HasHistoryCourse, "歷史課遺物暫不支援");
         return battle;
     }
 
@@ -326,6 +325,7 @@ internal static class LiveBattle
     {
         Pile[] targets = [Pile.Hand, Pile.Draw, Pile.Discard, Pile.Exhaust, Pile.Play];
         int p = 0;
+        var rowOf = new Dictionary<ulong, int>();
         foreach (ClrObject pile in live.Piles())
         {
             Pile target = targets[p++];
@@ -336,8 +336,18 @@ internal static class LiveBattle
                 Require(id is not ("SOVEREIGN_BLADE" or "THE_SHOT" or "MAD_SCIENCE"), $"{id} 的內部狀態尚未移植");
                 if (id == "FETCH" && history.FinishedThisTurnContains(card.Address)) value.Private |= FetchPlayedBit;
                 if (ReturnsToHandCards.Contains(id) && history.FinishedThisTurnContains(card.Address)) value.ReturnToHandNextTurn = true;
+                rowOf[card.Address] = battle.CardCount;
                 Piles.Append(ref battle, target, value);
             }
+        }
+        // BattleImporter.ImportHistoryCourseCard at a Play root: this turn's last finished non-dupe attack.
+        if (rules.HasHistoryCourse && history.HistoryCourseAttack() is ulong attack)
+        {
+            // Piles are appended in pile order, so the recorded row is final (upstream records CardCount the same way).
+            Require(rowOf.TryGetValue(attack, out int row), "歷史課記錄的攻擊牌不在牌堆中");
+            battle.Cards[row].HistoryCourseRole = 1;
+            battle.HistoryCourseCard = Kernel.HistoryCourseValue(battle.Cards[row]);
+            battle.Flags |= BattleFlags.HistoryCourseCardPresent;
         }
     }
 
@@ -462,10 +472,7 @@ internal static class LiveBattle
         ["ORICHALCUM"] = (null, null),
         ["FAKE_ORICHALCUM"] = (null, null),
     };
-    static readonly HashSet<string> RelicUnsupported = ["BOOMING_CONCH", "TORMENTOUS_COLLAR", "PHILOSOPHERS_STONE",
-        "MUSIC_BOX", "PAELS_LEGION", "EMOTION_CHIP", "VELVET_CHOKER"];
-
-    static void ImportRelics(ref Battle battle, LiveState live, Rules rules)
+    static void ImportRelics(ref Battle battle, LiveState live, Rules rules, LiveHistory history)
     {
         var relics = live.Relics();
         Require(relics.Count <= Limits.RelicRoster, $"遺物數 {relics.Count}");
@@ -475,8 +482,28 @@ internal static class LiveBattle
             ClrObject relic = relics[index];
             string relicId = Id(relic);
             Require(Registry.TryRelic(relicId, out ushort id), $"未支援的遺物 {relicId}");
-            Require(!RelicUnsupported.Contains(relicId), $"遺物 {relicId} 的內部狀態尚未移植");
             rows[index] = new Relic { Id = id, Flags = Get<bool>(relic, "_isMelted") ? RelicFlags.Melted : RelicFlags.None };
+            switch (relicId)
+            {
+                case "BOOMING_CONCH" or "TORMENTOUS_COLLAR":
+                    // RoomType == Elite; elite encounter ids end in _ELITE.
+                    ClrObject encounter = Obj(live.Combat, "_encounter");
+                    rows[index].Aux = !encounter.IsNull && Id(encounter).EndsWith("_ELITE", StringComparison.Ordinal) ? 1 : 0;
+                    break;
+                case "PHILOSOPHERS_STONE": rows[index].Aux = Var(relic, "StrengthPower"); break;
+                case "MUSIC_BOX": if (Get<bool>(relic, "_wasUsedThisTurn")) rows[index].Counter = 1; break;
+                case "VELVET_CHOKER": rows[index].Counter = history.CardPlayStartsThisTurn; break;
+                case "EMOTION_CHIP":
+                    (bool last, bool current) = history.EmotionChipDamage();
+                    (rows[index].Counter, rows[index].Aux) = (last ? 1 : 0, current ? 1 : 0);
+                    break;
+                case "PAELS_LEGION":
+                    ClrObject play = Obj(relic, "_affectedCardPlay");
+                    Require(play.IsNull || history.WasCardPlayFinished(play.Address), "PaelsLegion 記錄的出牌尚未完成");
+                    rows[index].Counter = Get<int>(relic, "_cooldown");
+                    if (Get<bool>(relic, "_triggeredBlockLastTurn")) rows[index].Flags |= RelicFlags.UsedThisCombat;
+                    break;
+            }
             if (RelicFields.TryGetValue(relicId, out var fields))
             {
                 if (fields.Counter != null) rows[index].Counter = IntOrBool(relic, fields.Counter);

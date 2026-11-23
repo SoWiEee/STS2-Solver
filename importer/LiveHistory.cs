@@ -92,4 +92,32 @@ internal sealed class LiveHistory
     public int CardsGenerated => Of("CardGeneratedEntry").Count(e => Obj(e.Obj, "Creator").Address == _live.Player.Address);
 
     public bool FinishedThisTurnContains(ulong card) => FinishedThisTurn.Any(p => Obj(p, "Card").Address == card);
+
+    public bool WasCardPlayFinished(ulong play) => Of("CardPlayFinishedEntry").Any(e => Play(e).Address == play);
+
+    /// <summary>NativeHistory.HistoryCourseAttack at a Play root: this turn's last finished non-dupe attack.</summary>
+    public ulong? HistoryCourseAttack()
+    {
+        ClrObject last = FinishedThisTurn.LastOrDefault(p => TypeOf(p) == CardType.Attack && !Get<bool>(Obj(p, "Card"), "_isDupe"));
+        return last.IsNull ? null : Obj(last, "Card").Address;
+    }
+
+    /// <summary>NativeHistory.EmotionChipDamage: unblocked-or-partial damage to the player last / this player turn.</summary>
+    public (bool LastPlayerTurn, bool ThisTurn) EmotionChipDamage()
+    {
+        bool last = false, current = false;
+        foreach (Entry e in Of("DamageReceivedEntry"))
+        {
+            ClrObject result = Obj(e.Obj, "Result");
+            if (Obj(result, "Receiver").Address != _player || Get<bool>(result, "WasFullyBlocked")) continue;
+            foreach (ClrValueType turn in HashEntries(Obj(e.Obj, "_playerTurnNumbers")))
+            {
+                if (turn.ReadField<ulong>("key") != _live.PlayerNetId) continue;
+                int n = turn.ReadField<int>("value");
+                last |= n == _live.TurnNumber - 1;
+                current |= n == _live.TurnNumber;
+            }
+        }
+        return (last, current);
+    }
 }
