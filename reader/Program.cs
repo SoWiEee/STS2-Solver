@@ -26,6 +26,7 @@ app.MapGet("/", () => Results.File(Path.Combine(root, "index.html"), "text/html;
 app.MapGet("/multi-turn.js", () => Results.File(Path.Combine(root, "multi-turn.js"), "text/javascript; charset=utf-8"));
 app.MapGet("/live-policy.js", () => Results.File(Path.Combine(root, "live-policy.js"), "text/javascript; charset=utf-8"));
 app.MapGet("/map-policy.js", () => Results.File(Path.Combine(root, "map-policy.js"), "text/javascript; charset=utf-8"));
+app.MapGet("/reward-policy.js", () => Results.File(Path.Combine(root, "reward-policy.js"), "text/javascript; charset=utf-8"));
 foreach (string doc in new[] { "game", "policy" })
     app.MapGet($"/docs/{doc}.md", () => Results.File(Path.Combine(root, "docs", doc + ".md"), "text/plain; charset=utf-8"));
 IResult ReadSnapshot(HttpContext request, Func<object> read)
@@ -43,6 +44,7 @@ IResult ReadSnapshot(HttpContext request, Func<object> read)
 }
 app.MapGet("/capture", (HttpContext request) => ReadSnapshot(request, GameReader.Capture));
 app.MapGet("/map", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureMap));
+app.MapGet("/rewards", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureRewards));
 app.Run();
 
 static class GameReader
@@ -52,6 +54,7 @@ static class GameReader
 
     public static object Capture() => WithRuntime(ReadCombat);
     public static object CaptureMap() => WithRuntime(ReadMap);
+    public static object CaptureRewards() => WithRuntime(ReadRewards);
 
     static object WithRuntime(Func<ClrRuntime, object> read)
     {
@@ -112,6 +115,7 @@ static class GameReader
                         relics = List(Object(pair.player, "_relics"), 256).Select(ShortName).ToArray(),
                         potions = List(Object(pair.player, "_potionSlots"), 32, allowEmpty: true).Select(ShortName).ToArray(),
                         drawPile = state.IsNull ? null : ReadPile(Object(state, Backing("DrawPile")), 256),
+                        discardPile = state.IsNull ? null : ReadPile(Object(state, Backing("DiscardPile")), 256),
                         hand = hand.IsNull ? null : List(Object(hand, "_cards"), 10).Select(ReadCard).ToArray()
                     };
                 }).ToArray();
@@ -137,6 +141,96 @@ static class GameReader
             var run = Object(combat, Backing("RunState"));
             return new { schemaVersion = 1, version = Version, capturedAt = DateTimeOffset.Now,
                 round = Field<int>(combat, Backing("RoundNumber")), ascension = Field<int>(run, Backing("AscensionLevel")), players, enemies };
+    }
+
+    static object ReadRewards(ClrRuntime runtime)
+    {
+        var runManager = FindManager(runtime, "MegaCrit.Sts2.Core.Runs.RunManager");
+        var run = Object(runManager, Backing("State"));
+        Require(!run.IsNull, "請先開始遊戲。");
+        var players = List(Object(run, "_players"), 4).ToArray();
+        Require(players.Length == 1, "獎勵建議目前限單人。");
+        var player = players[0];
+        var creature = Object(player, Backing("Creature"));
+        var stack = FindManager(runtime, "MegaCrit.Sts2.Core.Nodes.Screens.Overlays.NOverlayStack");
+        var overlays = List(Object(stack, "_overlays"), 32).ToArray();
+        var top = overlays.LastOrDefault();
+        var options = new List<RewardOption>();
+        if (ShortName(top) == "NCardRewardSelectionScreen")
+        {
+            var active = runtime.Heap.EnumerateObjects().FirstOrDefault(obj =>
+                obj.Type?.Name == "MegaCrit.Sts2.Core.Rewards.CardReward" &&
+                obj.TryReadObjectField("_currentlyShownScreen", out var screen) && screen.Address == top.Address);
+            Require(!active.IsNull, "找不到目前開啟的戰鬥卡牌獎勵。");
+            foreach (var choice in List(Object(active, "_cards"), 32))
+            {
+                var card = Object(choice, "_modifiedCard");
+                options.Add(ReadRewardCard(card.IsNull ? Object(choice, "originalCard") : card));
+            }
+            if (Field<bool>(active, Backing("CanSkip"))) options.Add(new RewardOption("略過", "skip"));
+        }
+        else if (ShortName(top) == "NRewardsScreen")
+        {
+            var set = Object(top, "_rewardsSet");
+            Require(!set.IsNull, "獎勵尚未生成。");
+            foreach (var reward in List(Object(set, Backing("Rewards")), 32))
+            {
+                if (ShortName(reward) != "RelicReward" || Field<bool>(reward, "_wasTaken")) continue;
+                var relic = Object(reward, "_relic");
+                if (relic.IsNull) continue;
+                options.Add(ReadRelicReward(relic));
+            }
+        }
+        else if (top.IsNull)
+        {
+            var synchronizer = Object(runManager, Backing("TreasureRoomRelicSynchronizer"));
+            if (!synchronizer.IsNull)
+            {
+                var relics = Object(synchronizer, "_currentRelics");
+                if (!relics.IsNull && runtime.Heap.EnumerateObjects().Any(obj =>
+                    obj.Type?.Name == "MegaCrit.Sts2.Core.Nodes.Rooms.NTreasureRoom" &&
+                    Field<bool>(obj, "_isRelicCollectionOpen") &&
+                    Object(obj, "_runState").Address == run.Address))
+                {
+                    options.AddRange(List(relics, 16).Select(ReadRelicReward));
+                }
+            }
+        }
+        Require(options.Count > 0, "未讀到可評估的獎勵。請開啟卡牌選擇、戰鬥獎勵或寶箱的遺物畫面。");
+        return new
+        {
+            deck = List(Object(Object(player, Backing("Deck")), "_cards"), 256).Select(ReadRewardCard).ToArray(),
+            options,
+            act = Field<int>(run, "_currentActIndex") + 1,
+            hp = Field<int>(creature, "_currentHp"),
+            maxHp = Field<int>(creature, "_maxHp")
+        };
+    }
+
+    sealed record RewardOption(string Name, string Kind, int? Cost = null, decimal? Damage = null,
+        decimal? Block = null, decimal? Draw = null, decimal? CombatStartHeal = null);
+
+    static RewardOption ReadRelicReward(ClrObject relic)
+    {
+        string name = ShortName(relic);
+        return name switch
+        {
+            "Anchor" => new RewardOption(name, "relic", Block: 10),
+            "BagOfPreparation" => new RewardOption(name, "relic", Draw: 2),
+            "BloodVial" => new RewardOption(name, "relic", CombatStartHeal: 2),
+            _ => new RewardOption(name, "relic")
+        };
+    }
+
+    static RewardOption ReadRewardCard(ClrObject card)
+    {
+        var cost = Object(card, "_energyCost");
+        var hints = ReadCardHints(card);
+        return new RewardOption(ShortName(card), "card",
+            cost.IsNull || Field<bool>(cost, Backing("CostsX")) ? null : Field<int>(cost, "_base"),
+            hints.TryGetValue("damage", out decimal damage) ? damage : null,
+            hints.TryGetValue("block", out decimal block) ? block : null,
+            hints.TryGetValue("draw", out decimal draw) ? draw : null);
     }
 
     static object ReadMap(ClrRuntime runtime)
@@ -272,7 +366,7 @@ static class GameReader
             var entry = array.GetStructValue(i);
             var value = entry.ReadObjectField("value");
             string? type = value.Type?.Name?.Split('.').Last();
-            string? key = type switch { "DamageVar" => "damage", "BlockVar" => "block", _ => null };
+            string? key = type switch { "DamageVar" => "damage", "BlockVar" => "block", "CardsVar" => "draw", _ => null };
             if (key != null && value.TryReadField<decimal>("_baseValue", out var amount) &&
                 amount >= 0 && amount <= 999)
                 hints[key] = amount;
