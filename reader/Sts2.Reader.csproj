@@ -12,6 +12,7 @@
     <Content Include="../index.html" Link="index.html" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../multi-turn.js" Link="multi-turn.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../live-policy.js" Link="live-policy.js" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../map-policy.js" Link="map-policy.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../docs/*.md" Link="docs/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

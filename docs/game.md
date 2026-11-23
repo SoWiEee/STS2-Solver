@@ -87,3 +87,10 @@ Windows companion 使用 ClrMD 的程序快照與遊戲附帶的 .NET 9 DAC。�
 同一份程序快照現在也讀取 `PlayerCombatState.DrawPile`、上限能量、進階值、卡牌修飾標記、目前能力與遺物，以及敵人的 `MoveState.FollowUpState`。REA 在 `CardPile.MoveToTopInternal` 讀到把牌插入陣列位置 0 的指令，因此抽牌堆由索引 0 開始取牌。模型用標準的 5 張抽牌規則，並在牌堆不足時停止預測。
 
 本機第一場縮小甲蟲戰的快照包含 `SHRINKER_MOVE → CHOMP_MOVE → STOMP_MOVE → CHOMP_MOVE` 以及 6 張未抽牌。REA 顯示 A9 以下咬擊／踩踏的基礎傷害是 7／13，A9 起是 8／14，縮小令有力量標記的攻擊傷害乘以 0.7。痛擊的 CIL 顯示基礎易傷 2 層，升級會增加 1 層。易傷的基礎倍率是 1.5。模型只套用已知的組合，遇到其他能力、敵人或修飾就停止對相應回合求解。
+
+
+## 標準與進階地圖
+
+REA 觀察到 `RunState._visitedMapCoords` 最後一筆是目前地圖座標。`ActMap.startMapPoints` 提供起點，`MapPoint.Children` 提供有方向的合法下一站，`MapPointType` 區分戰鬥、精英、營火、商店、寶箱、未知房間、先古之民與 Boss。Windows 讀取器只取節點位置、類型和連線，並使用當前 HP 和金幣排序。
+
+進階 2 的第一章實機快照讀到 68/80 HP、117 金幣。從座標 `1:2` 只有 `2:2` 可走，與遊戲畫面一致。進入 `2:2` 後，該節點有兩條向上分支。座標使用從 0 開始的列與欄，頁面把欄轉成從 1 開始。

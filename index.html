@@ -39,6 +39,16 @@
         <p class="row-caption">初版模型支援縮小甲蟲與已建模的鐵甲戰士起始牌。請依最新建議在遊戲中出牌。<a href="docs/policy.md">搜尋政策</a></p>
       </div>
     </section>
+    <section class="panel" id="mapPanel" hidden style="margin-top:16px" aria-labelledby="mapTitle">
+      <div class="panel-head">
+        <div><h2 class="panel-title" id="mapTitle">章節路線建議</h2><p class="panel-sub">比較從目前房間走到章節 Boss 的路線</p></div>
+        <button type="button" class="head-action" id="mapRefresh">讀取地圖</button>
+      </div>
+      <div class="panel-body">
+        <p id="mapStatus" role="status">開啟遊戲地圖後，可以讀取目前的分岔。</p>
+        <div id="mapResults" class="rows"></div>
+      </div>
+    </section>
     <div id="manualApp" hidden>
     <section class="hero" aria-labelledby="page-title">
       <div><h1 id="page-title">用當前局面，計算本回合出牌</h1><p>輸入玩家能量、手牌、生命與敵人意圖。搜尋所有可行的出牌組合和攻擊目標，優先保住隊伍，再比較 Boss 傷害。</p></div>
@@ -97,6 +107,7 @@
 
   <script src="multi-turn.js"></script>
   <script src="live-policy.js"></script>
+  <script src="map-policy.js"></script>
   <script>
     const HAND_LIMIT=10,MAX_ENEMIES=3,SEARCH_LIMIT=1500000;
     const bossDefaults={
@@ -274,6 +285,7 @@
 
     const livePage=location.protocol!=="file:";
     $("#livePanel").hidden=!livePage;
+    $("#mapPanel").hidden=!livePage;
     $("#manualApp").hidden=livePage;
     let autoEnabled=livePage, liveBusy=false, previousState="";
     async function refreshLive() {
@@ -308,6 +320,39 @@
       if(autoEnabled)refreshLive();
       else $("#liveStatus").textContent="已暫停。下方建議來自最後一次擷取。";
     });
+    async function refreshMap() {
+      if($("#mapRefresh").disabled)return;
+      const button=$("#mapRefresh"),status=$("#mapStatus"),output=$("#mapResults");
+      button.disabled=true;
+      status.textContent="正在讀取地圖…";
+      try {
+        const response=await fetch("/map",{headers:{"X-STS2-Capture":"1"}});
+        const map=await response.json();
+        if(!response.ok)throw new Error(map.error||"地圖讀取失敗。");
+        const result=globalThis.planMap(map);
+        const rooms=new Map(map.nodes.map(node=>[node.id,node]));
+        output.innerHTML=result.paths.map(({nodes,score,counts},index)=>{
+          const path=nodes.map(id=>rooms.get(id));
+          const next=path[0];
+          const labels=path.map(room=>`${room.name}（第 ${room.column+1} 欄）`);
+          return `<article class="row-card">
+            <strong>${index===0?"推薦":"備選"} · 下一站 ${esc(next.name)}（地圖第 ${next.column+1} 欄）</strong>
+            <p>${labels.map(esc).join(" → ")}</p>
+            <p class="row-caption">評分 ${score} · 營火 ${counts.rest} · 精英 ${counts.elite} · 商店 ${counts.shop}</p>
+          </article>`;
+        }).join("");
+        const scope=`第 ${map.act} 章 · 進階 ${map.ascension} · ${map.hp}/${map.maxHp} HP · ${map.gold} 金幣`;
+        status.textContent=result.paths.length
+          ? `${scope} · 比較 ${result.evaluated} 條路線${result.truncated?"（部分路線未列入）":""}。評分以目前 HP 和金幣估算。`
+          : `${scope} · 目前沒有後續可走的房間。`;
+      } catch(error) {
+        output.replaceChildren();
+        status.textContent=error.message;
+      } finally {
+        button.disabled=false;
+      }
+    }
+    $("#mapRefresh").addEventListener("click",refreshMap);
     if(livePage){
       refreshLive();
       setInterval(refreshLive,5000);

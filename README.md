@@ -19,6 +19,10 @@ dotnet run --project reader
 
 初次啟動會從 NuGet 還原 ClrMD。工作台經由本機回送介面接收資料。若顯示「目前的遊戲組件版本未支援」，請確認正在執行的 STS2 是文件所列的組件版本。
 
+## 地圖路線
+
+單人標準／進階模式可按「讀取地圖」，查看從當前房間到章節 Boss 的推薦與備選。評分使用目前生命與金幣，供玩家比較精英、營火和商店的取捨。卡牌獎勵與藥水仍由玩家自行決定。
+
 ## 推薦如何計算
 
 - 每回合比較可支付的牌、可選目標與出牌順序。痛擊的易傷能改變同回合與下回合的後續傷害。
@@ -32,6 +36,7 @@ dotnet run --project reader
 | --- | --- |
 | [reader/Program.cs](reader/Program.cs) | 建立程序快照並提供本機讀取介面 |
 | [live-policy.js](live-policy.js) | 把支援的即時快照轉成可計算的回合 |
+| [map-policy.js](map-policy.js) | 章節地圖評分與路線排序 |
 | [multi-turn.js](multi-turn.js) | 跨回合搜尋與排名 |
 | [index.html](index.html) | 即時建議畫面與離線沙盒 |
 | [docs/game.md](docs/game.md) | REA 逆向分析、版本與實機證據 |

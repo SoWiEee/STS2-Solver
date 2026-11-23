@@ -25,21 +25,24 @@ app.Use(async (request, next) =>
 app.MapGet("/", () => Results.File(Path.Combine(root, "index.html"), "text/html; charset=utf-8"));
 app.MapGet("/multi-turn.js", () => Results.File(Path.Combine(root, "multi-turn.js"), "text/javascript; charset=utf-8"));
 app.MapGet("/live-policy.js", () => Results.File(Path.Combine(root, "live-policy.js"), "text/javascript; charset=utf-8"));
+app.MapGet("/map-policy.js", () => Results.File(Path.Combine(root, "map-policy.js"), "text/javascript; charset=utf-8"));
 foreach (string doc in new[] { "game", "policy" })
     app.MapGet($"/docs/{doc}.md", () => Results.File(Path.Combine(root, "docs", doc + ".md"), "text/plain; charset=utf-8"));
-app.MapGet("/capture", (HttpContext request) =>
+IResult ReadSnapshot(HttpContext request, Func<object> read)
 {
     if (request.Request.Headers["X-STS2-Capture"] != "1") return Results.StatusCode(403);
     lock (captureLock)
     {
-        try { return Results.Json(GameReader.Capture()); }
+        try { return Results.Json(read()); }
         catch (Exception error) when (error is not OutOfMemoryException)
         {
             app.Logger.LogWarning(error, "Capture failed");
             return Results.Json(new { error = error.Message }, statusCode: 409);
         }
     }
-});
+}
+app.MapGet("/capture", (HttpContext request) => ReadSnapshot(request, GameReader.Capture));
+app.MapGet("/map", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureMap));
 app.Run();
 
 static class GameReader
@@ -47,7 +50,10 @@ static class GameReader
     const string Version = "0.113.1";
     const string DllHash = "62ECBE91093E1FA862DE4329AAC865209DCB297804CAF0F0520D92D8C0B4A9C3";
 
-    public static object Capture()
+    public static object Capture() => WithRuntime(ReadCombat);
+    public static object CaptureMap() => WithRuntime(ReadMap);
+
+    static object WithRuntime(Func<ClrRuntime, object> read)
     {
         var games = Process.GetProcessesByName("SlayTheSpire2");
         try
@@ -63,10 +69,22 @@ static class GameReader
 
             using var snapshot = DataTarget.CreateSnapshotAndAttach(active.Id);
             var runtime = snapshot.ClrVersions.Single().CreateRuntime(Path.Combine(data, "mscordaccore.dll"));
-            var managers = runtime.Heap.EnumerateObjects()
-                .Where(obj => obj.Type?.Name == "MegaCrit.Sts2.Core.Combat.CombatManager").Take(2).ToArray();
-            Require(managers.Length == 1, "找不到唯一的戰鬥管理器。");
-            var manager = managers[0];
+            return read(runtime);
+        }
+        finally { foreach (var game in games) game.Dispose(); }
+    }
+
+    static ClrObject FindManager(ClrRuntime runtime, string type)
+    {
+        var managers = runtime.Heap.EnumerateObjects()
+            .Where(obj => obj.Type?.Name == type).Take(2).ToArray();
+        Require(managers.Length == 1, "尚未取得目前的遊戲狀態。");
+        return managers[0];
+    }
+
+    static object ReadCombat(ClrRuntime runtime)
+    {
+            var manager = FindManager(runtime, "MegaCrit.Sts2.Core.Combat.CombatManager");
             var turn = Object(manager, "_turnState");
             Require(!turn.IsNull && Field<bool>(turn, Backing("IsInProgress")), "請進入一場戰鬥。");
             Require(!Field<bool>(manager, "_playerActionsDisabled") &&
@@ -118,8 +136,86 @@ static class GameReader
             var run = Object(combat, Backing("RunState"));
             return new { schemaVersion = 1, version = Version, capturedAt = DateTimeOffset.Now,
                 round = Field<int>(combat, Backing("RoundNumber")), ascension = Field<int>(run, Backing("AscensionLevel")), players, enemies };
+    }
+
+    static object ReadMap(ClrRuntime runtime)
+    {
+        var manager = FindManager(runtime, "MegaCrit.Sts2.Core.Runs.RunManager");
+        var run = Object(manager, Backing("State"));
+        Require(!run.IsNull && !Field<bool>(manager, Backing("HasRunEnded")), "請先開始一局遊戲。");
+        Require(!Field<bool>(manager, Backing("IsChangingRooms")), "正在切換房間。");
+        Require(!Field<bool>(run, Backing("IsCustomGame")), "地圖規劃適用於單人標準與進階模式。");
+        var player = List(Object(run, "_players"), 4).ToArray();
+        Require(player.Length == 1, "地圖規劃目前限單人。");
+        var creature = Object(player[0], Backing("Creature"));
+        var map = Object(run, Backing("Map"));
+        Require(!map.IsNull, "目前章節的地圖尚未生成。");
+
+        var visited = Object(run, "_visitedMapCoords");
+        int count = Field<int>(visited, "_size");
+        var visitedItems = Object(visited, "_items").AsArray();
+        Require(count >= 0 && count <= visitedItems.Length, "目前房間座標讀取失敗。");
+        var current = count == 0 ? ((string id, int row, int col)?)null :
+            GetPointCoord(visitedItems.GetStructValue(count - 1));
+        var points = new Dictionary<string, MapNode>();
+        var roots = MapPointSet(Object(map, "startMapPoints")).ToArray();
+        var pending = new Queue<ClrObject>(roots);
+        while (pending.TryDequeue(out var point))
+        {
+            var (id, row, col) = GetPointCoord(point.ReadValueTypeField("coord"));
+            if (points.ContainsKey(id)) continue;
+            Require(points.Count < 256, "地圖超出目前支援的房間數。");
+            var children = MapPointSet(Object(point, Backing("Children"))).ToArray();
+            var type = Field<int>(point, Backing("PointType"));
+            var (key, label) = type switch
+            {
+                1 => ("unknown", "未知"), 2 => ("shop", "商店"), 3 => ("treasure", "寶箱"),
+                4 => ("rest", "營火"), 5 => ("monster", "戰鬥"), 6 => ("elite", "精英"),
+                7 => ("boss", "Boss"), 8 => ("ancient", "先古之民"), _ => ("unknown", "未知")
+            };
+            points.Add(id, new MapNode(id, label, key, row, col,
+                children.Select(c => GetPointCoord(c.ReadValueTypeField("coord")).id).OrderBy(c => c).ToArray()));
+            foreach (var child in children) pending.Enqueue(child);
         }
-        finally { foreach (var game in games) game.Dispose(); }
+        string[] starts;
+        if (current == null || (roots.Length > 0 &&
+            current.Value.row < roots.Min(r => GetPointCoord(r.ReadValueTypeField("coord")).row)))
+            starts = roots.Select(r => GetPointCoord(r.ReadValueTypeField("coord")).id).ToArray();
+        else if (points.TryGetValue(current.Value.id, out var here)) starts = here.Children;
+        else throw new InvalidOperationException("找不到目前房間在地圖上的位置。");
+        return new
+        {
+            hp = Field<int>(creature, "_currentHp"),
+            maxHp = Field<int>(creature, "_maxHp"),
+            gold = Field<int>(player[0], "_gold"),
+            act = Field<int>(run, "_currentActIndex") + 1,
+            ascension = Field<int>(run, Backing("AscensionLevel")),
+            nodes = points.Values, startIds = starts, current = current?.id
+        };
+    }
+
+    sealed record MapNode(string Id, string Name, string Type, int Row, int Column, string[] Children);
+
+    static (string id, int row, int col) GetPointCoord(ClrValueType coord)
+    {
+        int row = coord.ReadField<int>("row"), col = coord.ReadField<int>("col");
+        return ($"{row}:{col}", row, col);
+    }
+
+    static IEnumerable<ClrObject> MapPointSet(ClrObject set)
+    {
+        int count = Field<int>(set, "_count");
+        if (count == 0) yield break;
+        var array = Object(set, "_entries").AsArray();
+        Require(count > 0 && count <= 32 && count <= array.Length, "地圖房間連線超出支援範圍。");
+        for (int i = 0; i < count; i++)
+        {
+            var entry = array.GetStructValue(i);
+            if (entry.ReadField<int>("Next") < -1) continue;
+            var point = entry.ReadObjectField("Value");
+            Require(!point.IsNull, "擷取到不完整的地圖連線。");
+            yield return point;
+        }
     }
 
     static object[] ReadPile(ClrObject pile, int limit) =>
