@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../vendor/sts2-solver/src/Core/Sts2Solver.Core.csproj" />
+    <Compile Include="../../reader/RulesCatalogFile.cs" Link="RulesCatalogFile.cs" />
+  </ItemGroup>
+</Project>

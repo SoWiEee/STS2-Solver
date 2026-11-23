@@ -1,0 +1,3 @@
+[submodule "vendor/sts2-solver"]
+	path = vendor/sts2-solver
+	url = https://github.com/rank-Yu/sts2-solver.git

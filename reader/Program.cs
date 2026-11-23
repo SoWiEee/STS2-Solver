@@ -27,7 +27,7 @@ app.MapGet("/multi-turn.js", () => Results.File(Path.Combine(root, "multi-turn.j
 app.MapGet("/live-policy.js", () => Results.File(Path.Combine(root, "live-policy.js"), "text/javascript; charset=utf-8"));
 app.MapGet("/map-policy.js", () => Results.File(Path.Combine(root, "map-policy.js"), "text/javascript; charset=utf-8"));
 app.MapGet("/reward-policy.js", () => Results.File(Path.Combine(root, "reward-policy.js"), "text/javascript; charset=utf-8"));
-foreach (string doc in new[] { "game", "policy" })
+foreach (string doc in new[] { "game", "policy", "live-import", "rules-catalog" })
     app.MapGet($"/docs/{doc}.md", () => Results.File(Path.Combine(root, "docs", doc + ".md"), "text/plain; charset=utf-8"));
 IResult ReadSnapshot(HttpContext request, Func<object> read)
 {
@@ -45,6 +45,8 @@ IResult ReadSnapshot(HttpContext request, Func<object> read)
 app.MapGet("/capture", (HttpContext request) => ReadSnapshot(request, GameReader.Capture));
 app.MapGet("/map", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureMap));
 app.MapGet("/rewards", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureRewards));
+app.MapGet("/import", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureImport));
+app.MapGet("/solve", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureSolve));
 app.Run();
 
 static class GameReader
@@ -55,6 +57,21 @@ static class GameReader
     public static object Capture() => WithRuntime(ReadCombat);
     public static object CaptureMap() => WithRuntime(ReadMap);
     public static object CaptureRewards() => WithRuntime(ReadRewards);
+
+    static readonly Lazy<Sts2Solver.LiveImport.RulesCatalog> Catalog = new(() =>
+        new Sts2Solver.LiveImport.RulesCatalog(Path.Combine(AppContext.BaseDirectory, "data", "rules-catalog.br")));
+
+    static readonly Sts2Solver.LiveImport.ScoreTemplates Templates = new(
+        Path.Combine(AppContext.BaseDirectory, "data", "score-template-normal.br"),
+        Path.Combine(AppContext.BaseDirectory, "data", "score-template-act3-boss.br"));
+
+    // rank-Yu beam search over the whole remaining fight from the current root (~10 s).
+    public static object CaptureSolve() => WithRuntime(runtime =>
+        Sts2Solver.LiveImport.LiveImporter.Solve(runtime, Catalog.Value, Templates, TimeSpan.FromSeconds(10)));
+
+    // rank-Yu solver import of the current root (Battle + Rules), with the kernel's end-turn prediction.
+    public static object CaptureImport() => WithRuntime(runtime =>
+        Sts2Solver.LiveImport.LiveImporter.Describe(Sts2Solver.LiveImport.LiveImporter.Import(runtime, Catalog.Value)));
 
     static object WithRuntime(Func<ClrRuntime, object> read)
     {
@@ -113,6 +130,8 @@ static class GameReader
                         maxEnergy = Field<int>(pair.player, Backing("MaxEnergy")),
                         powers = ReadPowers(pair.creature),
                         relics = List(Object(pair.player, "_relics"), 256).Select(ShortName).ToArray(),
+                        // Relics the rank-Yu registry defines with no hooks at all: no combat effect.
+                        inertRelics = List(Object(pair.player, "_relics"), 256).Where(IsInertRelic).Select(ShortName).ToArray(),
                         potions = List(Object(pair.player, "_potionSlots"), 32, allowEmpty: true).Select(ShortName).ToArray(),
                         drawPile = state.IsNull ? null : ReadPile(Object(state, Backing("DrawPile")), 256),
                         discardPile = state.IsNull ? null : ReadPile(Object(state, Backing("DiscardPile")), 256),
@@ -396,6 +415,14 @@ static class GameReader
             if (type.Name == "MegaCrit.Sts2.Core.MonsterMoves.Intents.AttackIntent")
                 return true;
         return false;
+    }
+
+    static bool IsInertRelic(ClrObject relic)
+    {
+        string? id = Object(relic, Backing("Id")).ReadStringField(Backing("Entry"));
+        if (id == null || !Sts2Solver.Simulation.Combat.Registry.TryRelic(id, out ushort rid)) return false;
+        var def = Sts2Solver.Simulation.Combat.Registry.Relic(rid);
+        return def.Hooks == 0 && def.HooksExt == 0;
     }
 
     static string ShortName(ClrObject obj) => obj.Type?.Name?.Split('.').Last() ?? "Unknown";

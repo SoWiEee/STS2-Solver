@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PlatformTarget>x64</PlatformTarget>
@@ -9,11 +9,17 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="3.1.512801" />
+    <!-- rank-Yu/sts2-solver (MIT) simulation core, pinned as git submodule; see THIRD_PARTY_NOTICES.md -->
+    <ProjectReference Include="../vendor/sts2-solver/src/Core/Sts2Solver.Core.csproj" />
+    <ProjectReference Include="../importer/Sts2Solver.Import.csproj" />
+    <!-- Shared with tools/rules-catalog; compiled into the importer, not the reader. -->
+    <Compile Remove="RulesCatalogFile.cs" />
     <Content Include="../index.html" Link="index.html" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../multi-turn.js" Link="multi-turn.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../live-policy.js" Link="live-policy.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../map-policy.js" Link="map-policy.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../reward-policy.js" Link="reward-policy.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../docs/*.md" Link="docs/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="data/*.br;data/*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

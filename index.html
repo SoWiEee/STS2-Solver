@@ -28,9 +28,20 @@
     <div class="version"><span class="dot" aria-hidden="true"></span><span>本機研究版 · 遊戲 v0.113.1</span></div>
   </header>
   <main class="app">
-    <section class="panel" id="livePanel" hidden aria-labelledby="liveTitle">
+    <section class="panel" id="solvePanel" hidden aria-labelledby="solveTitle">
       <div class="panel-head">
-        <div><h1 class="panel-title" id="liveTitle">單人即時出牌策略</h1><p class="panel-sub">讀取玩家回合，自動比較當前與後續出牌</p></div>
+        <div><h1 class="panel-title" id="solveTitle">整場戰鬥出牌建議</h1><p class="panel-sub">rank-Yu 求解器：局面一變就自動搜尋到戰鬥結束（約 1–10 秒）</p></div>
+        <button type="button" class="head-action" id="solveRefresh">重新搜尋</button>
+      </div>
+      <div class="panel-body">
+        <p id="solveStatus" role="status">進入戰鬥並輪到你出牌時會自動搜尋；遇到尚未支援的局面會列出原因。</p>
+        <div id="solveResults" class="rows"></div>
+        <p class="row-caption"><a href="docs/live-import.md">資料來源與支援範圍</a></p>
+      </div>
+    </section>
+    <section class="panel" id="livePanel" hidden style="margin-top:16px" aria-labelledby="liveTitle">
+      <div class="panel-head">
+        <div><h2 class="panel-title" id="liveTitle">簡易模型（備用）</h2><p class="panel-sub">本專案的 JS 多回合模型，只涵蓋少數敵人；上方不支援時可參考</p></div>
         <button type="button" class="head-action" id="liveToggle">暫停讀取</button>
       </div>
       <div class="panel-body">
@@ -301,9 +312,10 @@
     const livePage=location.protocol!=="file:";
     $("#livePanel").hidden=!livePage;
     $("#mapPanel").hidden=!livePage;
+    $("#solvePanel").hidden=!livePage;
     $("#rewardPanel").hidden=!livePage;
     $("#manualApp").hidden=livePage;
-    let autoEnabled=livePage, liveBusy=false, previousState="";
+    let autoEnabled=livePage, liveBusy=false, previousState="", solvedState="";
     async function refreshLive() {
       if(!autoEnabled||liveBusy||document.hidden)return;
       liveBusy=true;
@@ -315,6 +327,11 @@
         if(!response.ok)throw new Error(snapshot.error||"無法擷取戰鬥。");
         const {capturedAt,...state}=snapshot;
         const stateKey=JSON.stringify(state);
+        if(stateKey!==solvedState){
+          // The whole-fight search does not depend on the fallback planner supporting this state.
+          solvedState=stateKey;
+          runSolve();
+        }
         if(stateKey!==previousState){
           const result=globalThis.planLiveCombat(snapshot);
           renderLiveRoute(snapshot,result);
@@ -369,6 +386,40 @@
       }
     }
     $("#mapRefresh").addEventListener("click",refreshMap);
+    // Whole-fight search (rank-Yu solver). Runs on demand and whenever the live capture changes.
+    let solveBusy=false, solvePending=false;
+    async function runSolve(){
+      if(solveBusy){solvePending=true;return;}
+      solveBusy=true;
+      const button=$("#solveRefresh"),status=$("#solveStatus"),output=$("#solveResults");
+      button.disabled=true;
+      status.textContent="正在搜尋整場戰鬥…";
+      const name=id=>id.toLowerCase().replace(/_/g," ");
+      try {
+        const response=await fetch("/solve",{headers:{"X-STS2-Capture":"1"}});
+        const plan=await response.json();
+        if(!response.ok)throw new Error(`未支援：${plan.error||"搜尋失敗。"}`);
+        const turns=[];
+        for(const step of plan.route){
+          (turns[step.turn-1]??=[]);
+          if(step.kind==="play")turns[step.turn-1].push(`${name(step.card)}${step.upgrade?"+":""}${step.target?`（目標：${name(step.target)}）`:""}${step.choices?.length?`（選擇：${step.choices.map(name).join("、")}）`:""}`);
+        }
+        output.innerHTML=turns.map((plays,index)=>`<article class="row-card">
+          <strong>${index===0?"本回合":`第 ${index+1} 回合（預測）`}</strong>
+          <p>${plays.length?plays.map(esc).join(" → "):"不出牌"}${index<turns.length-1||!plan.victory?" → 結束回合":""}</p>
+        </article>`).join("");
+        status.textContent=`${plan.victory?"找到勝利路線":"未找到勝利路線（顯示最高分路線）"} · 預測戰鬥結束時 ${plan.finalHp}/${plan.maxHp} HP · ${plan.seconds.toFixed(1)} 秒、${plan.expandedNodes} 個節點`
+          +(plan.notes.length?` · ${[...new Set(plan.notes)].join("；")}`:"");
+      } catch(error) {
+        output.replaceChildren();
+        status.textContent=error.message;
+      } finally {
+        button.disabled=false;
+        solveBusy=false;
+        if(solvePending){solvePending=false;runSolve();}
+      }
+    }
+    $("#solveRefresh").addEventListener("click",runSolve);
     $("#rewardRefresh").addEventListener("click",async()=>{
       const button=$("#rewardRefresh"),status=$("#rewardStatus"),output=$("#rewardResults");
       button.disabled=true;

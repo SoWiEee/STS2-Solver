@@ -63,7 +63,7 @@ Queen 的 Torch Head Amalgam 基礎 HP 199，A8+ 為 211；開場 Strong Tackle 
 
 ## 公開演算法專案比較
 
-- [`rank-Yu/sts2-solver`](https://github.com/rank-Yu/sts2-solver)：README 將它定義為單人戰鬥 Mod，會讀取即時戰鬥狀態與 RNG，搜尋完整戰鬥路線並透過遊戲輸入出牌。它採用 CombatSolver 搜尋／估分思路和自製緊湊模擬核心；README 記錄 v0.113.1 的測試。Repo 顯示 MIT 授權。本研究借鑑「用狀態轉移加評分比較完整行動線」的設計，不複製其原始碼，也沒有把它直接整合到純 HTML 工具。
+- [`rank-Yu/sts2-solver`](https://github.com/rank-Yu/sts2-solver)：README 將它定義為單人戰鬥 Mod，會讀取即時戰鬥狀態與 RNG，搜尋完整戰鬥路線並透過遊戲輸入出牌。它採用 CombatSolver 搜尋／估分思路和自製緊湊模擬核心；README 記錄 v0.113.1 的測試。Repo 顯示 MIT 授權。本研究借鑑「用狀態轉移加評分比較完整行動線」的設計。讀取器以 git submodule（`vendor/sts2-solver`，固定於 `f0167be`）引用其只依賴 BCL 的 `src/Core` 模擬與搜尋函式庫，不修改上游原始碼；授權聲明見 [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md)。純 HTML 離線沙盒仍使用本 repo 自己的 JS 模型。
 - [`zhiyue/sts2-rl-agent`](https://github.com/zhiyue/sts2-rl-agent)：提供 headless Python 戰鬥模擬器、Gymnasium 環境、MaskablePPO 訓練流程與 C# 遊戲橋接。README 主述單一 agent；目前公開說明沒有提供協調多人手牌的政策。Repo 頁面未列出 LICENSE，因此本研究只讀取文件並引用其架構，不重用程式碼。
 
 兩個專案和本工具的目標不同：前者在遊戲中直接搜索並執行；後者訓練策略；本工具則是可看見計分準則的單回合組合搜尋，方便課堂展示與人工操作。

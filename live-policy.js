@@ -70,7 +70,8 @@
     if (snapshot.players.length !== 1) throw new Error("即時多回合求解目前限單人。");
     const [player] = snapshot.players;
     if (!player.hand || !player.drawPile || !Number.isInteger(player.energy)) throw new Error("手牌、抽牌堆或能量尚未讀取。");
-    const relic = player.relics.find(name => !safeRelics.has(name));
+    // inertRelics: relics the rank-Yu registry defines with no hooks (no combat effect), listed by the reader.
+    const relic = player.relics.find(name => !safeRelics.has(name) && !(player.inertRelics ?? []).includes(name));
     if (relic) throw new Error(`目前尚未模擬遺物 ${relic}。`);
     if (player.powers.some(p => !["StrengthPower","FreeAttackPower"].includes(p.name) && (p.name !== "ShrinkPower" || p.amount !== -1)))
       throw new Error("玩家身上有尚未模擬的狀態。");

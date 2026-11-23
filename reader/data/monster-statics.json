@@ -1,0 +1,2528 @@
+{
+ "AEONGLASS": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 535,
+   "low": 512
+  },
+  "TakeDamageSfxType": {
+   "value": 8
+  },
+  "EbbDamage": {
+   "ascension": 9,
+   "high": 26,
+   "low": 22
+  },
+  "EbbBlock": {
+   "value": 33
+  },
+  "EyeLasersDamage": {
+   "ascension": 9,
+   "high": 12,
+   "low": 11
+  },
+  "EyeLasersRepeat": {
+   "value": 2
+  },
+  "IncreasingIntensityBaseStrength": {
+   "ascension": 9,
+   "high": 4,
+   "low": 3
+  }
+ },
+ "ARCHITECT": {
+  "MinInitialHp": {
+   "value": 9999
+  },
+  "MaxInitialHp": {
+   "value": 9999
+  }
+ },
+ "ASSASSIN_RUBY_RAIDER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 19,
+   "low": 18
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 24,
+   "low": 23
+  },
+  "KillshotDamage": {
+   "ascension": 9,
+   "high": 11,
+   "low": 10
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  }
+ },
+ "AXEBOT": {
+  "BootUpBlock": {
+   "ascension": 9,
+   "high": 15,
+   "low": 10
+  },
+  "OneTwoDamage": {
+   "ascension": 9,
+   "high": 11,
+   "low": 10
+  },
+  "BootUpStrGain": {
+   "ascension": 9,
+   "high": 4,
+   "low": 3
+  },
+  "HammerUppercutDamage": {
+   "ascension": 9,
+   "high": 18,
+   "low": 14
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  }
+ },
+ "AXE_RUBY_RAIDER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 21,
+   "low": 20
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 23,
+   "low": 22
+  },
+  "SwingDamage": {
+   "ascension": 9,
+   "high": 6,
+   "low": 5
+  },
+  "SwingBlock": {
+   "ascension": 9,
+   "high": 6,
+   "low": 5
+  },
+  "BigSwingDamage": {
+   "ascension": 9,
+   "high": 13,
+   "low": 12
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  }
+ },
+ "BATTLE_FRIEND_V1": {
+  "MinInitialHp": {
+   "value": 75
+  },
+  "MaxInitialHp": {
+   "value": 75
+  }
+ },
+ "BATTLE_FRIEND_V2": {
+  "MinInitialHp": {
+   "value": 150
+  },
+  "MaxInitialHp": {
+   "value": 150
+  }
+ },
+ "BATTLE_FRIEND_V3": {
+  "MinInitialHp": {
+   "value": 300
+  },
+  "MaxInitialHp": {
+   "value": 300
+  }
+ },
+ "BOWLBUG_EGG": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 23,
+   "low": 21
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 24,
+   "low": 22
+  },
+  "BiteDamage": {
+   "ascension": 9,
+   "high": 8,
+   "low": 7
+  },
+  "ProtectBlock": {
+   "ascension": 9,
+   "high": 8,
+   "low": 7
+  },
+  "TakeDamageSfxType": {
+   "value": 4
+  }
+ },
+ "BOWLBUG_NECTAR": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 36,
+   "low": 35
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 39,
+   "low": 38
+  },
+  "ThrashDamage": {
+   "value": 3
+  },
+  "BuffStrengthGain": {
+   "ascension": 9,
+   "high": 16,
+   "low": 15
+  },
+  "TakeDamageSfxType": {
+   "value": 4
+  }
+ },
+ "BOWLBUG_ROCK": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 46,
+   "low": 45
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 49,
+   "low": 48
+  },
+  "HeadbuttDamage": {
+   "ascension": 9,
+   "high": 16,
+   "low": 15
+  },
+  "TakeDamageSfxType": {
+   "value": 4
+  }
+ },
+ "BOWLBUG_SILK": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 41,
+   "low": 40
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 44,
+   "low": 43
+  },
+  "ThrashDamage": {
+   "ascension": 9,
+   "high": 5,
+   "low": 4
+  }
+ },
+ "BRUTE_RUBY_RAIDER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 31,
+   "low": 30
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 34,
+   "low": 33
+  },
+  "BeatDamage": {
+   "ascension": 9,
+   "high": 8,
+   "low": 7
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  }
+ },
+ "BYGONE_EFFIGY": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 132,
+   "low": 127
+  },
+  "SlashDamage": {
+   "ascension": 9,
+   "high": 15,
+   "low": 13
+  },
+  "TakeDamageSfxType": {
+   "value": 8
+  }
+ },
+ "BYRDONIS": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 90,
+   "low": 81
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 90,
+   "low": 84
+  },
+  "PeckDamage": {
+   "ascension": 9,
+   "high": 4,
+   "low": 3
+  },
+  "PeckRepeat": {
+   "ascension": 9,
+   "high": 3,
+   "low": 3
+  },
+  "SwoopDamage": {
+   "ascension": 9,
+   "high": 19,
+   "low": 17
+  }
+ },
+ "CALCIFIED_CULTIST": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 39,
+   "low": 38
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 42,
+   "low": 41
+  },
+  "DarkStrikeDamage": {
+   "ascension": 9,
+   "high": 11,
+   "low": 9
+  },
+  "IncantationAmount": {
+   "value": 2
+  },
+  "TakeDamageSfxType": {
+   "value": 3
+  }
+ },
+ "CEREMONIAL_BEAST": {
+  "PlowAmount": {
+   "ascension": 9,
+   "high": 160,
+   "low": 150
+  },
+  "PlowDamage": {
+   "ascension": 9,
+   "high": 20,
+   "low": 18
+  },
+  "StompDamage": {
+   "ascension": 9,
+   "high": 17,
+   "low": 15
+  },
+  "CrushDamage": {
+   "ascension": 9,
+   "high": 19,
+   "low": 17
+  },
+  "CrushStrength": {
+   "ascension": 9,
+   "high": 4,
+   "low": 3
+  },
+  "ShouldDisappearFromDoom": {
+   "value": 0
+  },
+  "ShouldFadeAfterDeath": {
+   "value": 0
+  },
+  "TakeDamageSfxType": {
+   "value": 3
+  }
+ },
+ "CHOMPER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 63,
+   "low": 60
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 67,
+   "low": 64
+  },
+  "ClampDamage": {
+   "ascension": 9,
+   "high": 9,
+   "low": 8
+  }
+ },
+ "CORPSE_SLUG": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 27,
+   "low": 25
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 29,
+   "low": 27
+  },
+  "WhipSlapDamage": {
+   "value": 3
+  },
+  "WhipSlapRepeat": {
+   "value": 2
+  },
+  "GlompDamage": {
+   "ascension": 9,
+   "high": 9,
+   "low": 8
+  },
+  "GoopFrailAmt": {
+   "value": 2
+  },
+  "RavenousStr": {
+   "ascension": 9,
+   "high": 5,
+   "low": 4
+  },
+  "TakeDamageSfxType": {
+   "value": 7
+  }
+ },
+ "CROSSBOW_RUBY_RAIDER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 19,
+   "low": 18
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 22,
+   "low": 21
+  },
+  "FireDamage": {
+   "ascension": 9,
+   "high": 16,
+   "low": 14
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  }
+ },
+ "CRUSHER": {
+  "ShouldFadeAfterDeath": {
+   "value": 0
+  },
+  "ShouldDisappearFromDoom": {
+   "value": 0
+  },
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 219,
+   "low": 209
+  },
+  "ThrashDamage": {
+   "ascension": 9,
+   "high": 14,
+   "low": 12
+  },
+  "EnlargingStrikeDamage": {
+   "ascension": 9,
+   "high": 4,
+   "low": 4
+  },
+  "BugStingDamage": {
+   "ascension": 9,
+   "high": 7,
+   "low": 6
+  },
+  "BugStingTimes": {
+   "value": 2
+  },
+  "AdaptStrengthGain": {
+   "ascension": 9,
+   "high": 3,
+   "low": 2
+  },
+  "GuardedStrikeDamage": {
+   "ascension": 9,
+   "high": 14,
+   "low": 12
+  }
+ },
+ "CUBEX_CONSTRUCT": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 70,
+   "low": 65
+  },
+  "BlastDamage": {
+   "ascension": 9,
+   "high": 8,
+   "low": 7
+  },
+  "ExpelDamage": {
+   "ascension": 9,
+   "high": 6,
+   "low": 5
+  },
+  "TakeDamageSfxType": {
+   "value": 8
+  }
+ },
+ "DAMP_CULTIST": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 52,
+   "low": 51
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 54,
+   "low": 53
+  },
+  "DarkStrikeDamage": {
+   "ascension": 9,
+   "high": 3,
+   "low": 1
+  },
+  "IncantationAmount": {
+   "ascension": 9,
+   "high": 6,
+   "low": 5
+  },
+  "TakeDamageSfxType": {
+   "value": 3
+  }
+ },
+ "DECIMILLIPEDE_SEGMENT_BACK": {},
+ "DECIMILLIPEDE_SEGMENT_FRONT": {},
+ "DECIMILLIPEDE_SEGMENT_MIDDLE": {},
+ "DEVOTED_SCULPTOR": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 172,
+   "low": 162
+  },
+  "TakeDamageSfxType": {
+   "value": 3
+  },
+  "SavageDamage": {
+   "ascension": 9,
+   "high": 15,
+   "low": 12
+  }
+ },
+ "ENTOMANCER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 165,
+   "low": 145
+  },
+  "SpearMoveDamage": {
+   "ascension": 9,
+   "high": 20,
+   "low": 18
+  },
+  "BeesRepeat": {
+   "ascension": 9,
+   "high": 8,
+   "low": 7
+  },
+  "BeesDamage": {
+   "ascension": 9,
+   "high": 3,
+   "low": 3
+  }
+ },
+ "EXOSKELETON": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 26,
+   "low": 24
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 30,
+   "low": 28
+  },
+  "SkitterDamage": {
+   "value": 1
+  },
+  "SkitterRepeats": {
+   "ascension": 9,
+   "high": 4,
+   "low": 3
+  },
+  "MandiblesDamage": {
+   "ascension": 9,
+   "high": 9,
+   "low": 8
+  },
+  "TakeDamageSfxType": {
+   "value": 4
+  }
+ },
+ "EYE_WITH_TEETH": {
+  "MinInitialHp": {
+   "value": 6
+  },
+  "TakeDamageSfxType": {
+   "value": 5
+  },
+  "ShouldDisappearFromDoom": {
+   "value": 0
+  }
+ },
+ "FABRICATOR": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 155,
+   "low": 150
+  },
+  "FabricatingStrikeDamage": {
+   "ascension": 9,
+   "high": 21,
+   "low": 18
+  },
+  "DisintegrateDamage": {
+   "ascension": 9,
+   "high": 13,
+   "low": 11
+  },
+  "ShouldFadeAfterDeath": {
+   "value": 0
+  }
+ },
+ "FAKE_MERCHANT_MONSTER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 175,
+   "low": 165
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 175,
+   "low": 165
+  },
+  "SwipeDamage": {
+   "ascension": 9,
+   "high": 15,
+   "low": 13
+  },
+  "ThrowRelicDamage": {
+   "ascension": 9,
+   "high": 10,
+   "low": 9
+  },
+  "TakeDamageSfxType": {
+   "value": 7
+  }
+ },
+ "FAT_GREMLIN": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 14,
+   "low": 13
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 18,
+   "low": 17
+  },
+  "TakeDamageSfxType": {
+   "value": 4
+  }
+ },
+ "FLAIL_KNIGHT": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 108,
+   "low": 101
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  },
+  "FlailDamage": {
+   "ascension": 9,
+   "high": 10,
+   "low": 9
+  },
+  "RamDamage": {
+   "ascension": 9,
+   "high": 17,
+   "low": 15
+  }
+ },
+ "FLYCONID": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 51,
+   "low": 47
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 53,
+   "low": 49
+  },
+  "SmashDamage": {
+   "ascension": 9,
+   "high": 12,
+   "low": 11
+  },
+  "SporeDamage": {
+   "ascension": 9,
+   "high": 9,
+   "low": 8
+  }
+ },
+ "FOGMOG": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 78,
+   "low": 74
+  },
+  "SwipeDamage": {
+   "ascension": 9,
+   "high": 9,
+   "low": 8
+  },
+  "HeadbuttDamage": {
+   "ascension": 9,
+   "high": 16,
+   "low": 14
+  },
+  "TakeDamageSfxType": {
+   "value": 6
+  }
+ },
+ "FOSSIL_STALKER": {
+  "HasPhobiaSpineSkin": {
+   "value": 1
+  },
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 54,
+   "low": 51
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 56,
+   "low": 53
+  },
+  "TackleDamage": {
+   "ascension": 9,
+   "high": 11,
+   "low": 9
+  },
+  "LatchDamage": {
+   "ascension": 9,
+   "high": 14,
+   "low": 12
+  },
+  "LashDamage": {
+   "ascension": 9,
+   "high": 4,
+   "low": 3
+  },
+  "LashRepeat": {
+   "value": 2
+  },
+  "TakeDamageSfxType": {
+   "value": 8
+  }
+ },
+ "FROG_KNIGHT": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 199,
+   "low": 191
+  },
+  "StrikeDownEvilDamage": {
+   "ascension": 9,
+   "high": 23,
+   "low": 21
+  },
+  "TongueLashDamage": {
+   "ascension": 9,
+   "high": 14,
+   "low": 13
+  },
+  "BeetleChargeDamage": {
+   "ascension": 9,
+   "high": 40,
+   "low": 35
+  },
+  "PlatingAmount": {
+   "ascension": 8,
+   "high": 19,
+   "low": 15
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  }
+ },
+ "FUZZY_WURM_CRAWLER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 58,
+   "low": 55
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 59,
+   "low": 57
+  },
+  "AcidGoopDamage": {
+   "ascension": 9,
+   "high": 6,
+   "low": 4
+  }
+ },
+ "GAS_BOMB": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 8,
+   "low": 7
+  },
+  "ExplodeDamage": {
+   "ascension": 9,
+   "high": 9,
+   "low": 8
+  },
+  "TakeDamageSfxType": {
+   "value": 5
+  },
+  "ShouldFadeAfterDeath": {
+   "value": 0
+  }
+ },
+ "GLOBE_HEAD": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 158,
+   "low": 148
+  },
+  "ThunderStrikeDamage": {
+   "ascension": 9,
+   "high": 7,
+   "low": 6
+  },
+  "ShockingSlapDamage": {
+   "ascension": 9,
+   "high": 14,
+   "low": 13
+  },
+  "GalvanicBurstDamage": {
+   "ascension": 9,
+   "high": 17,
+   "low": 16
+  },
+  "GalvanicPowerAmount": {
+   "ascension": 9,
+   "high": 8,
+   "low": 6
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  }
+ },
+ "GREMLIN_MERC": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 51,
+   "low": 47
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 53,
+   "low": 49
+  },
+  "HasDeathSfx": {
+   "value": 0
+  },
+  "TakeDamageSfxType": {
+   "value": 3
+  },
+  "GimmeDamage": {
+   "ascension": 8,
+   "high": 8,
+   "low": 7
+  },
+  "GimmeRepeat": {
+   "value": 2
+  },
+  "DoubleSmashDamage": {
+   "ascension": 8,
+   "high": 7,
+   "low": 6
+  },
+  "DoubleSmashRepeat": {
+   "value": 2
+  },
+  "HeheDamage": {
+   "ascension": 8,
+   "high": 9,
+   "low": 8
+  }
+ },
+ "GUARDBOT": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 17,
+   "low": 16
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 21,
+   "low": 20
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  }
+ },
+ "HAUNTED_SHIP": {
+  "HasPhobiaSpineSkin": {
+   "value": 1
+  },
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 67,
+   "low": 63
+  },
+  "HauntDazed": {
+   "value": 5
+  },
+  "SwipeDamage": {
+   "ascension": 9,
+   "high": 14,
+   "low": 13
+  },
+  "StompDamage": {
+   "ascension": 9,
+   "high": 5,
+   "low": 4
+  },
+  "StompRepeat": {
+   "value": 3
+  },
+  "TakeDamageSfxType": {
+   "value": 2
+  }
+ },
+ "HUNTER_KILLER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 126,
+   "low": 121
+  },
+  "BiteDamage": {
+   "ascension": 9,
+   "high": 19,
+   "low": 17
+  },
+  "PunctureDamage": {
+   "ascension": 9,
+   "high": 8,
+   "low": 7
+  }
+ },
+ "INFESTED_PRISM": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 171,
+   "low": 161
+  },
+  "JabDamage": {
+   "ascension": 9,
+   "high": 17,
+   "low": 15
+  },
+  "VitalSparkAmount": {
+   "ascension": 9,
+   "high": 3,
+   "low": 2
+  },
+  "PulsateDamage": {
+   "ascension": 9,
+   "high": 10,
+   "low": 8
+  },
+  "WhirlwindDamage": {
+   "ascension": 9,
+   "high": 6,
+   "low": 5
+  },
+  "WhirlwindRepeat": {
+   "value": 3
+  },
+  "TakeDamageSfxType": {
+   "value": 8
+  }
+ },
+ "INKLET": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 12,
+   "low": 11
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 18,
+   "low": 17
+  },
+  "JabDamage": {
+   "ascension": 9,
+   "high": 4,
+   "low": 3
+  },
+  "WhirlwindDamage": {
+   "ascension": 9,
+   "high": 3,
+   "low": 2
+  },
+  "PiercingGazeDamage": {
+   "ascension": 9,
+   "high": 11,
+   "low": 10
+  },
+  "TakeDamageSfxType": {
+   "value": 5
+  }
+ },
+ "KIN_FOLLOWER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 62,
+   "low": 58
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 63,
+   "low": 59
+  },
+  "QuickSlashDamage": {
+   "ascension": 9,
+   "high": 5,
+   "low": 5
+  },
+  "BoomerangDamage": {
+   "ascension": 9,
+   "high": 2,
+   "low": 2
+  },
+  "DanceStrength": {
+   "ascension": 9,
+   "high": 3,
+   "low": 2
+  },
+  "TakeDamageSfxType": {
+   "value": 3
+  }
+ },
+ "KIN_PRIEST": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 199,
+   "low": 190
+  },
+  "OrbOfFrailtyDamage": {
+   "ascension": 9,
+   "high": 9,
+   "low": 8
+  },
+  "OrbOfWeaknessDamage": {
+   "ascension": 9,
+   "high": 9,
+   "low": 8
+  },
+  "BeamDamage": {
+   "ascension": 9,
+   "high": 3,
+   "low": 3
+  },
+  "RitualStrength": {
+   "ascension": 9,
+   "high": 3,
+   "low": 2
+  },
+  "TakeDamageSfxType": {
+   "value": 3
+  }
+ },
+ "KNOWLEDGE_DEMON": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 399,
+   "low": 379
+  },
+  "SlapDamage": {
+   "ascension": 9,
+   "high": 18,
+   "low": 17
+  },
+  "PonderDamage": {
+   "ascension": 9,
+   "high": 13,
+   "low": 11
+  },
+  "KnowledgeOverwhelmingDamage": {
+   "ascension": 9,
+   "high": 9,
+   "low": 8
+  },
+  "PonderStrength": {
+   "ascension": 9,
+   "high": 3,
+   "low": 2
+  }
+ },
+ "LAGAVULIN_MATRIARCH": {
+  "SlashDamage": {
+   "ascension": 9,
+   "high": 21,
+   "low": 19
+  },
+  "DisembowelDamage": {
+   "ascension": 9,
+   "high": 10,
+   "low": 9
+  },
+  "DisembowelRepeat": {
+   "value": 2
+  },
+  "TakeDamageSfxType": {
+   "value": 2
+  }
+ },
+ "LEAF_SLIME_M": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 33,
+   "low": 32
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 36,
+   "low": 35
+  },
+  "ClumpDamage": {
+   "ascension": 9,
+   "high": 9,
+   "low": 8
+  },
+  "TakeDamageSfxType": {
+   "value": 7
+  }
+ },
+ "LEAF_SLIME_S": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 12,
+   "low": 11
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 16,
+   "low": 15
+  },
+  "TackleDamage": {
+   "ascension": 9,
+   "high": 4,
+   "low": 3
+  },
+  "TakeDamageSfxType": {
+   "value": 7
+  }
+ },
+ "LIVING_FOG": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 82,
+   "low": 80
+  },
+  "AdvancedGasDamage": {
+   "ascension": 9,
+   "high": 9,
+   "low": 8
+  },
+  "BloatDamage": {
+   "ascension": 9,
+   "high": 6,
+   "low": 5
+  },
+  "SuperGasBlastDamage": {
+   "ascension": 9,
+   "high": 9,
+   "low": 8
+  },
+  "TakeDamageSfxType": {
+   "value": 5
+  },
+  "ShouldFadeAfterDeath": {
+   "value": 0
+  }
+ },
+ "LIVING_SHIELD": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 65,
+   "low": 55
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  },
+  "HasDeathSfx": {
+   "value": 0
+  },
+  "ShieldSlamDamage": {
+   "value": 6
+  },
+  "SmashDamage": {
+   "ascension": 9,
+   "high": 18,
+   "low": 16
+  },
+  "EnrageStr": {
+   "value": 3
+  }
+ },
+ "LOUSE_PROGENITOR": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 138,
+   "low": 134
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 141,
+   "low": 136
+  },
+  "TakeDamageSfxType": {
+   "value": 4
+  },
+  "WebDamage": {
+   "ascension": 9,
+   "high": 10,
+   "low": 9
+  },
+  "PounceDamage": {
+   "ascension": 9,
+   "high": 16,
+   "low": 14
+  },
+  "CurlBlock": {
+   "ascension": 8,
+   "high": 18,
+   "low": 14
+  },
+  "GrowStrength": {
+   "ascension": 9,
+   "high": 7,
+   "low": 5
+  }
+ },
+ "MAGI_KNIGHT": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 89,
+   "low": 82
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  },
+  "PowerShieldDamage": {
+   "ascension": 9,
+   "high": 7,
+   "low": 6
+  },
+  "PowerShieldBlock": {
+   "ascension": 8,
+   "high": 9,
+   "low": 5
+  },
+  "SpearDamage": {
+   "ascension": 9,
+   "high": 11,
+   "low": 10
+  },
+  "BombDamage": {
+   "ascension": 9,
+   "high": 40,
+   "low": 35
+  }
+ },
+ "MAWLER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 76,
+   "low": 72
+  },
+  "RipAndTearDamage": {
+   "ascension": 9,
+   "high": 16,
+   "low": 14
+  },
+  "ClawDamage": {
+   "ascension": 9,
+   "high": 5,
+   "low": 4
+  }
+ },
+ "MECHA_KNIGHT": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 320,
+   "low": 300
+  },
+  "ChargeDamage": {
+   "ascension": 9,
+   "high": 30,
+   "low": 25
+  },
+  "FlamethrowerDamage": {
+   "ascension": 9,
+   "high": 12,
+   "low": 8
+  },
+  "HeavyCleaveDamage": {
+   "ascension": 9,
+   "high": 40,
+   "low": 35
+  }
+ },
+ "MYSTERIOUS_KNIGHT": {},
+ "MYTE": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 64,
+   "low": 61
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 69,
+   "low": 67
+  },
+  "BiteDamage": {
+   "ascension": 9,
+   "high": 15,
+   "low": 13
+  },
+  "SuckDamage": {
+   "ascension": 9,
+   "high": 6,
+   "low": 4
+  },
+  "SuckStrength": {
+   "ascension": 9,
+   "high": 3,
+   "low": 2
+  }
+ },
+ "NIBBIT": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 44,
+   "low": 42
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 48,
+   "low": 46
+  },
+  "ButtDamage": {
+   "ascension": 9,
+   "high": 13,
+   "low": 12
+  },
+  "SliceBlock": {
+   "ascension": 8,
+   "high": 6,
+   "low": 5
+  },
+  "SliceDamage": {
+   "ascension": 9,
+   "high": 7,
+   "low": 6
+  },
+  "HissStrengthGain": {
+   "ascension": 9,
+   "high": 3,
+   "low": 2
+  },
+  "TakeDamageSfxType": {
+   "value": 7
+  }
+ },
+ "NOISEBOT": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 19,
+   "low": 18
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 24,
+   "low": 23
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  }
+ },
+ "OVICOPTER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 126,
+   "low": 124
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 132,
+   "low": 130
+  },
+  "SmashDamage": {
+   "ascension": 9,
+   "high": 17,
+   "low": 16
+  },
+  "TenderizerDamage": {
+   "ascension": 9,
+   "high": 8,
+   "low": 7
+  },
+  "NutritionalPasteStrengthAmount": {
+   "ascension": 9,
+   "high": 4,
+   "low": 3
+  },
+  "TakeDamageSfxType": {
+   "value": 7
+  }
+ },
+ "OWL_MAGISTRATE": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 247,
+   "low": 231
+  },
+  "VerdictDamage": {
+   "ascension": 9,
+   "high": 36,
+   "low": 33
+  },
+  "ScrutinyDamage": {
+   "ascension": 9,
+   "high": 17,
+   "low": 16
+  },
+  "PeckAssaultDamage": {
+   "ascension": 9,
+   "high": 4,
+   "low": 4
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  }
+ },
+ "PARAFRIGHT": {
+  "MinInitialHp": {
+   "value": 21
+  },
+  "SlamDamage": {
+   "ascension": 9,
+   "high": 17,
+   "low": 16
+  },
+  "HasDeathSfx": {
+   "value": 0
+  },
+  "ShouldDisappearFromDoom": {
+   "value": 0
+  }
+ },
+ "PHANTASMAL_GARDENER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 27,
+   "low": 26
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 32,
+   "low": 31
+  },
+  "BiteDamage": {
+   "ascension": 9,
+   "high": 5,
+   "low": 5
+  },
+  "LashDamage": {
+   "ascension": 9,
+   "high": 7,
+   "low": 7
+  },
+  "FlailDamage": {
+   "value": 1
+  },
+  "FlailRepeat": {
+   "ascension": 9,
+   "high": 3,
+   "low": 3
+  },
+  "EnlargeStr": {
+   "ascension": 9,
+   "high": 3,
+   "low": 2
+  },
+  "SkittishAmount": {
+   "ascension": 8,
+   "high": 7,
+   "low": 6
+  },
+  "ShouldFadeAfterDeath": {
+   "value": 0
+  },
+  "TakeDamageSfxType": {
+   "value": 5
+  }
+ },
+ "PHROG_PARASITE": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 66,
+   "low": 61
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 68,
+   "low": 64
+  },
+  "LashDamage": {
+   "ascension": 9,
+   "high": 5,
+   "low": 4
+  },
+  "TakeDamageSfxType": {
+   "value": 6
+  }
+ },
+ "PUNCH_CONSTRUCT": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 60,
+   "low": 55
+  },
+  "StrongPunchDamage": {
+   "ascension": 9,
+   "high": 16,
+   "low": 14
+  },
+  "FastPunchDamage": {
+   "ascension": 9,
+   "high": 6,
+   "low": 5
+  },
+  "FastPunchRepeat": {
+   "value": 2
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  }
+ },
+ "QUEEN": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 419,
+   "low": 400
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  },
+  "OffWithYourHeadDamage": {
+   "ascension": 9,
+   "high": 4,
+   "low": 3
+  },
+  "ExecutionDamage": {
+   "ascension": 9,
+   "high": 18,
+   "low": 15
+  },
+  "ChainsOfBindingAmount": {
+   "value": 3
+  }
+ },
+ "ROCKET": {
+  "ShouldFadeAfterDeath": {
+   "value": 0
+  },
+  "ShouldDisappearFromDoom": {
+   "value": 0
+  },
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 209,
+   "low": 199
+  },
+  "CalculatingDamage": {
+   "ascension": 9,
+   "high": 4,
+   "low": 3
+  },
+  "PreciseSmashDamage": {
+   "ascension": 9,
+   "high": 20,
+   "low": 18
+  },
+  "ChargeUpStrengthGain": {
+   "ascension": 9,
+   "high": 3,
+   "low": 2
+  }
+ },
+ "SCROLL_OF_BITING": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 33,
+   "low": 30
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 39,
+   "low": 37
+  },
+  "ChompDamage": {
+   "ascension": 9,
+   "high": 16,
+   "low": 14
+  },
+  "ChewDamage": {
+   "ascension": 9,
+   "high": 6,
+   "low": 5
+  },
+  "TakeDamageSfxType": {
+   "value": 5
+  },
+  "HasDeathSfx": {
+   "value": 1
+  }
+ },
+ "SEAPUNK": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 47,
+   "low": 44
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 49,
+   "low": 46
+  },
+  "SeaKickDamage": {
+   "ascension": 9,
+   "high": 13,
+   "low": 11
+  },
+  "SpinningKickDamage": {
+   "value": 2
+  },
+  "SpinningKickRepeat": {
+   "value": 4
+  },
+  "BubbleBlock": {
+   "ascension": 8,
+   "high": 8,
+   "low": 7
+  },
+  "BubbleStr": {
+   "ascension": 9,
+   "high": 2,
+   "low": 1
+  },
+  "TakeDamageSfxType": {
+   "value": 3
+  }
+ },
+ "SEWER_CLAM": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 58,
+   "low": 56
+  },
+  "JetDamage": {
+   "ascension": 9,
+   "high": 11,
+   "low": 10
+  },
+  "TakeDamageSfxType": {
+   "value": 8
+  }
+ },
+ "SHRINKER_BEETLE": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 40,
+   "low": 38
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 42,
+   "low": 40
+  },
+  "ChompDamage": {
+   "ascension": 9,
+   "high": 8,
+   "low": 7
+  },
+  "StompDamage": {
+   "ascension": 9,
+   "high": 14,
+   "low": 13
+  },
+  "TakeDamageSfxType": {
+   "value": 4
+  }
+ },
+ "SKULKING_COLONY": {
+  "HasPhobiaSpineSkin": {
+   "value": 1
+  },
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 80,
+   "low": 75
+  },
+  "InertiaDamage": {
+   "ascension": 9,
+   "high": 11,
+   "low": 9
+  },
+  "ZoomDamage": {
+   "ascension": 9,
+   "high": 16,
+   "low": 14
+  },
+  "PiercingStabsDamage": {
+   "ascension": 9,
+   "high": 8,
+   "low": 7
+  },
+  "PiercingStabsRepeat": {
+   "value": 2
+  },
+  "InertiaStrengthGain": {
+   "ascension": 9,
+   "high": 4,
+   "low": 2
+  },
+  "TakeDamageSfxType": {
+   "value": 8
+  }
+ },
+ "SLIMED_BERSERKER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 281,
+   "low": 261
+  },
+  "TakeDamageSfxType": {
+   "value": 7
+  },
+  "HasDeathSfx": {
+   "value": 1
+  },
+  "PummelingDamage": {
+   "ascension": 9,
+   "high": 5,
+   "low": 4
+  },
+  "SmotherDamage": {
+   "ascension": 9,
+   "high": 33,
+   "low": 30
+  }
+ },
+ "SLITHERING_STRANGLER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 54,
+   "low": 53
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 56,
+   "low": 55
+  },
+  "ThwackDamage": {
+   "ascension": 9,
+   "high": 8,
+   "low": 7
+  },
+  "LashDamage": {
+   "ascension": 9,
+   "high": 13,
+   "low": 12
+  },
+  "TakeDamageSfxType": {
+   "value": 6
+  }
+ },
+ "SLUDGE_SPINNER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 41,
+   "low": 37
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 42,
+   "low": 39
+  },
+  "OilSprayDamage": {
+   "ascension": 9,
+   "high": 9,
+   "low": 8
+  },
+  "SlamDamage": {
+   "ascension": 9,
+   "high": 12,
+   "low": 11
+  },
+  "RageDamage": {
+   "ascension": 9,
+   "high": 7,
+   "low": 6
+  },
+  "TakeDamageSfxType": {
+   "value": 8
+  }
+ },
+ "SLUMBERING_BEETLE": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 89,
+   "low": 86
+  },
+  "RolloutDamage": {
+   "ascension": 9,
+   "high": 18,
+   "low": 16
+  },
+  "PlatingAmount": {
+   "ascension": 8,
+   "high": 18,
+   "low": 15
+  }
+ },
+ "SNAPPING_JAXFRUIT": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 34,
+   "low": 31
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 36,
+   "low": 33
+  },
+  "EnergyDamage": {
+   "ascension": 9,
+   "high": 4,
+   "low": 3
+  },
+  "TakeDamageSfxType": {
+   "value": 6
+  }
+ },
+ "SNEAKY_GREMLIN": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 11,
+   "low": 10
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 15,
+   "low": 14
+  },
+  "TackleDamage": {
+   "ascension": 9,
+   "high": 10,
+   "low": 9
+  },
+  "TakeDamageSfxType": {
+   "value": 4
+  }
+ },
+ "SOUL_FYSH": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 221,
+   "low": 211
+  },
+  "DeGasDamage": {
+   "ascension": 9,
+   "high": 18,
+   "low": 16
+  },
+  "ScreamDamage": {
+   "ascension": 9,
+   "high": 15,
+   "low": 13
+  },
+  "GazeDamage": {
+   "ascension": 9,
+   "high": 8,
+   "low": 7
+  },
+  "GazeMoveAmount": {
+   "value": 1
+  },
+  "ScreamMoveAmount": {
+   "value": 3
+  },
+  "TakeDamageSfxType": {
+   "value": 5
+  }
+ },
+ "SOUL_NEXUS": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 254,
+   "low": 234
+  },
+  "SoulBurnDamage": {
+   "ascension": 9,
+   "high": 31,
+   "low": 29
+  },
+  "MaelstromDamage": {
+   "ascension": 9,
+   "high": 7,
+   "low": 6
+  },
+  "MaelstromRepeat": {
+   "ascension": 9,
+   "high": 4,
+   "low": 4
+  },
+  "DrainLifeDamage": {
+   "ascension": 9,
+   "high": 19,
+   "low": 18
+  },
+  "ShouldFadeAfterDeath": {
+   "value": 0
+  },
+  "TakeDamageSfxType": {
+   "value": 5
+  }
+ },
+ "SPECTRAL_KNIGHT": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 97,
+   "low": 93
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  },
+  "SoulSlashDamage": {
+   "ascension": 9,
+   "high": 17,
+   "low": 15
+  },
+  "SoulFlameDamage": {
+   "ascension": 9,
+   "high": 4,
+   "low": 3
+  }
+ },
+ "SPINY_TOAD": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 121,
+   "low": 116
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 124,
+   "low": 119
+  },
+  "LashDamage": {
+   "ascension": 9,
+   "high": 19,
+   "low": 17
+  },
+  "ExplosionDamage": {
+   "ascension": 9,
+   "high": 25,
+   "low": 23
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  }
+ },
+ "STABBOT": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 19,
+   "low": 18
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 24,
+   "low": 23
+  },
+  "StabDamage": {
+   "ascension": 9,
+   "high": 12,
+   "low": 11
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  }
+ },
+ "TERROR_EEL": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 150,
+   "low": 140
+  },
+  "ShriekAmount": {
+   "ascension": 8,
+   "high": 75,
+   "low": 70
+  },
+  "CrashDamage": {
+   "ascension": 9,
+   "high": 18,
+   "low": 16
+  },
+  "ThrashDamage": {
+   "ascension": 9,
+   "high": 4,
+   "low": 3
+  },
+  "ThrashRepeat": {
+   "value": 3
+  },
+  "TakeDamageSfxType": {
+   "value": 7
+  }
+ },
+ "TEST_SUBJECT": {
+  "FirstFormHp": {
+   "ascension": 8,
+   "high": 111,
+   "low": 100
+  },
+  "SecondFormHp": {
+   "ascension": 8,
+   "high": 212,
+   "low": 200
+  },
+  "ThirdFormHp": {
+   "ascension": 8,
+   "high": 313,
+   "low": 300
+  },
+  "BiteDamage": {
+   "ascension": 9,
+   "high": 22,
+   "low": 20
+  },
+  "SkullBashDamage": {
+   "ascension": 9,
+   "high": 16,
+   "low": 14
+  },
+  "MultiClawDamage": {
+   "ascension": 9,
+   "high": 11,
+   "low": 10
+  },
+  "Phase3LacerateDamage": {
+   "ascension": 9,
+   "high": 11,
+   "low": 10
+  },
+  "BigPounceDamage": {
+   "value": 45
+  },
+  "BurningGrowlBurnCount": {
+   "ascension": 9,
+   "high": 5,
+   "low": 3
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  }
+ },
+ "THE_FORGOTTEN": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 111,
+   "low": 106
+  },
+  "DebilitatingSmogDexStealAmount": {
+   "ascension": 9,
+   "high": 2,
+   "low": 2
+  },
+  "TakeDamageSfxType": {
+   "value": 8
+  }
+ },
+ "THE_INSATIABLE": {
+  "ThrashDamage": {
+   "ascension": 9,
+   "high": 9,
+   "low": 8
+  },
+  "BiteDamage": {
+   "ascension": 9,
+   "high": 31,
+   "low": 28
+  },
+  "SalivateStrength": {
+   "ascension": 9,
+   "high": 3,
+   "low": 2
+  },
+  "TakeDamageSfxType": {
+   "value": 4
+  }
+ },
+ "THE_LOST": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 99,
+   "low": 93
+  },
+  "EyeLasersDamage": {
+   "ascension": 9,
+   "high": 5,
+   "low": 4
+  },
+  "DebilitatingSmogStrengthStealAmount": {
+   "ascension": 9,
+   "high": 2,
+   "low": 2
+  },
+  "TakeDamageSfxType": {
+   "value": 8
+  }
+ },
+ "THE_OBSCURA": {
+  "HasPhobiaSpineSkin": {
+   "value": 1
+  },
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 129,
+   "low": 123
+  },
+  "PiercingGazeDamage": {
+   "ascension": 9,
+   "high": 11,
+   "low": 10
+  },
+  "HardeningStrikeDamage": {
+   "ascension": 9,
+   "high": 7,
+   "low": 6
+  },
+  "HardeningStrikeBlock": {
+   "ascension": 9,
+   "high": 7,
+   "low": 6
+  }
+ },
+ "THIEVING_HOPPER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 84,
+   "low": 79
+  },
+  "TakeDamageSfxType": {
+   "value": 4
+  },
+  "TheftDamage": {
+   "ascension": 9,
+   "high": 19,
+   "low": 17
+  },
+  "HatTrickDamage": {
+   "ascension": 9,
+   "high": 23,
+   "low": 21
+  },
+  "NabDamage": {
+   "ascension": 9,
+   "high": 16,
+   "low": 14
+  }
+ },
+ "TOADPOLE": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 22,
+   "low": 21
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 26,
+   "low": 25
+  },
+  "SpikeSpitDamage": {
+   "ascension": 9,
+   "high": 4,
+   "low": 3
+  },
+  "SpikeSpitRepeat": {
+   "value": 3
+  },
+  "WhirlDamage": {
+   "ascension": 9,
+   "high": 8,
+   "low": 7
+  },
+  "SpikenAmount": {
+   "value": 2
+  },
+  "TakeDamageSfxType": {
+   "value": 7
+  }
+ },
+ "TORCH_HEAD_AMALGAM": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 211,
+   "low": 199
+  },
+  "TackleDamage": {
+   "ascension": 9,
+   "high": 22,
+   "low": 18
+  },
+  "WeakTackleDamage": {
+   "ascension": 9,
+   "high": 16,
+   "low": 14
+  },
+  "SoulBeamDamage": {
+   "ascension": 9,
+   "high": 8,
+   "low": 8
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  }
+ },
+ "TOUGH_EGG": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 15,
+   "low": 14
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 19,
+   "low": 18
+  },
+  "HatchlingMinHp": {
+   "ascension": 8,
+   "high": 20,
+   "low": 19
+  },
+  "HatchlingMaxHp": {
+   "ascension": 8,
+   "high": 23,
+   "low": 22
+  },
+  "NibbleDamage": {
+   "ascension": 9,
+   "high": 5,
+   "low": 4
+  },
+  "TakeDamageSfxType": {
+   "value": 7
+  }
+ },
+ "TRACKER_RUBY_RAIDER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 22,
+   "low": 21
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 26,
+   "low": 25
+  },
+  "HoundsDamage": {
+   "ascension": 9,
+   "high": 1,
+   "low": 1
+  },
+  "HoundsRepeat": {
+   "ascension": 9,
+   "high": 9,
+   "low": 8
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  }
+ },
+ "TUNNELER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 92,
+   "low": 87
+  },
+  "BiteDamage": {
+   "ascension": 9,
+   "high": 15,
+   "low": 13
+  },
+  "BlockGain": {
+   "ascension": 8,
+   "high": 37,
+   "low": 32
+  },
+  "FromBelowDamage": {
+   "ascension": 9,
+   "high": 28,
+   "low": 24
+  }
+ },
+ "TURRET_OPERATOR": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 51,
+   "low": 41
+  },
+  "TakeDamageSfxType": {
+   "value": 3
+  },
+  "FireDamage": {
+   "ascension": 9,
+   "high": 4,
+   "low": 3
+  }
+ },
+ "TWIG_SLIME_M": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 27,
+   "low": 26
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 29,
+   "low": 28
+  },
+  "HasPhobiaSpineSkin": {
+   "value": 1
+  },
+  "ClumpDamage": {
+   "ascension": 9,
+   "high": 12,
+   "low": 11
+  },
+  "TakeDamageSfxType": {
+   "value": 7
+  }
+ },
+ "TWIG_SLIME_S": {
+  "HasPhobiaSpineSkin": {
+   "value": 1
+  },
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 8,
+   "low": 7
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 12,
+   "low": 11
+  },
+  "TackleDamage": {
+   "ascension": 9,
+   "high": 5,
+   "low": 4
+  },
+  "TakeDamageSfxType": {
+   "value": 7
+  }
+ },
+ "TWO_TAILED_RAT": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 18,
+   "low": 17
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 22,
+   "low": 21
+  },
+  "ScratchDamage": {
+   "ascension": 9,
+   "high": 9,
+   "low": 8
+  },
+  "DiseaseBiteDamage": {
+   "ascension": 9,
+   "high": 7,
+   "low": 6
+  },
+  "TakeDamageSfxType": {
+   "value": 7
+  }
+ },
+ "VANTOM": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 183,
+   "low": 173
+  },
+  "InkBlotDamage": {
+   "ascension": 9,
+   "high": 8,
+   "low": 7
+  },
+  "InkyLanceDamage": {
+   "ascension": 9,
+   "high": 7,
+   "low": 6
+  },
+  "DismemberDamage": {
+   "ascension": 9,
+   "high": 30,
+   "low": 26
+  },
+  "TakeDamageSfxType": {
+   "value": 5
+  },
+  "ShouldDisappearFromDoom": {
+   "value": 0
+  }
+ },
+ "VINE_SHAMBLER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 64,
+   "low": 61
+  },
+  "GraspingVinesDamage": {
+   "ascension": 9,
+   "high": 9,
+   "low": 8
+  },
+  "SwipeDamage": {
+   "ascension": 9,
+   "high": 7,
+   "low": 6
+  },
+  "ChompDamage": {
+   "ascension": 9,
+   "high": 18,
+   "low": 16
+  }
+ },
+ "WATERFALL_GIANT": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 250,
+   "low": 240
+  },
+  "SiphonHeal": {
+   "ascension": 8,
+   "high": 15,
+   "low": 10
+  },
+  "PressurizeAmount": {
+   "ascension": 9,
+   "high": 20,
+   "low": 15
+  },
+  "StompDamage": {
+   "ascension": 9,
+   "high": 16,
+   "low": 15
+  },
+  "RamDamage": {
+   "ascension": 9,
+   "high": 11,
+   "low": 10
+  },
+  "PressureUpDamage": {
+   "ascension": 9,
+   "high": 14,
+   "low": 13
+  },
+  "BasePressureGunDamage": {
+   "ascension": 9,
+   "high": 23,
+   "low": 20
+  },
+  "PressureGunIncrease": {
+   "value": 5
+  },
+  "TakeDamageSfxType": {
+   "value": 5
+  },
+  "HasDeathSfx": {
+   "value": 0
+  }
+ },
+ "WRIGGLER": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 18,
+   "low": 17
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 22,
+   "low": 21
+  },
+  "BiteDamage": {
+   "ascension": 9,
+   "high": 7,
+   "low": 6
+  },
+  "TakeDamageSfxType": {
+   "value": 6
+  }
+ },
+ "ZAPBOT": {
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 19,
+   "low": 18
+  },
+  "MaxInitialHp": {
+   "ascension": 8,
+   "high": 24,
+   "low": 23
+  },
+  "ZapDamage": {
+   "ascension": 9,
+   "high": 15,
+   "low": 14
+  },
+  "TakeDamageSfxType": {
+   "value": 1
+  }
+ }
+}

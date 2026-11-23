@@ -89,7 +89,7 @@
 ## 研究參考
 
 - REA 對本機遊戲 assembly 的結構證據和已知限制：[`game.md`](game.md)。
-- 搜尋方法的外部比較：[`rank-Yu/sts2-solver`](https://github.com/rank-Yu/sts2-solver)（單人完整戰鬥搜尋）、[`zhiyue/sts2-rl-agent`](https://github.com/zhiyue/sts2-rl-agent)（Gymnasium／MaskablePPO）。本 repo 沒有複製其程式碼。
+- 搜尋方法的外部比較：[`rank-Yu/sts2-solver`](https://github.com/rank-Yu/sts2-solver)（單人完整戰鬥搜尋）、[`zhiyue/sts2-rl-agent`](https://github.com/zhiyue/sts2-rl-agent)（Gymnasium／MaskablePPO）。本 repo 以 git submodule 固定引用 `rank-Yu/sts2-solver` 的 `src/Core`（MIT，見 [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md)），沒有複製 `zhiyue/sts2-rl-agent` 的程式碼。
 
 
 ## 章節地圖路線
