@@ -7,9 +7,10 @@
 
 ## 啟動
 
-需要 Windows x64、.NET 6 SDK 和 Steam 版 STS2 v0.113.1。在專案目錄執行：
+需要 Windows x64、.NET 9 SDK 和 Steam 版 STS2 v0.113.1。初次 clone 後先取得子模組，再在專案目錄執行：
 
 ```powershell
+git submodule update --init
 dotnet run --project reader
 ```
 
