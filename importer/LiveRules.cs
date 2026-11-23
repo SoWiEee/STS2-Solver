@@ -89,7 +89,9 @@ internal static class LiveRules
             if (at < 0) catalogPools[key] = pool.Cards;
             else if (key[(at + 1)..] == character) catalogPools[key[..at]] = pool.Cards;
         }
-        AddCardClosure(live, draft, cards, catalogPools, content);
+        List<ushort> spawnClosure = SpawnClosure(live);
+        Require(live.Enemies.Count + spawnClosure.Count <= Limits.MonsterRules, $"怪物規則 {live.Enemies.Count}+{spawnClosure.Count}");
+        AddCardClosure(live, draft, cards, catalogPools, content, spawnClosure);
 
         // ---- Root facts (RulesCompiler.Compile) ----
         bool identity = live.Character is "REGENT" or "NECROBINDER" or "SILENT";
@@ -166,8 +168,20 @@ internal static class LiveRules
             MonsterDef def = Registry.Monster(mid);
             draft.HasTheftContent |= monsterId is "GREMLIN_MERC" or "THIEVING_HOPPER" or "FAT_GREMLIN";
             infiniteHp |= def.HasInfiniteHpDisplay;
-            Require(def.SpawnedMonsterIds.Count == 0, $"{monsterId} 會召喚其他敵人，暫不支援");
             draft.SetMonster(index, PickVariant(catalog, creature, monster, monsterId, def, notes, Get<int>(live.Run, "AscensionLevel")));
+        }
+        // RulesCompiler.CompileSpawnedMonster: one entry per type reachable by summoning. Upstream
+        // compiles a fresh model in-process; here the catalog's spawn-compiled variant (no root
+        // powers) stands in, so its numbers are those of the fixture it came from.
+        foreach (ushort spawned in spawnClosure)
+        {
+            MonsterDef def = Registry.Monster(spawned);
+            infiniteHp |= def.HasInfiniteHpDisplay;
+            var variants = catalog.Variants(def.NativeId);
+            MonsterRules? fresh = variants.FirstOrDefault(v => v.RootPowerAmounts.All(a => a == 0)) ?? variants.FirstOrDefault();
+            Require(fresh != null, $"規則目錄沒有召喚物 {def.NativeId}");
+            draft.AddSpawnableMonster(fresh!);
+            notes.Add($"召喚物 {def.NativeId} 的數值取自規則目錄（未依本局進階等級重算）");
         }
         draft.HasInfiniteHpDisplayMonster = infiniteHp;
         return draft.Build().WithRelics(RelicRoster.Create(rosterRows.ToArray()));
@@ -178,8 +192,28 @@ internal static class LiveRules
     /// 0/current/next upgrade, then everything the root's cards, powers, relics, potions and enemies
     /// declare they can generate, transitively.
     /// </summary>
+    /// <summary>RulesCompiler.SpawnClosure: summonable types, transitively, in first-seen BFS order.</summary>
+    static List<ushort> SpawnClosure(LiveState live)
+    {
+        var closure = new List<ushort>();
+        var seen = new HashSet<ushort>();
+        var pending = new Queue<string>();
+        foreach (ClrObject enemy in live.Enemies)
+            if (Registry.TryMonster(Id(Obj(enemy, "Monster")), out ushort id))
+                foreach (string spawned in Registry.Monster(id).SpawnedMonsterIds) pending.Enqueue(spawned);
+        while (pending.Count > 0)
+        {
+            string nativeId = pending.Dequeue();
+            Require(Registry.TryMonster(nativeId, out ushort id), $"召喚物 {nativeId} 沒有定義");
+            if (!seen.Add(id)) continue;
+            closure.Add(id);
+            foreach (string next in Registry.Monster(id).SpawnedMonsterIds) pending.Enqueue(next);
+        }
+        return closure;
+    }
+
     static void AddCardClosure(LiveState live, RulesDraft draft, CardStats?[][] catalogCards,
-        Dictionary<string, ushort[]> catalogPools, Rules content)
+        Dictionary<string, ushort[]> catalogPools, Rules content, List<ushort> spawnClosure)
     {
         var pendingCards = new Queue<(string Card, int Upgrade)>();
         var pendingPools = new Queue<string>();
@@ -246,6 +280,7 @@ internal static class LiveRules
             }
         foreach (ClrObject enemy in live.Enemies)
             if (Registry.TryMonster(Id(Obj(enemy, "Monster")), out ushort id)) Declare(Registry.Monster(id));
+        foreach (ushort spawned in spawnClosure) Declare(Registry.Monster(spawned));
 
         while (true)
         {
