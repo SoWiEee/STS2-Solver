@@ -27,6 +27,8 @@ app.MapGet("/multi-turn.js", () => Results.File(Path.Combine(root, "multi-turn.j
 app.MapGet("/live-policy.js", () => Results.File(Path.Combine(root, "live-policy.js"), "text/javascript; charset=utf-8"));
 app.MapGet("/map-policy.js", () => Results.File(Path.Combine(root, "map-policy.js"), "text/javascript; charset=utf-8"));
 app.MapGet("/reward-policy.js", () => Results.File(Path.Combine(root, "reward-policy.js"), "text/javascript; charset=utf-8"));
+app.MapGet("/event-policy.js", () => Results.File(Path.Combine(root, "event-policy.js"), "text/javascript; charset=utf-8"));
+app.MapGet("/events.json", () => Results.File(Path.Combine(root, "data", "events.json"), "application/json; charset=utf-8"));
 foreach (string doc in new[] { "game", "policy", "live-import", "rules-catalog" })
     app.MapGet($"/docs/{doc}.md", () => Results.File(Path.Combine(root, "docs", doc + ".md"), "text/plain; charset=utf-8"));
 IResult ReadSnapshot(HttpContext request, Func<object> read)
@@ -46,6 +48,7 @@ app.MapGet("/capture", (HttpContext request) => ReadSnapshot(request, GameReader
 app.MapGet("/map", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureMap));
 app.MapGet("/rewards", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureRewards));
 app.MapGet("/import", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureImport));
+app.MapGet("/event", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureEvent));
 app.MapGet("/names", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureNames));
 app.MapGet("/solve", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureSolve));
 app.Run();
@@ -58,6 +61,7 @@ static class GameReader
     public static object Capture() => WithRuntime(ReadCombat);
     public static object CaptureMap() => WithRuntime(ReadMap);
     public static object CaptureRewards() => WithRuntime(ReadRewards);
+    public static object CaptureEvent() => WithRuntime(ReadEvent);
 
     static readonly Lazy<Sts2Solver.LiveImport.RulesCatalog> Catalog = new(() =>
         new Sts2Solver.LiveImport.RulesCatalog(Path.Combine(AppContext.BaseDirectory, "data", "rules-catalog.br")));
@@ -180,6 +184,67 @@ static class GameReader
     {
         var move = Object(Object(creature, Backing("Monster")), Backing("NextMove"));
         return !move.IsNull && move.ReadStringField(Backing("StateId")) is "REVIVE_MOVE" or "RESPAWN_MOVE";
+    }
+
+    /// <summary>
+    /// The local player's current event (EventSynchronizer._events), its live DynamicVars (already
+    /// ascension-scaled) and options; effects are looked up client-side in data/events.json by TextKey.
+    /// </summary>
+    static object ReadEvent(ClrRuntime runtime, string gameDirectory)
+    {
+        var runManager = FindManager(runtime, "MegaCrit.Sts2.Core.Runs.RunManager");
+        var run = Object(runManager, Backing("State"));
+        Require(!run.IsNull, "請先開始遊戲。");
+        var players = List(Object(run, "_players"), 4).ToArray();
+        Require(players.Length == 1, "事件建議目前限單人。");
+        var player = players[0];
+        var creature = Object(player, Backing("Creature"));
+        Require(List(Object(run, "_currentRooms"), 8).LastOrDefault() is { IsNull: false } room && ShortName(room) == "EventRoom",
+            "請在遊戲進入事件。");
+        var events = List(Object(Object(runManager, Backing("EventSynchronizer")), "_events"), 4).ToList();
+        Require(events.Count == 1, "事件建議目前限單人。");
+        var model = events[0];
+        string id = Object(model, Backing("Id")).ReadStringField(Backing("Entry")) ?? "";
+        var vars = new Dictionary<string, decimal>();
+        foreach (var entry in DynamicVarEntries(model))
+                if (entry.ReadObjectField("value").TryReadField<decimal>("_baseValue", out var amount))
+                    vars[entry.ReadObjectField("key").AsString() ?? ""] = amount;
+        var text = RelicText.Load(gameDirectory, "events");
+        foreach (var (key, value) in RelicText.Load(gameDirectory, "ancients")) text.TryAdd(key, value);
+        var optionList = Object(model, "_currentOptions");
+        Require(!optionList.IsNull, "事件目前沒有可選的選項。");
+        var options = List(optionList, 16, allowEmpty: true).Select(option =>
+        {
+            string key = option.ReadStringField(Backing("TextKey")) ?? "";
+            var relic = Object(option, Backing("Relic"));
+            return new
+            {
+                textKey = key,
+                title = RelicText.Describe(text.GetValueOrDefault(key + ".title"), vars),
+                description = RelicText.Describe(text.GetValueOrDefault(key + ".description"), vars),
+                locked = Field<bool>(option, Backing("IsLocked")),
+                proceed = Field<bool>(option, Backing("IsProceed")),
+                relic = relic.IsNull ? null : ShortName(relic),
+                mayKill = !Object(option, Backing("WillKillPlayer")).IsNull,
+            };
+        }).ToArray();
+        Require(options.Length > 0, "事件目前沒有可選的選項。");
+        return new
+        {
+            eventId = id,
+            title = text.GetValueOrDefault(id + ".title"),
+            vars,
+            options,
+            deck = List(Object(Object(player, Backing("Deck")), "_cards"), 256).Select(card => ReadRewardCard(card)).ToArray(),
+            relics = List(Object(player, "_relics"), 256).Select(ShortName).ToArray(),
+            potions = List(Object(player, "_potionSlots"), 32, allowEmpty: true).Select(p => p.IsNull ? null : ShortName(p)).ToArray(),
+            gold = Field<int>(player, "_gold"),
+            character = ShortName(Object(player, Backing("Character"))),
+            act = Field<int>(run, "_currentActIndex") + 1,
+            ascension = Field<int>(run, Backing("AscensionLevel")),
+            hp = Field<int>(creature, "_currentHp"),
+            maxHp = Field<int>(creature, "_maxHp"),
+        };
     }
 
     static object ReadRewards(ClrRuntime runtime, string gameDirectory)
@@ -316,7 +381,8 @@ static class GameReader
         string? Description = null, decimal? OpeningEnergy = null, decimal? OpeningStrength = null,
         decimal? OpeningDexterity = null, decimal? OpeningVigor = null, string? Pool = null,
         int? StarCost = null, bool StarCostsX = false, decimal? DrawPutBack = null, bool GeneratesStars = false,
-        decimal? NextTurnEnergy = null, int? Price = null);
+        decimal? NextTurnEnergy = null, int? Price = null, decimal? BlockPerTurn = null, bool ReturnsToHand = false,
+        string? Unmodeled = null);
 
     static RewardOption? ReadMerchantEntry(ClrObject entry, Lazy<Dictionary<string, string>> relicText,
         Lazy<Dictionary<string, string>> cardText)
@@ -389,6 +455,11 @@ static class GameReader
         if (id == "FIEND_FIRE" && hints.TryGetValue("damage", out decimal perCard)) hints["damage"] = perCard * 4; // per exhausted card, ~4 in hand
         var values = DynamicVarEntries(card).ToDictionary(e => e.ReadObjectField("key").AsString()!,
             e => e.ReadObjectField("value").TryReadField<decimal>("_baseValue", out var v) ? v : 0m);
+        // Stretch adds its amount to the next block-gaining card once (StretchPower.ModifyBlockAdditive);
+        // Hidden Roots grants that Stretch every turn, so it scores as block per turn.
+        decimal? blockPerTurn = values.TryGetValue("HiddenRootsPower", out decimal roots) ? roots : null;
+        if (blockPerTurn == null && values.TryGetValue("StretchPower", out decimal stretch))
+            hints["block"] = hints.GetValueOrDefault("block") + stretch;
         string? description = text == null ? null : RelicText.Describe(text.GetValueOrDefault(id + ".description"), values);
         return new RewardOption(name, "card",
             energyCost,
@@ -401,8 +472,16 @@ static class GameReader
             StarCostsX: stats?.StarCostsX == true,
             DrawPutBack: id == "GLIMMER" ? 1 : null,
             GeneratesStars: id is "SOLAR_STRIKE" or "SHINING_STRIKE" or "GATHER_LIGHT",
-            NextTurnEnergy: id == "CHARGE_BATTERY" ? hints.GetValueOrDefault("energy", 1) : null);
+            NextTurnEnergy: NextTurnEnergyCards.Contains(id) ? hints.GetValueOrDefault("energy", 1) : null,
+            BlockPerTurn: blockPerTurn,
+            // GetResultLocationForCardPlay sends these back to hand instead of the discard pile (Trick Shot only while arrows remain).
+            ReturnsToHand: id is "MOURNING_BLOW" or "PARTICLE_WALL" or "TRICK_SHOT",
+            Unmodeled: id == "RECALL" ? "效果依賴箭矢與抽牌堆順序，無法換算分數，請參照牌面。" : null);
     }
+
+    // Cards whose OnPlay applies EnergyNextTurnPower with their Energy var (decompiled 0.113.1).
+    static readonly HashSet<string> NextTurnEnergyCards = ["CHARGE_BATTERY", "CONVERGENCE", "DELAY", "HEGEMONY", "INVOKE",
+        "KI_REST", "KI_WHIP", "OUTMANEUVER", "REFINE_BLADE", "RELAX", "SCAVENGE", "SIDESTEP", "THE_STAR", "WAH_KI"];
 
     static object ReadMap(ClrRuntime runtime)
     {

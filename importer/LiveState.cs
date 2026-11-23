@@ -19,6 +19,11 @@ internal sealed class LiveState
     public required ulong PlayerNetId { get; init; }
     public required string Character { get; init; }
 
+    public List<ClrObject> Pets => List(Obj(PlayerState, "_pets"), 16);
+    /// <summary>Player.Osty / the Wuppy pet: the player's pet whose monster model is that native type (may be dead).</summary>
+    public ClrObject Pet(string monsterType) =>
+        Pets.FirstOrDefault(p => Obj(p, "Monster").Type?.Name == monsterType);
+
     public static LiveState Capture(ClrRuntime runtime)
     {
         ClrObject manager = Single(runtime, "MegaCrit.Sts2.Core.Combat.CombatManager");

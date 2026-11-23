@@ -62,6 +62,7 @@ internal sealed class LiveHistory
         Obj(e.Obj, "CardPlay") is { IsNull: false } play && ByPlayer(play) && (Get<int>(e.Obj, "Props") & 8) != 0);
     public int CardsExhaustedThisTurn => Turn("CardExhaustedEntry").Count(e => e.Actor == _player);
     public int CardsDiscardedThisTurn => Turn("CardDiscardedEntry").Count(e => e.Actor == _player);
+    public int CreatureAttacksThisTurn(ulong creature) => Turn("CreatureAttackedEntry").Count(e => e.Actor == creature);
     public int PlayerAttacksThisTurn => Turn("CreatureAttackedEntry").Count(e => e.Actor == _player);
     public int NonHandDrawsThisTurn => Turn("CardDrawnEntry").Count(e => e.Actor == _player && !Get<bool>(e.Obj, "FromHandDraw"));
     public int StatusCardsDrawnThisTurn => Turn("CardDrawnEntry").Count(e => e.Actor == _player

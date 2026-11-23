@@ -73,7 +73,7 @@
       }
 
       const hasNumbers = ["damage", "block", "draw", "combatStartHeal", "openingEnergy",
-        "openingStrength", "openingDexterity", "openingVigor", "nextTurnEnergy"].some(key => option[key] != null);
+        "openingStrength", "openingDexterity", "openingVigor", "nextTurnEnergy", "blockPerTurn"].some(key => option[key] != null);
       const usesStars = kind === "card" && (number(option.starCost, 0) > 0 || option.starCostsX);
       const evaluated = hasNumbers && (kind === "card" || kind === "relic");
       if (evaluated) {
@@ -87,13 +87,18 @@
         const dexterity = Math.max(0, number(option.openingDexterity, 0));
         const vigor = Math.max(0, number(option.openingVigor, 0));
         const cost = Math.max(0, number(option.cost, 1));
+        const blockPerTurn = Math.max(0, number(option.blockPerTurn, 0));
         // Weighted utility is deliberately limited to normalized numerical data.
         const damageValue = damage * (0.55 + 0.35 * missingDamage);
         const blockValue = block * (0.38 + 0.35 * missingBlock) * (hpRatio < 0.45 ? 1.35 : 1);
         const putBack = Math.max(0, number(option.drawPutBack, 0));
         const drawValue = Math.max(0, draw - putBack) * (4 + 2 * missingDraw);
         const costPenalty = kind === "card" ? Math.max(0, cost - 1) * 0.8 : 0;
-        score = damageValue + blockValue + drawValue + heal * (hpRatio < 0.45 ? 1.8 : 1.2) - costPenalty
+        // A card that returns to hand can be replayed each turn: its damage/block counts 50% extra.
+        const replay = option.returnsToHand ? 0.5 * (damageValue + blockValue) : 0;
+        // Block every turn is worth about one Dexterity on a deck of average block density.
+        const perTurnValue = blockPerTurn * (0.38 + 0.35 * missingBlock) * 2.5;
+        score = damageValue + blockValue + drawValue + replay + perTurnValue + heal * (hpRatio < 0.45 ? 1.8 : 1.2) - costPenalty
           + energy * 3 + nextTurnEnergy * 2 + strength * 6 * attackDensity
           + dexterity * 5 * blockDensity + vigor * 0.7 * Math.min(1, 5 * attackDensity);
         if (damage > 0) reasons.push(`已知傷害 ${damage}，依牌組傷害缺口計分。`);
@@ -101,6 +106,8 @@
         if (draw > 0) reasons.push(putBack > 0
           ? `抽 ${draw} 張、放回 ${putBack} 張，依淨抽牌數估分。`
           : `抽 ${draw} 張，依牌組抽牌缺口估分。`);
+        if (replay > 0) reasons.push(`打出後回到手牌，可重複使用，加 ${replay.toFixed(1)} 分。`);
+        if (blockPerTurn > 0) reasons.push(`每回合多 ${blockPerTurn} 點格擋（伸展），以持續效果估分。`);
         if (heal > 0) reasons.push(`每場戰鬥開始時恢復 ${heal} HP。`);
         if (energy > 0) reasons.push(`首回合額外 ${energy} 點能量。`);
         if (nextTurnEnergy > 0) reasons.push(`下回合額外 ${nextTurnEnergy} 點能量。`);
@@ -116,6 +123,8 @@
           score += bonus;
           if (bonus > 0) reasons.push(`目前牌組 ${count} 張；早期小牌組成長加 ${bonus.toFixed(1)} 分。`);
         }
+      } else if (option.unmodeled) {
+        reasons.push(option.unmodeled);
       } else if (kind === "card" || kind === "relic") {
         reasons.push("效果沒有可用的已知數值；不推測文字效果，依 0 分排序。");
       } else {

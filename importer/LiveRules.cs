@@ -119,6 +119,7 @@ internal static class LiveRules
                 Require(draft.HasCard(cardId, upgrade), $"規則目錄沒有 {Id(card)}+{upgrade}");
             }
         var allCreatures = new List<ClrObject> { live.Creature };
+        allCreatures.AddRange(live.Pets);
         allCreatures.AddRange(live.Enemies);
         int swordSage = 0;
         foreach (ClrObject creature in allCreatures)
@@ -300,7 +301,7 @@ internal static class LiveRules
                 if (!affliction.IsNull && Registry.TryAffliction(Id(affliction), out ushort aid))
                     Declare(Registry.Affliction(aid));
             }
-        foreach (ClrObject creature in new[] { live.Creature }.Concat(live.Enemies))
+        foreach (ClrObject creature in new[] { live.Creature }.Concat(live.Pets).Concat(live.Enemies))
             foreach (ClrObject power in LiveState.Powers(creature))
                 if (Get<int>(power, "_amount") != 0 && Registry.TryPower(Id(power), out ushort id))
                     Declare(Registry.Power(id));

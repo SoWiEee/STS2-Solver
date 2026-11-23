@@ -14,6 +14,8 @@ static class RelicText
         ["potions"] = (2130503616, 11323, "EE59B4BCFD174535C323D5013A90BD3F"),
         ["monsters"] = (2130476304, 25370, "3D0117DDA1B0B5AF8A73F4EBE16C092B"),
         ["powers"] = (2130515408, 94567, "5461AA990E11D1143C8BD7A1B42FCD90"),
+        ["events"] = (2130302464, 124247, "53B0485C6C8AFFF26E45E0FAA0730CCF"),
+        ["ancients"] = (2130055600, 36003, "7B94339D3BED9B4BF975BEB997676FCD"),
     };
 
     public static Dictionary<string, string> Load(string gameDirectory) => Load(gameDirectory, "relics");

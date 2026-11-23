@@ -17,8 +17,12 @@ internal static class LiveBattle
         var history = new LiveHistory(live, rules);
         var ownerOf = new Dictionary<ulong, byte> { [live.Creature.Address] = Limits.PlayerOwner };
         for (int i = 0; i < live.Enemies.Count; i++) ownerOf[live.Enemies[i].Address] = (byte)(Limits.FirstEnemyOwner + i);
-        Require(List(Obj(live.PlayerState, "_pets")).Count == 0, "召喚物（Osty／寵物）暫不支援");
-        Require(List(Obj(live.Combat, "_allies")).Count == 1, "場上有其他友方生物，暫不支援");
+        ClrObject osty = live.Pet("Osty"), wuppy = live.Pet("Wuppy");
+        Require(live.Pets.All(p => p.Address == osty.Address || p.Address == wuppy.Address), "未支援的召喚物");
+        Require(List(Obj(live.Combat, "_allies")).All(a => a.Address == live.Creature.Address || live.Pets.Any(p => p.Address == a.Address)),
+            "場上有其他友方生物，暫不支援");
+        if (!osty.IsNull) ownerOf[osty.Address] = Limits.OstyOwner;
+        if (!wuppy.IsNull) ownerOf[wuppy.Address] = Limits.WuppyOwner;
 
         Battle battle = default;
         battle.Round = live.Round;
@@ -34,9 +38,16 @@ internal static class LiveBattle
         if (Get<bool>(live.Player, "IsActiveForHooks")) battle.Flags |= BattleFlags.PlayerHooksActive;
         battle.MaxHandSize = 10; // CardPile.MaxCardsInHand: ldc.i4.s 10 (REA, docs/game.md)
         battle.Player = Vitals(live.Creature, history);
+        // BattleImporter: Osty in _allies (alive or retained) marks OstyEverPresent; Player.Osty fills the slot.
+        if (!osty.IsNull)
+        {
+            battle.Osty = Vitals(osty, history);
+            battle.Flags |= BattleFlags.OstyPresent | BattleFlags.OstyEverPresent;
+        }
+        if (!wuppy.IsNull) battle.Wuppy = Vitals(wuppy, history);
 
         var dampen = ReadDampen(live);
-        ImportCounters(ref battle, history);
+        ImportCounters(ref battle, live, history);
         battle.SetCounter(Counter.DampenCasterMask, dampen.Mask);
         ImportRng(ref battle, live);
         ImportEnemies(ref battle, live, rules, history);
@@ -67,7 +78,7 @@ internal static class LiveBattle
         int position = 0;
         foreach (ClrObject pile in live.Piles())
             foreach (ClrObject card in LiveState.Cards(pile)) slotOf[card.Address] = position++;
-        foreach (ClrObject creature in new[] { live.Creature }.Concat(live.Enemies))
+        foreach (ClrObject creature in new[] { live.Creature }.Concat(live.Pets).Concat(live.Enemies))
         {
             byte owner = ownerOf[creature.Address];
             int showOffOccurrence = 0;
@@ -172,7 +183,7 @@ internal static class LiveBattle
         return (mask, original);
     }
 
-    static void ImportCounters(ref Battle battle, LiveHistory h)
+    static void ImportCounters(ref Battle battle, LiveState live, LiveHistory h)
     {
         battle.SetCounter(Counter.CardsPlayedThisTurn, h.CardsPlayedThisTurn);
         battle.SetCounter(Counter.ManualCardsPlayedThisTurn, h.ManualCardsPlayedThisTurn);
@@ -207,7 +218,8 @@ internal static class LiveBattle
         battle.SetCounter(Counter.FinishedCardPlays, h.FinishedCardPlays);
         battle.SetCounter(Counter.CardsDrawn, h.CardsDrawn);
         battle.SetCounter(Counter.LightningChannels, h.LightningChannels);
-        battle.SetCounter(Counter.OstyAttacksThisTurn, 0);
+        ClrObject osty = live.Pet("Osty");
+        battle.SetCounter(Counter.OstyAttacksThisTurn, osty.IsNull ? 0 : h.CreatureAttacksThisTurn(osty.Address));
         battle.SetCounter(Counter.DoomAppliedThisTurn, h.DoomAppliedThisTurn ? 1 : 0);
         battle.SetCounter(Counter.EtherealPlays, h.EtherealPlays);
         battle.SetCounter(Counter.CardsGeneratedThisCombat, h.CardsGenerated);
@@ -404,9 +416,17 @@ internal static class LiveBattle
         var ordered = new List<(byte Owner, ClrObject Power)>();
         foreach (ClrObject power in LiveState.Powers(live.Creature))
             if (Get<int>(power, "_amount") != 0) ordered.Add((Limits.PlayerOwner, power));
+        foreach (string pet in new[] { "Osty", "Wuppy" })
+        {
+            ClrObject creature = live.Pet(pet);
+            if (creature.IsNull) continue;
+            foreach (ClrObject power in LiveState.Powers(creature))
+                if (Get<int>(power, "_amount") != 0) ordered.Add((ownerOf[creature.Address], power));
+        }
         for (int i = 0; i < live.Enemies.Count; i++)
             foreach (ClrObject power in LiveState.Powers(live.Enemies[i]))
                 if (Get<int>(power, "_amount") != 0) ordered.Add(((byte)(Limits.FirstEnemyOwner + i), power));
+        ordered = ordered.OrderBy(p => p.Owner).ToList(); // stable: native order within an owner
         Require(ordered.Count <= Limits.Powers, $"能力數 {ordered.Count}");
         battle.PowerCount = (byte)ordered.Count;
         for (int index = 0; index < ordered.Count; index++)
@@ -729,8 +749,19 @@ internal static class LiveBattle
         ClrObject queue = Obj(live.PlayerState, "OrbQueue");
         int capacity = Get<int>(queue, "Capacity");
         Require(capacity >= 0 && capacity <= Limits.Orbs, $"球槽 {capacity}");
-        Require(List(Obj(queue, "_orbs")).Count == 0, "充能球暫不支援");
+        List<ClrObject> orbs = List(Obj(queue, "_orbs"), Limits.Orbs + 1);
+        Require(orbs.Count <= capacity, $"球數 {orbs.Count} 超過容量 {capacity}");
         battle.OrbCapacity = (byte)capacity;
-        battle.OrbCount = 0;
+        battle.OrbCount = (byte)orbs.Count;
+        for (int index = 0; index < orbs.Count; index++)
+        {
+            string orbId = Id(orbs[index]);
+            Require(Registry.TryOrb(orbId, out ushort id), $"未支援的充能球 {orbId}");
+            // NativeAccess.OrbPrivateValue: Dark keeps its growing evoke value, Glass its decaying passive value.
+            string? field = orbId switch { "DARK_ORB" => "_evokeVal", "GLASS_ORB" => "_passiveVal", _ => null };
+            decimal stored = field == null ? 0m : Get<decimal>(orbs[index], field);
+            Require(stored == decimal.Truncate(stored), $"{orbId} 私有值 {stored}");
+            battle.Orbs[index] = new Orb { Id = checked((byte)id), Aux = (int)stored };
+        }
     }
 }

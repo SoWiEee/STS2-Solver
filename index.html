@@ -103,7 +103,7 @@
         <button type="button" class="head-action" id="rewardRefresh">比較選項</button>
       </div>
       <div class="panel-body">
-        <p id="rewardStatus" role="status">請在遊戲開啟獎勵、商品清單或營火。</p>
+        <p id="rewardStatus" role="status">請在遊戲開啟獎勵、商品清單、營火或事件。</p>
         <div id="rewardResults" class="rows"></div>
       </div>
     </section>
@@ -169,6 +169,7 @@
   <script src="live-policy.js"></script>
   <script src="map-policy.js"></script>
   <script src="reward-policy.js"></script>
+  <script src="event-policy.js"></script>
   <script>
     const HAND_LIMIT=10,MAX_ENEMIES=3,SEARCH_LIMIT=1500000;
     const bossDefaults={
@@ -374,9 +375,10 @@
           runSolve();
         }
         if(stateKey!==previousState){
-          const result=globalThis.planLiveCombat(snapshot);
-          renderLiveRoute(snapshot,result);
           previousState=stateKey;
+          // A state the fallback model cannot represent must not read as a failed capture (that clears the search route).
+          try { renderLiveRoute(snapshot,globalThis.planLiveCombat(snapshot)); }
+          catch(error) { $("#liveResults").replaceChildren(Object.assign(document.createElement("p"),{className:"empty",textContent:`備用模型：${error.message}`})); }
         }
         status.textContent=`第 ${snapshot.round} 回合 · ${new Date(capturedAt).toLocaleTimeString()} 已擷取 · 自動更新中`;
       } catch(error) {
@@ -486,6 +488,25 @@
       }
     }
     $("#solveRefresh").addEventListener("click",runSolve);
+    let eventTable=null;
+    // Event rooms: rank options with event-policy.js against the transcribed effects table.
+    async function renderEvent(status,output){
+      const response=await fetch("/event",{headers:{"X-STS2-Capture":"1"}});
+      if(!response.ok)return false;
+      const event=await response.json();
+      if(!eventTable){const r=await fetch("/events.json");if(r.ok)eventTable=await r.json();}
+      if(!gameNames){try{const r=await fetch("/names",{headers:{"X-STS2-Capture":"1"}});if(r.ok)gameNames=await r.json();}catch{}}
+      const name=id=>gameNames?.cards?.[id]||gameNames?.relics?.[id]||gameNames?.potions?.[id]||id;
+      const plan=globalThis.planEvent({...event,name},eventTable);
+      status.textContent=`事件「${event.title??event.eventId}」· ${event.hp}/${event.maxHp} HP · ${event.gold} 金幣。${plan.known?"依效果換算的生命等值分數排序。":"此事件尚無效果資料，僅列出選項。"}`;
+      const ranked=[...plan.ranked].sort((a,b)=>(b.score??0)-(a.score??0));
+      output.innerHTML=ranked.map(o=>`<article class="row-card">
+        <strong>${o.originalIndex===plan.best?"推薦 · ":""}${esc(o.title??o.textKey)}</strong>
+        <p class="row-caption">${o.locked?"無法選擇":o.lethal?"可能致死":Number.isFinite(o.score)?`評分 ${o.score.toFixed(1)}${o.evaluated?"":"（部分未計）"}`:"未評估"}</p>
+        ${o.description?`<p>${esc(o.description)}</p>`:""}
+        ${o.reasons.map(r=>`<p>${esc(r)}</p>`).join("")}</article>`).join("");
+      return true;
+    }
     $("#rewardRefresh").addEventListener("click",async()=>{
       const button=$("#rewardRefresh"),status=$("#rewardStatus"),output=$("#rewardResults");
       button.disabled=true;
@@ -494,6 +515,7 @@
       try {
         const response=await fetch("/rewards",{headers:{"X-STS2-Capture":"1"}});
         const reward=await response.json();
+        if(!response.ok&&await renderEvent(status,output))return;
         if(!response.ok)throw new Error(reward.error||"獎勵讀取失敗。");
         if(reward.restSite){
           const rest=reward.recommendation==="rest";
