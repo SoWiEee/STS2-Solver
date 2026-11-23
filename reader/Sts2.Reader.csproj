@@ -10,6 +10,8 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="3.1.512801" />
     <Content Include="../index.html" Link="index.html" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../multi-turn.js" Link="multi-turn.js" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../live-policy.js" Link="live-policy.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../docs/*.md" Link="docs/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

@@ -23,6 +23,8 @@ app.Use(async (request, next) =>
     await next();
 });
 app.MapGet("/", () => Results.File(Path.Combine(root, "index.html"), "text/html; charset=utf-8"));
+app.MapGet("/multi-turn.js", () => Results.File(Path.Combine(root, "multi-turn.js"), "text/javascript; charset=utf-8"));
+app.MapGet("/live-policy.js", () => Results.File(Path.Combine(root, "live-policy.js"), "text/javascript; charset=utf-8"));
 foreach (string doc in new[] { "game", "policy" })
     app.MapGet($"/docs/{doc}.md", () => Results.File(Path.Combine(root, "docs", doc + ".md"), "text/plain; charset=utf-8"));
 app.MapGet("/capture", (HttpContext request) =>
@@ -87,6 +89,10 @@ static class GameReader
                         maxHp = Field<int>(pair.creature, "_maxHp"),
                         block = Field<int>(pair.creature, "_block"),
                         energy = state.IsNull ? (int?)null : Field<int>(state, "_energy"),
+                        maxEnergy = Field<int>(pair.player, Backing("MaxEnergy")),
+                        powers = ReadPowers(pair.creature),
+                        relics = List(Object(pair.player, "_relics"), 256).Select(ShortName).ToArray(),
+                        drawPile = state.IsNull ? null : ReadPile(Object(state, Backing("DrawPile")), 256),
                         hand = hand.IsNull ? null : List(Object(hand, "_cards"), 10).Select(ReadCard).ToArray()
                     };
                 }).ToArray();
@@ -103,13 +109,37 @@ static class GameReader
                         maxHp = Field<int>(c, "_maxHp"),
                         block = Field<int>(c, "_block"),
                         move = move.IsNull ? null : move.ReadStringField(Backing("StateId")),
-                        hasAttack = HasAttackIntent(move)
+                        hasAttack = HasAttackIntent(move),
+                        moves = ReadFollowUps(move),
+                        powers = ReadPowers(c)
                     };
                 }).ToArray();
             Require(enemies.Length is >= 1 and <= 3, "目前支援同時 1 到 3 名存活敵人。");
-            return new { schemaVersion = 1, version = Version, capturedAt = DateTimeOffset.Now, round = Field<int>(combat, Backing("RoundNumber")), players, enemies };
+            var run = Object(combat, Backing("RunState"));
+            return new { schemaVersion = 1, version = Version, capturedAt = DateTimeOffset.Now,
+                round = Field<int>(combat, Backing("RoundNumber")), ascension = Field<int>(run, Backing("AscensionLevel")), players, enemies };
         }
         finally { foreach (var game in games) game.Dispose(); }
+    }
+
+    static object[] ReadPile(ClrObject pile, int limit) =>
+        List(Object(pile, "_cards"), limit).Select(ReadCard).ToArray();
+
+    static object[] ReadPowers(ClrObject creature) =>
+        List(Object(creature, "_powers"), 256)
+            .Select(power => (object)new { name = ShortName(power), amount = Field<int>(power, "_amount") }).ToArray();
+
+    static string?[] ReadFollowUps(ClrObject move)
+    {
+        var moves = new List<string?>();
+        while (!move.IsNull && moves.Count < 4)
+        {
+            if (!move.TryReadStringField(Backing("StateId"), 256, out var id)) break;
+            moves.Add(id);
+            if (!move.TryReadObjectField(Backing("FollowUpState"), out var next)) break;
+            move = next;
+        }
+        return moves.ToArray();
     }
 
     static object ReadCard(ClrObject card)
@@ -123,6 +153,9 @@ static class GameReader
             baseCost = baseCost >= 0 ? baseCost : null,
             unplayable = baseCost == -1,
             targetType = Field<int>(card, Backing("TargetType")),
+            modified = !Object(card, Backing("Enchantment")).IsNull || !Object(card, Backing("Affliction")).IsNull ||
+                (!cost.IsNull && !Object(cost, "_localModifiers").IsNull && Field<int>(Object(cost, "_localModifiers"), "_size") > 0) ||
+                Field<int>(card, "_baseReplayCount") != 0 || Field<int>(card, "_extraReplayThisTurn") != 0,
             vars = ReadCardHints(card)
         };
     }

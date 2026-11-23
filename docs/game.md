@@ -81,3 +81,9 @@ Windows companion 使用 ClrMD 的程序快照與遊戲附帶的 .NET 9 DAC。�
 單人實測第一回合讀到玩家 64/80 HP、0 格擋、3 能量、5 張手牌，包含兩張各自獨立的打擊。敵人 Shrinker Beetle 為 40/40 HP，其 `SHRINKER_MOVE` 意圖沒有攻擊。快照亦包含卡牌型別、升級數、基礎費用，以及可辨識的基礎傷害與格擋變數。這些基礎變數不包含目標與戰鬥狀態造成的修正。
 
 外部讀取可以取得遊戲客戶端實際持有的物件。僅憑程式定義有手牌欄位，無法保證遠端玩家的值已同步到這一台客戶端。雙人手牌與能量仍需以兩邊遊戲畫面交叉驗證。參考 [ClrMD 說明](https://github.com/microsoft/clrmd/blob/main/doc/GettingStarted.md)。
+
+## 單人跨回合讀取
+
+同一份程序快照現在也讀取 `PlayerCombatState.DrawPile`、上限能量、進階值、卡牌修飾標記、目前能力與遺物，以及敵人的 `MoveState.FollowUpState`。REA 在 `CardPile.MoveToTopInternal` 讀到把牌插入陣列位置 0 的指令，因此抽牌堆由索引 0 開始取牌。模型用標準的 5 張抽牌規則，並在牌堆不足時停止預測。
+
+本機第一場縮小甲蟲戰的快照包含 `SHRINKER_MOVE → CHOMP_MOVE → STOMP_MOVE → CHOMP_MOVE` 以及 6 張未抽牌。REA 顯示 A9 以下咬擊／踩踏的基礎傷害是 7／13，A9 起是 8／14，縮小令有力量標記的攻擊傷害乘以 0.7。痛擊的 CIL 顯示基礎易傷 2 層，升級會增加 1 層。易傷的基礎倍率是 1.5。模型只套用已知的組合，遇到其他能力、敵人或修飾就停止對相應回合求解。
