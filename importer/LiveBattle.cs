@@ -96,6 +96,8 @@ internal static class LiveBattle
                         if (row < 0) break;
                         battle.Powers[row].Aux0 = Var(power, "HitCounter");
                         List<ClrObject> source = List(Obj(Obj(power, "_internalData"), "arrowSources"), 64);
+                        // Multiplayer: a partner's arrows in the same Impaled stack are not simulated; keep ours.
+                        if (live.Partnered) source = source.Where(a => arrowAt.ContainsKey(a.Address)).ToList();
                         for (int i = 0; i < source.Count; i++)
                         {
                             Require(arrowAt.TryGetValue(source[i].Address, out int arrow), "穿刺引用了其他玩家的箭");
