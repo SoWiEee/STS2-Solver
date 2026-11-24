@@ -8,18 +8,11 @@
   <style>
     :root{color-scheme:light;--ink:#1a241e;--muted:#536357;--paper:#f3f3ec;--panel:#fffefa;--line:#d9ddd3;--deep:#111914;--deep2:#1b2820;--accent:#b84030;--accent-soft:#fbebe6;--green:#247052;--green-soft:#e8f2eb;--gold:#c69235;--gold-soft:#f6efd9;--blue:#386b75;--shadow:0 12px 32px rgba(24,37,28,.07);font-family:Inter,"Segoe UI","Noto Sans TC",system-ui,sans-serif}
     *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-size:14px;line-height:1.48}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #72aaa0;outline-offset:2px}a{color:inherit}
-    .topbar{height:62px;background:var(--deep);color:#f6f3e8;display:flex;align-items:center;justify-content:space-between;padding:0 max(24px,calc((100vw - 1440px)/2));border-bottom:1px solid #2b3930}.brand{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.02em}.mark{width:27px;height:27px;border:1px solid #d3a447;display:grid;place-items:center;color:#e4b84f;border-radius:7px;font-weight:800;font-size:16px}.version{color:#b7c2b6;font-size:12px;display:flex;align-items:center;gap:8px}.dot{width:7px;height:7px;background:#7fc39b;border-radius:50%;box-shadow:0 0 0 3px #7fc39b25}
-    .app{max-width:1440px;margin:0 auto;padding:26px 28px 54px}.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:22px}.hero h1{font-size:27px;line-height:1.2;margin:0 0 7px;letter-spacing:-.035em}.hero p{margin:0;color:var(--muted);max-width:670px}.hero-note{font-size:12px;color:#536259;background:#e6e9df;border:1px solid #d4dacf;border-radius:7px;padding:9px 12px;white-space:nowrap}
-    .toolbar{display:flex;align-items:center;gap:18px;padding:12px 14px;background:#e8eae2;border:1px solid #d7dbd1;border-radius:10px;margin-bottom:18px;flex-wrap:wrap}.tool-group{display:flex;align-items:center;gap:8px}.tool-label{color:var(--muted);font-size:12px;font-weight:650}.segmented{display:flex;background:#d8dcd3;padding:3px;border-radius:7px;gap:2px}.segmented button{border:0;background:transparent;color:#58645b;padding:7px 12px;border-radius:5px;font-weight:650}.segmented button[aria-pressed=true]{background:var(--panel);color:var(--ink);box-shadow:0 1px 3px #1520181a}.select{height:34px;border:1px solid #cbd1c7;border-radius:6px;background:var(--panel);padding:0 30px 0 10px;color:var(--ink)}.toolbar .spacer{flex:1}
-    .layout{display:grid;grid-template-columns:minmax(0,1.16fr) minmax(390px,.84fr);gap:18px;align-items:start}.leftcol,.rightcol{display:grid;gap:16px;min-width:0}.panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow);overflow:hidden}.panel-head{padding:15px 17px 12px;border-bottom:1px solid #e7e9e1;display:flex;align-items:center;justify-content:space-between;gap:10px}.panel-title{font-size:15px;font-weight:750;margin:0;letter-spacing:-.015em}.panel-sub{font-size:11px;color:var(--muted);margin-top:3px}.head-action{border:0;background:none;color:var(--green);font-size:12px;font-weight:700;padding:5px}.panel-body{padding:15px 17px}.section-kicker{font-size:11px;text-transform:uppercase;letter-spacing:.075em;color:#78847b;font-weight:750;margin:0 0 10px}.rows{display:grid;gap:9px}.row-card{border:1px solid #e1e5dc;background:#fcfcf8;border-radius:8px;padding:11px 12px}.row-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}.row-name{font-weight:700}.row-caption{font-size:11px;color:var(--muted)}.remove{width:26px;height:26px;border:1px solid #e4d8d4;background:#fff9f7;color:#9c5142;border-radius:5px;font-size:17px;line-height:1}.field-grid{display:grid;grid-template-columns:repeat(4,minmax(68px,1fr));gap:8px}.field{display:grid;gap:4px;min-width:0}.field label{font-size:10px;color:#69766e;font-weight:650}.field input,.field select{width:100%;min-width:0;height:31px;border:1px solid #d8ddd4;border-radius:5px;background:white;padding:4px 7px;color:var(--ink)}.field input[type=number]{font-variant-numeric:tabular-nums}.field.wide{grid-column:span 2}.field.checkbox{display:flex;align-items:center;gap:7px;padding-top:14px}.field.checkbox input{width:auto;height:auto;accent-color:var(--green)}.field.checkbox label{font-size:11px}
-    .preset-line{display:flex;align-items:end;gap:9px;flex-wrap:wrap;margin-bottom:14px}.preset-line .field{min-width:140px}.pill{display:inline-flex;align-items:center;gap:6px;background:#eff1eb;color:#536259;border:1px solid #e1e5dd;border-radius:20px;padding:4px 8px;font-size:10px;font-weight:700}.pill.live{background:var(--green-soft);color:var(--green);border-color:#d4e5d9}.pill.warn{background:var(--gold-soft);color:#82601f;border-color:#e8ddbd}
-    .add-button{border:1px dashed #b9c4b8;background:#f7f9f4;color:#43624f;border-radius:7px;padding:8px 11px;font-weight:700;font-size:12px;width:100%;margin-top:9px}.add-button:hover{background:#eef4ed;border-color:#779783}.empty{padding:16px;border:1px dashed #d4dacf;border-radius:7px;color:#728077;font-size:12px;text-align:center}
-    .cards-head{display:grid;grid-template-columns:2fr 1fr 1fr;gap:6px;margin:0 3px 7px;color:#738077;font-size:10px;font-weight:700}.hand-list{display:grid;gap:8px}.hand-card{border:1px solid #dfe4da;background:#fdfdf9;border-radius:8px;padding:10px}.card-top{display:grid;grid-template-columns:minmax(105px,1.7fr) minmax(80px,.8fr) 26px;gap:7px;align-items:center;margin-bottom:8px}.card-top input,.card-top select{width:100%;height:30px;border:1px solid #d8ddd4;border-radius:5px;background:white;padding:4px 7px;color:var(--ink)}.card-fields{display:grid;grid-template-columns:repeat(5,minmax(50px,1fr));gap:7px}.card-fields .field input,.card-fields .field select{height:30px}.badge-type{font-size:10px;background:#f3eadd;color:#815126;border-radius:4px;padding:3px 6px;white-space:nowrap}
-    .run-row{display:flex;align-items:center;gap:12px;margin-top:12px}.primary{background:var(--accent);color:#fff;border:0;border-radius:7px;padding:11px 17px;font-weight:750;box-shadow:0 3px 8px #d5503b2a}.primary:hover{background:#b9402f}.run-hint{font-size:11px;color:var(--muted)}
-    .result-head{background:var(--deep2);color:#f4f2e9;padding:17px 18px 15px}.result-head .panel-title{font-size:17px}.result-head p{margin:6px 0 0;color:#b8c5ba;font-size:12px}.result-body{padding:15px 17px}.recommendation{border:1px solid #d9e6db;background:#f0f6ef;border-radius:9px;padding:13px 14px;margin-bottom:13px}.recommendation .kicker{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--green);font-weight:800}.recommendation h2{font-size:17px;margin:4px 0 5px;line-height:1.35}.recommendation p{font-size:12px;color:#536259;margin:0}.play-list{display:grid;gap:6px;margin:11px 0}.play-item{display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:8px;background:white;border:1px solid #e1e7dd;border-radius:6px;padding:7px 9px}.play-index{width:20px;height:20px;display:grid;place-items:center;background:#e8f2eb;color:#2e7652;border-radius:50%;font-size:10px;font-weight:800}.play-item strong{font-size:12px}.play-item small{font-size:10px;color:var(--muted)}.target{font-size:10px;color:#52645a;border:1px solid #d9e0d8;border-radius:4px;padding:3px 6px}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}.metric{border-top:1px solid #e2e6dd;padding:8px 2px 0}.metric b{display:block;font-size:17px;font-variant-numeric:tabular-nums}.metric span{font-size:10px;color:var(--muted)}.rank-list{margin-top:14px;border-top:1px solid #e5e8e1;padding-top:12px}.rank-row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #eff0eb;font-size:11px}.rank-row:last-child{border-bottom:0}.rank-row span:first-child{color:#46554a}.rank-row b{font-variant-numeric:tabular-nums}.reason{font-size:11px;color:#68766d;margin-top:10px;line-height:1.55}.state-warning{margin:0 17px 16px;padding:9px 11px;background:#fbf4e2;border:1px solid #e9dfc1;border-radius:6px;color:#725a22;font-size:11px}.state-warning strong{color:#584412}
-    details{border-top:1px solid var(--line);background:#fafbf7}details summary{cursor:pointer;padding:14px 17px;font-weight:750;font-size:13px;list-style:none;display:flex;justify-content:space-between}details summary::-webkit-details-marker{display:none}details summary:after{content:"＋";color:#758278}details[open] summary:after{content:"−"}.info-content{padding:0 17px 17px;display:grid;gap:13px}.info-block{border-left:2px solid #cbd7ca;padding-left:11px}.info-block h3{font-size:12px;margin:0 0 4px}.info-block p,.info-block li{font-size:11px;color:#59685e;margin:0;line-height:1.6}.info-block ul{padding-left:17px;margin:4px 0}.refs{display:flex;flex-wrap:wrap;gap:8px}.refs a{font-size:11px;color:#356c5d;text-decoration-thickness:1px;text-underline-offset:2px}.footer{max-width:1440px;margin:0 auto;padding:0 28px 28px;color:#77837a;font-size:11px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.footer a{color:#406b59;text-underline-offset:2px}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-    @media(max-width:1000px){.layout{grid-template-columns:1fr}.rightcol{grid-row:1}.rightcol .panel:first-child{position:relative}.hero{align-items:flex-start;flex-direction:column}.hero-note{white-space:normal}.app{padding:22px 18px 44px}.topbar{padding:0 18px}}
-    @media(max-width:620px){.app{padding:18px 12px 36px}.topbar{height:54px;padding:0 12px}.version{font-size:12px}.hero h1{font-size:23px}.toolbar{gap:10px;padding:10px}.toolbar .spacer{display:none}.tool-group{flex:1}.select{max-width:100%}.panel-head,.panel-body{padding-left:12px;padding-right:12px}.field-grid{grid-template-columns:repeat(2,minmax(70px,1fr))}.card-top{grid-template-columns:minmax(100px,1fr) minmax(72px,.72fr) 26px}.card-fields{grid-template-columns:repeat(3,minmax(55px,1fr))}.metrics{grid-template-columns:repeat(3,1fr)}.result-body{padding:12px}.footer{padding:0 12px 22px}.hero-note{font-size:11px}.tool-label{font-size:11px}}
+    .topbar{height:62px;background:var(--deep);color:#f6f3e8;display:flex;align-items:center;justify-content:space-between;padding:0 max(24px,calc((100vw - 1440px)/2));border-bottom:1px solid #2b3930}.brand{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.02em}.version{color:#b7c2b6;font-size:12px;display:flex;align-items:center;gap:8px}
+    .app{max-width:1440px;margin:0 auto;padding:26px 28px 54px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow);overflow:hidden}.panel-head{padding:15px 17px 12px;border-bottom:1px solid #e7e9e1;display:flex;align-items:center;justify-content:space-between;gap:10px}.panel-title{font-size:15px;font-weight:750;margin:0;letter-spacing:-.015em}.head-action{border:0;background:none;color:var(--green);font-size:12px;font-weight:700;padding:5px}.panel-body{padding:15px 17px}.rows{display:grid;gap:9px}.row-card{border:1px solid #e1e5dc;background:#fcfcf8;border-radius:8px;padding:11px 12px}.row-caption{font-size:11px;color:var(--muted)}.remove{width:26px;height:26px;border:1px solid #e4d8d4;background:#fff9f7;color:#9c5142;border-radius:5px;font-size:17px;line-height:1}.empty{padding:16px;border:1px dashed #d4dacf;border-radius:7px;color:#728077;font-size:12px;text-align:center}.recommendation{border:1px solid #d9e6db;background:#f0f6ef;border-radius:9px;padding:13px 14px;margin-bottom:13px}.recommendation .kicker{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--green);font-weight:800}.recommendation h2{font-size:17px;margin:4px 0 5px;line-height:1.35}.recommendation p{font-size:12px;color:#536259;margin:0}.target{font-size:10px;color:#52645a;border:1px solid #d9e0d8;border-radius:4px;padding:3px 6px}.reason{font-size:11px;color:#68766d;margin-top:10px;line-height:1.55}
+    details{border-top:1px solid var(--line);background:#fafbf7}details summary{cursor:pointer;padding:14px 17px;font-weight:750;font-size:13px;list-style:none;display:flex;justify-content:space-between}details summary::-webkit-details-marker{display:none}details summary:after{content:"＋";color:#758278}details[open] summary:after{content:"−"}.footer{max-width:1440px;margin:0 auto;padding:0 28px 28px;color:#77837a;font-size:11px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.footer a{color:#406b59;text-underline-offset:2px}
+    @media(max-width:1000px){.app{padding:22px 18px 44px}.topbar{padding:0 18px}}
+    @media(max-width:620px){.app{padding:18px 12px 36px}.topbar{height:54px;padding:0 12px}.version{font-size:12px}.panel-head,.panel-body{padding-left:12px;padding-right:12px}.footer{padding:0 12px 22px}}
     [hidden]{display:none!important}
     ::selection{background:#d9e8da;color:#17281d}
     /* Live workspace: one column ordered by what the game asks for now (data-phase). */
@@ -105,8 +98,8 @@
       <symbol id="i-map" viewBox="0 0 24 24"><path d="M14.1 5.6a2 2 0 0 0 1.8 0l3.7-1.9a1 1 0 0 1 1.4.9v12.8a1 1 0 0 1-.6.9l-4.5 2.3a2 2 0 0 1-1.8 0l-4.2-2.1a2 2 0 0 0-1.8 0l-3.7 1.9A1 1 0 0 1 3 19.4V6.6a1 1 0 0 1 .6-.9l4.5-2.3a2 2 0 0 1 1.8 0zM15 5.8v15M9 3.2v15"/></symbol>
       <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.8 9.8 0 0 1 6.7 2.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.8 9.8 0 0 1-6.7-2.7L3 16M8 16H3v5"/></symbol>
     </svg>
-    <div class="live-workspace" id="liveWorkspace" hidden>
-    <section class="panel" id="solvePanel" hidden aria-labelledby="solveTitle">
+    <div class="live-workspace" id="liveWorkspace">
+    <section class="panel" id="solvePanel" aria-labelledby="solveTitle">
       <div class="panel-head">
         <h1 class="panel-title" id="solveTitle"><svg class="icon"><use href="#i-combat"/></svg>戰鬥<span class="now-tag">現在</span></h1>
         <button type="button" class="head-action" id="solveRefresh"><svg class="icon"><use href="#i-refresh"/></svg>重新搜尋</button>
@@ -117,7 +110,7 @@
         <p class="row-caption result-only"><a href="docs/live-import.md">模型支援範圍</a></p>
       </div>
     </section>
-    <section class="panel" id="rewardPanel" hidden aria-labelledby="rewardTitle">
+    <section class="panel" id="rewardPanel" aria-labelledby="rewardTitle">
       <div class="panel-head">
         <h2 class="panel-title" id="rewardTitle"><svg class="icon"><use href="#i-gift"/></svg>選擇<span class="now-tag">現在</span></h2>
         <button type="button" class="head-action" id="rewardRefresh"><svg class="icon"><use href="#i-refresh"/></svg>重新讀取</button>
@@ -127,7 +120,7 @@
         <div id="rewardResults" class="rows"></div>
       </div>
     </section>
-    <section class="panel" id="mapPanel" hidden aria-labelledby="mapTitle">
+    <section class="panel" id="mapPanel" aria-labelledby="mapTitle">
       <div class="panel-head">
         <h2 class="panel-title" id="mapTitle"><svg class="icon"><use href="#i-map"/></svg>地圖<span class="now-tag">現在</span></h2>
         <button type="button" class="head-action" id="mapRefresh"><svg class="icon"><use href="#i-refresh"/></svg>重新讀取</button>
@@ -137,7 +130,7 @@
         <div id="mapResults" class="rows"></div>
       </div>
     </section>
-    <details class="panel" id="livePanel" hidden>
+    <details class="panel" id="livePanel">
       <summary>備用出牌模型</summary>
       <div class="panel-body">
         <p id="liveStatus" role="status">正在讀取遊戲…</p>
@@ -145,59 +138,6 @@
         <div id="liveResults" aria-live="polite"></div>
       </div>
     </details>
-    </div>
-    <div id="manualApp" hidden>
-    <section class="hero" aria-labelledby="page-title">
-      <div><h1 id="page-title">用當前局面，計算本回合出牌</h1><p>輸入玩家能量、手牌、生命與敵人意圖。搜尋所有可行的出牌組合和攻擊目標，優先保住隊伍，再比較 Boss 傷害。</p></div>
-      <div class="hero-note">解題範圍：眼前這一回合 · 1–2 位玩家 · 本機運作</div>
-    </section>
-
-    <section class="toolbar" aria-label="戰鬥模式與遭遇設定">
-      <div class="tool-group"><span class="tool-label">模式</span><div class="segmented"><button id="soloMode" aria-pressed="true">單人</button><button id="coopMode" aria-pressed="false">雙人合作</button></div></div>
-      <div class="tool-group"><label class="tool-label" for="bossSelect">Act 3 Boss</label><select class="select" id="bossSelect"><option value="aeonglass">Aeonglass</option><option value="queen">Queen ＋ Torch Head</option><option value="test">Test Subject</option></select></div>
-      <div class="tool-group" id="phaseGroup" hidden><label class="tool-label" for="phaseSelect">階段</label><select class="select" id="phaseSelect"><option value="1">第 1 階段</option><option value="2">第 2 階段</option><option value="3">第 3 階段</option></select></div>
-      <div class="tool-group"><label class="tool-label" for="ascension">進階</label><select class="select" id="ascension"><option value="0">A0–7</option><option value="8">A8</option><option value="9">A9–10</option></select></div>
-      <span class="spacer"></span><button class="head-action" id="loadBoss">載入 Boss 基準數值 ↗</button>
-    </section>
-
-    <div class="layout">
-      <div class="leftcol">
-        <section class="panel" aria-labelledby="party-title">
-          <div class="panel-head"><div><h2 class="panel-title" id="party-title">隊伍狀態</h2><div class="panel-sub">填入目前 HP、格擋與可用能量</div></div><span class="pill live" id="partyPill">1 位玩家</span></div>
-          <div class="panel-body"><div class="rows" id="playersList"></div></div>
-        </section>
-
-        <section class="panel" aria-labelledby="enemy-title">
-          <div class="panel-head"><div><h2 class="panel-title" id="enemy-title">敵人與意圖</h2><div class="panel-sub">多段攻擊請輸入本回合預覽的總傷害</div></div><button class="head-action" id="addEnemy">＋ 加入敵人</button></div>
-          <div class="panel-body"><div class="rows" id="enemiesList"></div><div class="row-caption" style="margin-top:10px">Queen 戰可同時輸入守衛和 Queen；擊敗被標記為「Boss 死亡時離場」的守衛，可讓模型略過其攻擊。</div></div>
-        </section>
-
-        <section class="panel" aria-labelledby="hand-title">
-          <div class="panel-head"><div><h2 class="panel-title" id="hand-title">目前手牌</h2><div class="panel-sub">輸入遊戲畫面顯示的費用、每擊傷害與格擋</div></div><span class="pill" id="handPill">0 張 · 上限 10 張</span></div>
-          <div class="panel-body"><div id="handList" class="hand-list"></div><button class="add-button" id="addCard">＋ 加入手牌</button><div class="run-row"><button class="primary" id="solveBtn">計算推薦出牌</button><span class="run-hint" id="searchStatus" aria-live="polite">結果會依輸入即時更新</span></div></div>
-        </section>
-      </div>
-
-      <div class="rightcol">
-        <section class="panel" aria-labelledby="result-title">
-          <div class="result-head"><h2 class="panel-title" id="result-title">本回合推薦</h2><p id="resultSubtitle">先保全隊生命，再擊殺或削減 Boss 生命</p></div>
-          <div class="result-body" id="resultBody" aria-live="polite"></div>
-          <div class="state-warning"><strong>模型邊界：</strong>目前只計算畫面上這手牌的費用、直接傷害與格擋，以及這回合的可見攻擊意圖。抽牌、能量生成、藥水、力量／易傷等狀態效果需先換算成畫面預覽數字；不預測未知牌序或後續回合。</div>
-        </section>
-        <section class="panel">
-          <details>
-            <summary>機制分析、演算法與資料來源</summary>
-            <div class="info-content">
-              <div class="info-block"><h3>REA 本機靜態分析</h3><p>REA 6.10.1 檢視了本機 v0.113.1 的 `sts2.dll` 和 PCK。CIL 顯示能量由 PlayerCmd 管理；Creature 有格擋、HP 損失、清除格擋與多人 HP 縮放路徑；手牌上限 getter 回傳 10。這些是程式結構證據；REA 未執行遊戲，也沒有直接推導所有卡牌數值。</p></div>
-              <div class="info-block"><h3>本工具怎麼排名</h3><p>每人最多 10 張手牌，搜尋可行子集合；攻擊牌再分支到每個存活敵人，AOE 牌分支到全部存活敵人。逐個敵人套用格擋與 HP，再依可見意圖模擬敵方回合。依序比較：存活玩家數、最危險存活玩家的 HP 比例、全隊剩餘 HP、Boss 擊殺、Boss 傷害、敵人擊殺、總傷害。</p></div>
-              <div class="info-block"><h3>單人與合作模式</h3><p>單人和合作共用同一個搜尋核心；每位玩家各自有 HP、格擋、能量與手牌，敵人生命和格擋則共享。多人 Boss HP 會受遊戲的多人縮放影響，請以遊戲畫面上的當前數值覆寫基準值。</p></div>
-              <div class="info-block"><h3>延伸研究</h3><p><a href="docs/game.md">docs/game.md：遊戲逆向與機制分析</a> · <a href="docs/policy.md">docs/policy.md：本工具實作的應對策略</a></p></div>
-              <div class="refs"><a href="https://github.com/morluto/rea" target="_blank" rel="noreferrer">REA</a><a href="https://github.com/rank-Yu/sts2-solver" target="_blank" rel="noreferrer">rank-Yu/sts2-solver</a><a href="https://github.com/zhiyue/sts2-rl-agent" target="_blank" rel="noreferrer">zhiyue/sts2-rl-agent</a><a href="https://sts.wiki/keywords/draw-pile" target="_blank" rel="noreferrer">手牌／抽牌規則</a><a href="https://sts.wiki/acts/glory" target="_blank" rel="noreferrer">Glory Boss 數值</a></div>
-            </div>
-          </details>
-        </section>
-      </div>
-    </div>
     </div>
   </main>
   <footer class="footer"><a href="docs/policy.md">評分規則</a></footer>
@@ -208,160 +148,7 @@
   <script src="reward-policy.js"></script>
   <script src="event-policy.js"></script>
   <script>
-    const HAND_LIMIT=10,MAX_ENEMIES=3,SEARCH_LIMIT=1500000;
-    const bossDefaults={
-      aeonglass:{name:"Aeonglass",hp:[512,535,535],block:0,damage:[22,22,26],hits:1,boss:true,vanish:false},
-      queen:{name:"Queen",hp:[400,419,419],block:20,damage:0,hits:1,boss:true,vanish:false},
-      guard:{name:"Torch Head Amalgam",hp:[199,211,211],block:0,damage:[26,26,32],hits:1,boss:false,vanish:true},
-      test:{name:"Test Subject",hp:[[100,200,300],[111,212,313],[111,212,313]],block:0,damage:[20,20,22],hits:1,boss:true,vanish:false}
-    };
-    let players=[{id:"p1",name:"玩家 1",hp:42,maxHp:70,block:3,energy:3}];
-    let enemies=[{id:"e1",name:"Aeonglass",hp:512,maxHp:512,block:0,damage:22,target:"all",boss:true,vanish:false}];
-    let cards=[
-      {id:"c1",name:"打擊 A",owner:"p1",cost:1,damage:6,hits:1,block:0,area:false},
-      {id:"c2",name:"打擊 B",owner:"p1",cost:1,damage:6,hits:1,block:0,area:false},
-      {id:"c3",name:"防禦",owner:"p1",cost:1,damage:0,hits:1,block:5,area:false},
-      {id:"c4",name:"重擊",owner:"p1",cost:2,damage:12,hits:1,block:0,area:false}
-    ];
-    let mode="solo",nextId=5;
     const $=s=>document.querySelector(s), esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-    const num=(v,d=0)=>{const n=Number(v);return Number.isFinite(n)?Math.max(0,n):d};
-    function fmt(n){return Math.max(0,Math.round(n*10)/10)}
-    function renderPlayers(){
-      $("#playersList").innerHTML=players.map((p,i)=>`<article class="row-card"><div class="row-top"><div><div class="row-name">${esc(p.name)}</div><div class="row-caption">個人資源不與隊友共用</div></div><span class="pill">P${i+1}</span></div><div class="field-grid"><div class="field"><label for="${p.id}-hp">目前 HP</label><input id="${p.id}-hp" type="number" min="0" max="999" value="${p.hp}" data-player="${p.id}" data-key="hp"></div><div class="field"><label for="${p.id}-max">最大 HP</label><input id="${p.id}-max" type="number" min="1" max="999" value="${p.maxHp}" data-player="${p.id}" data-key="maxHp"></div><div class="field"><label for="${p.id}-block">目前格擋</label><input id="${p.id}-block" type="number" min="0" max="999" value="${p.block}" data-player="${p.id}" data-key="block"></div><div class="field"><label for="${p.id}-energy">可用能量</label><input id="${p.id}-energy" type="number" min="0" max="99" value="${p.energy??""}" data-player="${p.id}" data-key="energy"></div></div></article>`).join("");
-      $("#partyPill").textContent=`${players.length} 位玩家`;
-      renderEnemies();renderHand();
-    }
-    function renderEnemies(){
-      const targetOptions=`<option value="">請選擇</option><option value="all">全體玩家</option>`+players.map((p,i)=>`<option value="${p.id}">${esc(p.name)}</option>`).join("");
-      $("#enemiesList").innerHTML=enemies.map((e,i)=>`<article class="row-card"><div class="row-top"><div><div class="row-name">${esc(e.name)}</div><div class="row-caption">${e.boss?'<span class="badge-type">BOSS</span>':'<span class="badge-type">敵人／守衛</span>'}　目前意圖：${e.damage===null?"待填":fmt(e.damage)} 傷害</div></div><button class="remove" aria-label="移除敵人 ${esc(e.name)}" data-remove-enemy="${e.id}">×</button></div><div class="field-grid"><div class="field wide"><label>敵人名稱</label><input type="text" value="${esc(e.name)}" data-enemy="${e.id}" data-key="name"></div><div class="field"><label>目前 HP</label><input type="number" min="0" value="${e.hp}" data-enemy="${e.id}" data-key="hp"></div><div class="field"><label>敵人格擋</label><input type="number" min="0" value="${e.block}" data-enemy="${e.id}" data-key="block"></div><div class="field"><label>意圖總傷害</label><input type="number" min="0" value="${e.damage??""}" data-enemy="${e.id}" data-key="damage"></div><div class="field"><label>意圖目標</label><select data-enemy="${e.id}" data-key="target">${targetOptions}</select></div><div class="field checkbox"><input type="checkbox" id="${e.id}-boss" ${e.boss?"checked":""} data-enemy="${e.id}" data-key="boss"><label for="${e.id}-boss">Boss</label></div><div class="field checkbox"><input type="checkbox" id="${e.id}-vanish" ${e.vanish?"checked":""} data-enemy="${e.id}" data-key="vanish"><label for="${e.id}-vanish">Boss 死亡時離場</label></div></div></article>`).join("");
-      enemies.forEach(e=>{const el=$(`[data-enemy="${e.id}"][data-key="target"]`);if(el)el.value=e.target;});
-    }
-    function renderHand(){
-      const ownerOptions=players.map((p,i)=>`<option value="${p.id}">${esc(p.name)}</option>`).join("");
-      $("#handList").innerHTML=cards.length?cards.map((c,i)=>`<article class="hand-card"><div class="card-top"><input aria-label="第 ${i+1} 張卡牌名稱" type="text" value="${esc(c.name)}" data-card="${c.id}" data-key="name"><select aria-label="卡牌持有人" data-card="${c.id}" data-key="owner">${ownerOptions}</select><button class="remove" aria-label="移除 ${esc(c.name)}" data-remove-card="${c.id}">×</button></div><div class="card-fields"><div class="field"><label>費用</label><input type="number" min="0" max="99" value="${c.cost??""}" placeholder="${c.baseCost===null||c.baseCost===undefined?"":`基礎 ${c.baseCost}`}" data-card="${c.id}" data-key="cost"></div><div class="field"><label>每擊傷害</label><input type="number" min="0" max="999" value="${c.damage??""}" data-card="${c.id}" data-key="damage"></div><div class="field"><label>擊數</label><input type="number" min="1" max="99" value="${c.hits??""}" data-card="${c.id}" data-key="hits"></div><div class="field"><label>獲得格擋</label><input type="number" min="0" max="999" value="${c.block??""}" data-card="${c.id}" data-key="block"></div><div class="field"><label>攻擊範圍</label><select data-card="${c.id}" data-key="area"><option value="">請選擇</option><option value="false">單一目標</option><option value="true">全體敵人</option></select></div><div class="field checkbox"><input type="checkbox" id="${c.id}-skip" ${c.skip?"checked":""} data-card="${c.id}" data-key="skip"><label for="${c.id}-skip">不納入搜尋</label></div></div></article>`).join(""):`<div class="empty">先加入目前手牌。輸入卡牌畫面顯示的數字，計算結果會隨狀態更新。</div>`;
-      cards.forEach(c=>{const o=$(`[data-card="${c.id}"][data-key="owner"]`),a=$(`[data-card="${c.id}"][data-key="area"]`);if(o)o.value=c.owner;if(a)a.value=c.area===null?"":String(c.area);});
-      $("#handPill").textContent=`${cards.length} 張 · 上限 ${players.length * HAND_LIMIT} 張`;
-      const full = players.every(p => handSize(p.id) >= HAND_LIMIT);
-      $("#addCard").disabled=full;
-      $("#addCard").textContent=full?"手牌已滿":"＋ 加入手牌";
-    }
-    function applyBoss(){
-      const boss=$("#bossSelect").value,asc=Number($("#ascension").value),phase=Number($("#phaseSelect").value),idx=asc===0?0:asc===8?1:2;
-      if(boss==="aeonglass"){const d=bossDefaults.aeonglass;enemies=[{id:"e1",name:d.name,hp:d.hp[idx],maxHp:d.hp[idx],block:0,damage:d.damage[idx],target:"all",boss:true,vanish:false}];}
-      if(boss==="queen"){const q=bossDefaults.queen,g=bossDefaults.guard;enemies=[{id:"e1",name:q.name,hp:q.hp[idx],maxHp:q.hp[idx],block:20,damage:0,target:"all",boss:true,vanish:false},{id:"e2",name:g.name,hp:g.hp[idx],maxHp:g.hp[idx],block:0,damage:g.damage[idx],target:"all",boss:false,vanish:true}];}
-      if(boss==="test"){const d=bossDefaults.test,hp=d.hp[idx][phase-1];enemies=[{id:"e1",name:`Test Subject · 第 ${phase} 階段`,hp,maxHp:hp,block:0,damage:d.damage[idx],target:"all",boss:true,vanish:false}];}
-      renderEnemies();calculate();
-    }
-    function showMode(next){
-      mode=next;
-      $("#soloMode").setAttribute("aria-pressed",String(mode==="solo"));
-      $("#coopMode").setAttribute("aria-pressed",String(mode==="coop"));
-    }
-    function setMode(next){
-      showMode(next);
-      const count=mode==="solo"?1:2;resizeParty(count);renderPlayers();calculate();
-    }
-    function resizeParty(count){
-      while(players.length<count){const n=players.length+1;players.push({id:`p${n}`,name:`玩家 ${n}`,hp:48,maxHp:70,block:0,energy:3});}
-      players=players.slice(0,count);players.forEach((p,i)=>p.name=`玩家 ${i+1}`);
-      cards=cards.filter(c=>players.some(p=>p.id===c.owner));
-      enemies.forEach(e=>{if(e.target!=="all"&&!players.some(p=>p.id===e.target))e.target="all";});
-    }
-    const handSize = id => cards.filter(c => c.owner === id).length;
-    function addCard(){const player = players.find(p => handSize(p.id) < HAND_LIMIT);if(!player)return;cards.push({id:`c${nextId++}`,name:"新卡牌",owner:player.id,cost:1,damage:0,hits:1,block:0,area:false});renderHand();calculate();}
-    function addEnemy(){if(enemies.length>=MAX_ENEMIES)return;enemies.push({id:`e${nextId++}`,name:"敵人",hp:40,maxHp:40,block:0,damage:0,target:"all",boss:false,vanish:false});renderEnemies();calculate();}
-    function compare(a,b){
-      const x=a.score,y=b.score;for(let i=0;i<x.length;i++){if(Math.abs(x[i]-y[i])>1e-7)return x[i]>y[i]?1:-1;}return 0;
-    }
-    function damageEnemy(enemy,damage){const absorbed=Math.min(enemy.block,damage);enemy.block-=absorbed;const hpLoss=Math.min(enemy.hp,damage-absorbed);enemy.hp-=hpLoss;return hpLoss;}
-    function cloneState(ps,es){return {ps:ps.map(p=>({...p})),es:es.map(e=>({...e}))};}
-    function simulateEnemyTurn(ps,es){
-      const bossDead=es.some(e=>e.boss&&e.hp<=0);let taken=0;
-      for(const e of es){if(e.hp<=0)continue;if(e.vanish&&bossDead){e.hp=0;continue;}if(e.damage<=0)continue;for(const p of ps){if(p.hp<=0||(e.target!=="all"&&e.target!==p.id))continue;const hit=Math.max(0,e.damage-p.block);p.block=Math.max(0,p.block-e.damage);p.hp=Math.max(0,p.hp-hit);taken+=hit;}}
-      return taken;
-    }
-    function scorePlan(ps,es){
-      const alive=ps.filter(p=>p.hp>0),minRatio=alive.length?Math.min(...alive.map(p=>p.hp/Math.max(1,p.maxHp))):0;
-      const initialBoss=enemies.filter(e=>e.boss).reduce((s,e)=>s+e.hp,0),initialTotal=enemies.reduce((s,e)=>s+e.hp,0);
-      const bossLeft=es.filter(e=>e.boss).reduce((s,e)=>s+e.hp,0),totalLeft=es.reduce((s,e)=>s+e.hp,0);
-      const bossKills=enemies.filter(e=>e.boss&&e.hp>0).length-es.filter(e=>e.boss&&e.hp>0).length;
-      const enemyKills=enemies.filter(e=>e.hp>0).length-es.filter(e=>e.hp>0).length;
-      return [alive.length,minRatio,alive.reduce((s,p)=>s+p.hp,0),bossKills,initialBoss-bossLeft,enemyKills,initialTotal-totalLeft];
-    }
-    function calculate(){
-      const status=$("#searchStatus");
-      const invalid = !enemies.length || players.some(p => [p.hp,p.maxHp,p.block,p.energy].includes(null) || handSize(p.id) > HAND_LIMIT)
-        || enemies.some(e => [e.hp,e.block,e.damage].includes(null) || (e.damage > 0 && !e.target))
-        || cards.some(c => !c.skip && [c.cost,c.damage,c.hits,c.block,c.area].includes(null));
-      if(invalid){
-        status.textContent="請補齊欄位，每人最多 10 張手牌";
-        $("#resultSubtitle").textContent="等待完整局面";
-        $("#resultBody").innerHTML='<div class="empty">請確認敵方意圖及每張牌可建模的數值。沒有直接傷害或格擋時，請填入 0。不適用簡化模型的牌可勾選不納入搜尋。</div>';
-        return;
-      }
-      const initialP=players.map(p=>({...p,maxHp:Math.max(1,num(p.maxHp,1)),hp:Math.min(num(p.hp),Math.max(1,num(p.maxHp,1))),block:num(p.block),energy:num(p.energy)}));
-      const initialE=enemies.map(e=>({...e,hp:num(e.hp),block:num(e.block),damage:num(e.damage)}));
-      const orderedCards=cards.filter(c=>!c.skip).map(c=>({...c,cost:num(c.cost),damage:num(c.damage),hits:Math.max(1,num(c.hits,1)),block:num(c.block)}));
-      const deadline=performance.now()+700;
-      let nodes=0,cut=false,best=[];const initialBossCount=initialE.filter(e=>e.boss&&e.hp>0).length;
-      function keep(plan){
-        const sig=plan.chosen.map(x=>`${x.card.id}:${x.targetIds.join(",")}`).sort().join("|");if(best.some(x=>x.sig===sig))return;
-        plan.sig=sig;best.push(plan);best.sort((a,b)=>compare(b,a));if(best.length>3)best.length=3;
-      }
-      function visit(i,ps,es,chosen){
-        if(nodes++>=SEARCH_LIMIT||(nodes%1024===0&&performance.now()>deadline)){cut=true;return;}if(i===orderedCards.length){const outcome=cloneState(ps,es),taken=simulateEnemyTurn(outcome.ps,outcome.es);keep({chosen:[...chosen],players:outcome.ps,enemies:outcome.es,taken,score:scorePlan(outcome.ps,outcome.es)});return;}
-        const card=orderedCards[i];visit(i+1,ps,es,chosen);if(cut)return;
-        const owner=ps.find(p=>p.id===card.owner);if(!owner||owner.hp<=0||owner.energy<card.cost||(!card.damage&&!card.block))return;
-        const living=es.filter(e=>e.hp>0);if(card.damage&&!card.area&&!living.length)return;
-        const targetSets=card.damage?(card.area?[living.map(e=>e.id)]:living.map(e=>[e.id])):[[]];
-        for(const targets of targetSets){
-          if(cut)break;const st=cloneState(ps,es),p=st.ps.find(x=>x.id===card.owner);p.energy-=card.cost;p.block+=card.block;
-          if(card.damage){const chosenEnemies=card.area?st.es.filter(e=>targets.includes(e.id)&&e.hp>0):[st.es.find(e=>e.id===targets[0])].filter(Boolean);for(const e of chosenEnemies){for(let h=0;h<card.hits;h++){if(e.hp<=0)break;damageEnemy(e,card.damage);}}}
-          chosen.push({card,targetIds:[...targets]});visit(i+1,st.ps,st.es,chosen);chosen.pop();
-        }
-      }
-      visit(0,initialP,initialE,[]);
-      if(!best.length){$("#resultBody").innerHTML='<div class="empty">沒有找到可執行的出牌組合。請確認能量與手牌數值。</div>';status.textContent="請檢查輸入";return;}
-      status.textContent=cut?`已搜尋 ${nodes.toLocaleString()} 個狀態並達預算上限 · 目前最佳解未必全域最佳`:`已完整搜尋 ${nodes.toLocaleString()} 個狀態`;
-      renderResults(best,cut,initialBossCount);
-    }
-    function renderResults(plans,cut,bossCount){
-      const best=plans[0],alive=best.players.filter(p=>p.hp>0).length,totalHp=best.players.reduce((s,p)=>s+p.hp,0),bossLeft=best.enemies.filter(e=>e.boss).reduce((s,e)=>s+e.hp,0),bossTotal=enemies.filter(e=>e.boss).reduce((s,e)=>s+e.hp,0),bossDamage=bossTotal-bossLeft,enemyLeft=best.enemies.reduce((s,e)=>s+e.hp,0),enemyTotal=enemies.reduce((s,e)=>s+e.hp,0),totalDamage=enemyTotal-enemyLeft;
-      const defeated=best.enemies.filter(e=>e.hp<=0).map(e=>e.name);const title=best.chosen.length?`${best.chosen.length} 張牌 · 預測 ${alive}/${players.length} 人存活`:"保留能量，不出牌";
-      let items=best.chosen.map((x,i)=>{
-        const card=x.card;
-        let targetName="不選目標";
-        if(x.targetIds.length>1)targetName="全體敵人";
-        else if(x.targetIds.length)targetName=enemies.find(e=>e.id===x.targetIds[0])?.name||"目標已倒下";
-        const damageText=card.damage?card.damage+" × "+card.hits:"—";
-        const ownerName=players.find(p=>p.id===card.owner)?.name||"玩家";
-        const targetHtml=card.damage?"<span class=\"target\">"+esc(targetName)+"</span>":"<span class=\"target\">防禦</span>";
-        return "<div class=\"play-item\"><span class=\"play-index\">"+(i+1)+"</span><div><strong>"+esc(card.name)+"</strong><br><small>"+esc(ownerName)+" · 費用 "+card.cost+" · 傷害 "+damageText+" · 格擋 +"+card.block+"</small></div>"+targetHtml+"</div>";
-      }).join("");
-      if(!items)items='<div class="reason">不出牌是目前輸入下的最佳選擇。</div>';
-      const reasons=[];if(defeated.length)reasons.push(`擊敗：${defeated.join("、")}，其後續意圖不再計入。`);if(best.taken===0)reasons.push("隊伍能用目前格擋承受可見攻擊，搜尋因此優先減少 Boss 生命。");else reasons.push(`套用目前格擋後，預測隊伍承受 ${fmt(best.taken)} 點傷害。`);if(best.chosen.length)reasons.push("列出的目標可依序手動調整；模型只比較結果，不會操作遊戲。");
-      let alternatives=plans.slice(1).map((p,i)=>`<div class="rank-row"><span>候選 ${i+2} · ${p.chosen.length} 張牌，存活 ${p.players.filter(x=>x.hp>0).length}/${players.length} 人</span><b>隊伍剩 ${fmt(p.players.reduce((s,x)=>s+x.hp,0))} HP · Boss 傷 ${fmt(bossTotal-p.enemies.filter(x=>x.boss).reduce((s,x)=>s+x.hp,0))}</b></div>`).join("");
-      $("#resultBody").innerHTML=`<div class="recommendation"><div class="kicker">${cut?"目前已搜尋到的最佳候選":"依目前模型的最高分方案"}</div><h2>${esc(title)}</h2><p>多人隊伍按存活數與最低 HP 比例排序；同分時看全隊剩餘 HP 和 Boss 傷害。</p><div class="play-list">${items}</div><div class="metrics"><div class="metric"><b>${fmt(totalHp)}</b><span>隊伍預測剩餘 HP</span></div><div class="metric"><b>${fmt(bossDamage)}</b><span>Boss HP 傷害</span></div><div class="metric"><b>${fmt(best.taken)}</b><span>預測未格擋傷害</span></div></div></div><div class="reason">${reasons.map(x=>`• ${esc(x)}`).join("<br>")}</div>${alternatives?`<div class="rank-list"><div class="section-kicker">其他高分方案</div>${alternatives}</div>`:""}<div class="reason">搜尋比較了 ${plans.length===1?"目前最高分解":"最高分的不同出牌組合"}；${cut?"達到搜尋上限，結果不保證是全域最佳。":"在本頁明示的簡化模型內已完整搜尋。"} 不代表整場戰鬥或完整遊戲的勝率最佳策略。</div>`;
-      $("#resultSubtitle").textContent=`${cards.some(c=>c.skip)?"僅含納入搜尋的牌 · ":""}${mode==="solo"?"單人":"多人合作"} · ${players.length} 位玩家 · ${bossCount} 名 Boss · ${cut?"受搜尋上限影響":"完整目前回合搜尋"}`;
-    }
-    function update(e){
-      const t=e.target;if(t.dataset.player){const p=players.find(x=>x.id===t.dataset.player);if(p)p[t.dataset.key]=t.value===""?null:num(t.value);}
-      if(t.dataset.enemy){const x=enemies.find(a=>a.id===t.dataset.enemy);if(x){const k=t.dataset.key;x[k]=t.type==="checkbox"?t.checked:k==="name"||k==="target"?t.value:t.value===""?null:num(t.value);}}
-      if(t.dataset.card){const c=cards.find(x=>x.id===t.dataset.card);if(c){const k=t.dataset.key;c[k]=k==="skip"?t.checked:k==="name"||k==="owner"?t.value:t.value===""?null:k==="area"?t.value==="true":num(t.value);if(k==="owner")renderHand();}}
-      if(t.id==="bossSelect"){const isTest=t.value==="test";$("#phaseGroup").hidden=!isTest;applyBoss();return;}
-      if(t.id==="phaseSelect"||t.id==="ascension"){applyBoss();return;}
-      calculate();
-    }
-    document.addEventListener("input",e=>{if(e.target.matches("input[data-player],input[data-enemy],input[data-card]")&&e.target.type!=="checkbox")update(e);});
-    document.addEventListener("change",e=>{if(e.target.matches("select,input[type=checkbox]"))update(e);});
-    document.addEventListener("click",e=>{
-      const c=e.target.closest("[data-remove-card]");if(c){cards=cards.filter(x=>x.id!==c.dataset.removeCard);renderHand();calculate();return;}
-      const en=e.target.closest("[data-remove-enemy]");if(en){enemies=enemies.filter(x=>x.id!==en.dataset.removeEnemy);renderEnemies();calculate();}
-    });
-    $("#soloMode").addEventListener("click",()=>setMode("solo"));$("#coopMode").addEventListener("click",()=>setMode("coop"));
-    $("#addCard").addEventListener("click",addCard);$("#addEnemy").addEventListener("click",addEnemy);$("#loadBoss").addEventListener("click",applyBoss);$("#solveBtn").addEventListener("click",calculate);
-
     function renderLiveRoute(snapshot, result) {
       const plan=result.plans[0];
       if(!plan)throw new Error("目前找不到可比較的路線。");
@@ -387,13 +174,9 @@
         <div class="rows" style="margin-top:12px">${turns}</div>`;
     }
 
+    // The workbench reads the running game through the local reader; opened as a file it has nothing to show.
     const livePage=location.protocol!=="file:";
-    $("#liveWorkspace").hidden=!livePage;
-    $("#livePanel").hidden=!livePage;
-    $("#mapPanel").hidden=!livePage;
-    $("#solvePanel").hidden=!livePage;
-    $("#rewardPanel").hidden=!livePage;
-    $("#manualApp").hidden=livePage;
+    if(!livePage)document.querySelector("main").innerHTML='<p class="empty">請執行 <code>dotnet run --project reader</code>，再開啟 http://127.0.0.1:8765/。</p>';
     let autoEnabled=livePage, liveBusy=false, previousState="", solvedState="";
     const icon=name=>`<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
     // The panel for the screen the game shows now leads the page; the other two shrink to their status.
@@ -587,7 +370,7 @@
       status.textContent=`事件「${event.title??event.eventId}」· ${event.hp}/${event.maxHp} HP · ${event.gold} 金幣。${plan.known?"分數＝效果換算成的生命值。":"這個事件還沒有效果資料，只列出選項。"}`;
       const ranked=[...plan.ranked].sort((a,b)=>(b.score??0)-(a.score??0));
       output.innerHTML=ranked.map(o=>`<article class="row-card${o.originalIndex===plan.best?" pick":""}">${icon("event")}
-        ${o.originalIndex===plan.best?'<span class="pick-label">選這個</span>':""}<strong>${esc(o.title??o.textKey)}</strong>
+        ${o.originalIndex===plan.best?'<span class="pick-label">選這個</span>':""}<strong>${esc(o.title??name(o.textKey.split(".").pop()))}</strong>
         <p class="row-caption">${o.locked?"無法選擇":o.lethal?"可能致死":Number.isFinite(o.score)&&(o.evaluated||o.score!==0)?`評分 ${o.score.toFixed(1)}${o.evaluated?"":"（部分未計）"}`:"未評估"}</p>
         ${o.description?`<p>${esc(o.description)}</p>`:""}
         ${o.reasons.map(r=>`<p>${esc(r)}</p>`).join("")}</article>`).join("");
@@ -664,8 +447,6 @@
         try { if(!(await refreshRewards()))await refreshMap(); } finally { advising=false; }
       },4000);
       document.addEventListener("visibilitychange",refreshLive);
-    } else {
-      renderPlayers();calculate();
     }
   </script>
 </body>

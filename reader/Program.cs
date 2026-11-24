@@ -62,9 +62,11 @@ static class GameReader
 
     public static object Capture() => WithRuntime(ReadCombat);
 
-    public static object CaptureMap() => WithRuntime(ReadMap);
-    public static object CaptureRewards() => WithRuntime(ReadRewards);
-    public static object CaptureEvent() => WithRuntime(ReadEvent);
+    // Map, reward and event screens are static: read them live without suspending the game, so the
+    // page's polling outside combat does not stutter it. Combat keeps the consistent snapshot.
+    public static object CaptureMap() => WithRuntime((r, _) => ReadMap(r), suspend: false);
+    public static object CaptureRewards() => WithRuntime(ReadRewards, suspend: false);
+    public static object CaptureEvent() => WithRuntime(ReadEvent, suspend: false);
 
     static readonly Lazy<Sts2Solver.LiveImport.RulesCatalog> Catalog = new(() =>
         new Sts2Solver.LiveImport.RulesCatalog(Path.Combine(AppContext.BaseDirectory, "data", "rules-catalog.br")));
@@ -105,7 +107,8 @@ static class GameReader
 
     static object WithRuntime(Func<ClrRuntime, object> read) => WithRuntime((runtime, _) => read(runtime));
 
-    static object WithRuntime(Func<ClrRuntime, string, object> read)
+    static string? verifiedDll;
+    static object WithRuntime(Func<ClrRuntime, string, object> read, bool suspend = true)
     {
         var games = Process.GetProcessesByName("SlayTheSpire2");
         try
@@ -115,11 +118,17 @@ static class GameReader
             Require(active != null, "請開啟一個 Slay the Spire 2 遊戲視窗。");
             string dir = Path.GetDirectoryName(active!.MainModule!.FileName)!;
             string data = Path.Combine(dir, "data_sts2_windows_x86_64");
-            using (var dll = File.OpenRead(Path.Combine(data, "sts2.dll")))
-            using (var sha = SHA256.Create())
-                Require(Convert.ToHexString(sha.ComputeHash(dll)) == DllHash, "目前的遊戲組件版本未支援。");
+            string dllPath = Path.Combine(data, "sts2.dll");
+            if (verifiedDll != dllPath)
+            {
+                using (var dll = File.OpenRead(dllPath))
+                    Require(Convert.ToHexString(SHA256.HashData(dll)) == DllHash, "目前的遊戲組件版本未支援。");
+                verifiedDll = dllPath;
+            }
 
-            using var snapshot = DataTarget.CreateSnapshotAndAttach(active.Id);
+            using var snapshot = suspend
+                ? DataTarget.CreateSnapshotAndAttach(active.Id)
+                : DataTarget.AttachToProcess(active.Id, suspend: false);
             var runtime = snapshot.ClrVersions.Single().CreateRuntime(Path.Combine(data, "mscordaccore.dll"));
             return read(runtime, dir);
         }
