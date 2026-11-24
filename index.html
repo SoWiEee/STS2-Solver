@@ -213,7 +213,7 @@
     // The workbench reads the running game through the local reader; opened as a file it has nothing to show.
     const livePage=location.protocol!=="file:";
     if(!livePage)document.querySelector("main").innerHTML='<p class="empty">請執行 <code>dotnet run --project reader</code>，再開啟 http://127.0.0.1:8765/。</p>';
-    let autoEnabled=livePage, liveBusy=false, previousState="", solvedState="";
+    let autoEnabled=livePage, liveBusy=false, previousState="", solvedState="", captureMisses=0;
     const icon=name=>`<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
     // The panel for the screen the game shows now leads the page; the other two shrink to their status.
     function setPhase(phase){
@@ -254,8 +254,12 @@
           catch(error) { $("#liveResults").replaceChildren(Object.assign(document.createElement("p"),{className:"empty",textContent:`備用模型：${error.message}`})); }
         }
         status.textContent=`第 ${snapshot.round} 回合 · ${new Date(capturedAt).toLocaleTimeString()} 已擷取 · 自動更新中`;
+        captureMisses=0;
       } catch(error) {
         if(!autoEnabled)return;
+        // A live (non-suspending) read can occasionally catch the game mid-update; keep the route
+        // unless the next read fails too.
+        if(solvedState&&++captureMisses<2)return;
         previousState="";
         $("#liveResults").replaceChildren();
         status.textContent=error.message;

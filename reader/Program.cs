@@ -60,7 +60,9 @@ static class GameReader
     const string Version = "0.113.1";
     const string DllHash = "62ECBE91093E1FA862DE4329AAC865209DCB297804CAF0F0520D92D8C0B4A9C3";
 
-    public static object Capture() => WithRuntime(ReadCombat);
+    // The page polls this every few seconds only to notice changes; reading without suspending keeps
+    // combat smooth. The search (/solve) re-reads under a snapshot, so it always sees a consistent state.
+    public static object Capture() => WithRuntime((r, _) => ReadCombat(r), suspend: false);
 
     // Map, reward and event screens are static: read them live without suspending the game, so the
     // page's polling outside combat does not stutter it. Combat keeps the consistent snapshot.
