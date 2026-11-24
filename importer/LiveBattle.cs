@@ -98,6 +98,8 @@ internal static class LiveBattle
                         List<ClrObject> source = List(Obj(Obj(power, "_internalData"), "arrowSources"), 64);
                         // Multiplayer: a partner's arrows in the same Impaled stack are not simulated; keep ours.
                         if (live.Partnered) source = source.Where(a => arrowAt.ContainsKey(a.Address)).ToList();
+                        // Only the partner's arrows: the stack is theirs, so it is not part of this player's fight.
+                        if (live.Partnered && source.Count == 0) { Kernel.RemovePowerAt(ref battle, row); break; }
                         for (int i = 0; i < source.Count; i++)
                         {
                             Require(arrowAt.TryGetValue(source[i].Address, out int arrow), "穿刺引用了其他玩家的箭");

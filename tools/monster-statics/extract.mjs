@@ -44,5 +44,15 @@ const DREAD = [
 ];
 for (const [monster, name, ascension, high, low, dread] of DREAD)
   (result[monster] ??= {})[name] = { ascension, high, low, dread };
+// Getters of the form `if (!IsDread()) return a; return b;` (constant outside Dread).
+const DREAD_CONST = [
+  ["CEREMONIAL_BEAST", "PlowStrength", 2, 3], ["CEREMONIAL_BEAST", "RitualAmount", 0, 2],
+  ["CRUSHER", "PlatingAmount", 0, 14], ["LAGAVULIN_MATRIARCH", "DebuffAmount", -2, -3],
+  ["ROCKET", "PlatingAmount", 0, 14], ["SOUL_FYSH", "BeckonMoveAmount", 2, 3],
+  ["TEST_SUBJECT", "BaseMultiClawCount", 3, 4], ["THE_INSATIABLE", "SandpitAmount", 4, 3],
+  ["VANTOM", "PrepareStrength", 2, 3], ["WATERFALL_GIANT", "SteamBoostAmount", 3, 4],
+];
+for (const [monster, name, value, inDread] of DREAD_CONST)
+  (result[monster] ??= {})[name] = { value, dread: inDread - value };
 fs.writeFileSync(output, JSON.stringify(result, null, 1) + "\n");
 console.log(Object.entries(result).map(([k, v]) => `${k}: ${Object.keys(v).length}`).join("\n"));

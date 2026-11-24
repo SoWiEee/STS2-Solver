@@ -368,6 +368,14 @@
    "high": 262,
    "low": 252,
    "dread": 30
+  },
+  "PlowStrength": {
+   "value": 2,
+   "dread": 1
+  },
+  "RitualAmount": {
+   "value": 0,
+   "dread": 2
   }
  },
  "CHOMPER": {
@@ -486,6 +494,10 @@
    "ascension": 9,
    "high": 14,
    "low": 12
+  },
+  "PlatingAmount": {
+   "value": 0,
+   "dread": 14
   }
  },
  "CUBEX_CONSTRUCT": {
@@ -1197,6 +1209,10 @@
    "high": 14,
    "low": 12,
    "dread": 2
+  },
+  "DebuffAmount": {
+   "value": -2,
+   "dread": -1
   }
  },
  "LEAF_SLIME_M": {
@@ -1724,6 +1740,10 @@
    "high": 35,
    "low": 31,
    "dread": 5
+  },
+  "PlatingAmount": {
+   "value": 0,
+   "dread": 14
   }
  },
  "SCROLL_OF_BITING": {
@@ -2045,6 +2065,10 @@
   },
   "TakeDamageSfxType": {
    "value": 5
+  },
+  "BeckonMoveAmount": {
+   "value": 2,
+   "dread": 1
   }
  },
  "SOUL_NEXUS": {
@@ -2246,6 +2270,10 @@
    "high": 3,
    "low": 2,
    "dread": 3
+  },
+  "BaseMultiClawCount": {
+   "value": 3,
+   "dread": 1
   }
  },
  "THE_FORGOTTEN": {
@@ -2296,6 +2324,10 @@
    "high": 341,
    "low": 321,
    "dread": 20
+  },
+  "SandpitAmount": {
+   "value": 4,
+   "dread": -1
   }
  },
  "THE_LOST": {
@@ -2646,6 +2678,10 @@
    "high": 9,
    "low": 8,
    "dread": 2
+  },
+  "PrepareStrength": {
+   "value": 2,
+   "dread": 1
   }
  },
  "VINE_SHAMBLER": {
@@ -2738,6 +2774,10 @@
   },
   "_maxPressureBuildup": {
    "value": 6
+  },
+  "SteamBoostAmount": {
+   "value": 3,
+   "dread": 1
   }
  },
  "WRIGGLER": {

@@ -47,7 +47,7 @@ public sealed class RulesCatalog
     {
         value = 0;
         if (!_statics.TryGetValue(monster, out var getters) || !getters.TryGetValue(name, out var g)) return false;
-        if (g.Value is int constant) { value = constant; return true; }
+        if (g.Value is int constant) { value = constant + (DreadMode ? g.Dread ?? 0 : 0); return true; }
         if (g is { Ascension: int level, High: int high, Low: int low })
         {
             value = (HasAscension(ascension, level) ? high : low) + (DreadMode ? g.Dread ?? 0 : 0);
