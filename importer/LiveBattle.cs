@@ -15,11 +15,14 @@ internal static class LiveBattle
     public static Battle Import(LiveState live, Rules rules, List<string> notes)
     {
         var history = new LiveHistory(live, rules);
+        partnered = live.Partnered;
+        if (partnered) notes.Add("多人戰鬥：只模擬你的角色，隊友的出牌、傷害與承受的攻擊都不計入，建議僅供參考");
         var ownerOf = new Dictionary<ulong, byte> { [live.Creature.Address] = Limits.PlayerOwner };
         for (int i = 0; i < live.Enemies.Count; i++) ownerOf[live.Enemies[i].Address] = (byte)(Limits.FirstEnemyOwner + i);
         ClrObject osty = live.Pet("Osty"), wuppy = live.Pet("Wuppy");
         Require(live.Pets.All(p => p.Address == osty.Address || p.Address == wuppy.Address), "未支援的召喚物");
-        Require(List(Obj(live.Combat, "_allies")).All(a => a.Address == live.Creature.Address || live.Pets.Any(p => p.Address == a.Address)),
+        // Partners and their pets are left out of a multiplayer import (LiveState.Partnered).
+        Require(live.Partnered || List(Obj(live.Combat, "_allies")).All(a => a.Address == live.Creature.Address || live.Pets.Any(p => p.Address == a.Address)),
             "場上有其他友方生物，暫不支援");
         if (!osty.IsNull) ownerOf[osty.Address] = Limits.OstyOwner;
         if (!wuppy.IsNull) ownerOf[wuppy.Address] = Limits.WuppyOwner;
@@ -454,10 +457,13 @@ internal static class LiveBattle
         }
     }
 
+    [ThreadStatic] static bool partnered;
+
     static byte OwnerOf(ClrObject creature, Dictionary<ulong, byte> ownerOf)
     {
         if (creature.IsNull) return Limits.NoOwner;
         if (ownerOf.TryGetValue(creature.Address, out byte owner)) return owner;
+        if (partnered) return Limits.NoOwner; // applied by a partner, who is not simulated
         // shortcut: upstream keeps dead enemies as PermanentlyDead tombstones via a cross-turn tracker; the
         // live port sees only _enemies, so a dead applier/target (it never acts again) maps to no owner.
         Require(Get<int>(creature, "_currentHp") <= 0, "能力關聯到未知的生物");

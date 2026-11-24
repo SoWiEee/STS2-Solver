@@ -171,9 +171,13 @@ static class GameReader
                 Require(!Field<bool>(obj, flag), $"戰鬥正在結算（{flag.Trim('<', '>').Replace(">k__BackingField", "")}）。請等到可出牌時擷取。");
             var combat = Object(turn, Backing("State"));
             Require(Field<int>(combat, Backing("CurrentSide")) == 1, "請在玩家回合擷取。");
-            var players = List(Object(combat, "_allies"), 32)
+            var pairs = List(Object(combat, "_allies"), 32)
                 .Select(c => (creature: c, player: Object(c, Backing("Player"))))
-                .Where(pair => !pair.player.IsNull).Select(pair =>
+                .Where(pair => !pair.player.IsNull).ToList();
+            // Multiplayer: the local player comes first (the page and the search treat players[0] as "you").
+            int local = LocalPlayerIndex(runtime, pairs.Select(p => p.player).ToArray());
+            if (local > 0) { var me = pairs[local]; pairs.RemoveAt(local); pairs.Insert(0, me); }
+            var players = pairs.Select(pair =>
                 {
                     var state = Object(pair.player, Backing("PlayerCombatState"));
                     ClrObject hand = state.IsNull ? default : Object(state, Backing("Hand"));
