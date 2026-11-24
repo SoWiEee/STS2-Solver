@@ -3,80 +3,116 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#111914">
+  <meta name="theme-color" content="#140f1c">
   <title>尖塔戰術工作台｜STS2 Solver</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800&display=swap">
   <style>
-    :root{color-scheme:light;--ink:#1a241e;--muted:#536357;--paper:#f3f3ec;--panel:#fffefa;--line:#d9ddd3;--deep:#111914;--deep2:#1b2820;--accent:#b84030;--accent-soft:#fbebe6;--green:#247052;--green-soft:#e8f2eb;--gold:#c69235;--gold-soft:#f6efd9;--blue:#386b75;--shadow:0 12px 32px rgba(24,37,28,.07);font-family:Inter,"Segoe UI","Noto Sans TC",system-ui,sans-serif}
-    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-size:14px;line-height:1.48}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #72aaa0;outline-offset:2px}a{color:inherit}
-    .topbar{height:62px;background:var(--deep);color:#f6f3e8;display:flex;align-items:center;justify-content:space-between;padding:0 max(24px,calc((100vw - 1440px)/2));border-bottom:1px solid #2b3930}.brand{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.02em}.version{color:#b7c2b6;font-size:12px;display:flex;align-items:center;gap:8px}
-    .app{max-width:1440px;margin:0 auto;padding:26px 28px 54px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow);overflow:hidden}.panel-head{padding:15px 17px 12px;border-bottom:1px solid #e7e9e1;display:flex;align-items:center;justify-content:space-between;gap:10px}.panel-title{font-size:15px;font-weight:750;margin:0;letter-spacing:-.015em}.head-action{border:0;background:none;color:var(--green);font-size:12px;font-weight:700;padding:5px}.panel-body{padding:15px 17px}.rows{display:grid;gap:9px}.row-card{border:1px solid #e1e5dc;background:#fcfcf8;border-radius:8px;padding:11px 12px}.row-caption{font-size:11px;color:var(--muted)}.remove{width:26px;height:26px;border:1px solid #e4d8d4;background:#fff9f7;color:#9c5142;border-radius:5px;font-size:17px;line-height:1}.empty{padding:16px;border:1px dashed #d4dacf;border-radius:7px;color:#728077;font-size:12px;text-align:center}.recommendation{border:1px solid #d9e6db;background:#f0f6ef;border-radius:9px;padding:13px 14px;margin-bottom:13px}.recommendation .kicker{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--green);font-weight:800}.recommendation h2{font-size:17px;margin:4px 0 5px;line-height:1.35}.recommendation p{font-size:12px;color:#536259;margin:0}.target{font-size:10px;color:#52645a;border:1px solid #d9e0d8;border-radius:4px;padding:3px 6px}.reason{font-size:11px;color:#68766d;margin-top:10px;line-height:1.55}
-    details{border-top:1px solid var(--line);background:#fafbf7}details summary{cursor:pointer;padding:14px 17px;font-weight:750;font-size:13px;list-style:none;display:flex;justify-content:space-between}details summary::-webkit-details-marker{display:none}details summary:after{content:"＋";color:#758278}details[open] summary:after{content:"−"}.footer{max-width:1440px;margin:0 auto;padding:0 28px 28px;color:#77837a;font-size:11px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.footer a{color:#406b59;text-underline-offset:2px}
-    @media(max-width:1000px){.app{padding:22px 18px 44px}.topbar{padding:0 18px}}
-    @media(max-width:620px){.app{padding:18px 12px 36px}.topbar{height:54px;padding:0 12px}.version{font-size:12px}.panel-head,.panel-body{padding-left:12px;padding-right:12px}.footer{padding:0 12px 22px}}
+    /* Night-violet theme: deep violet ground, white text at graded opacity, one amber accent and a
+       soft pink for secondary highlights (palette after Rockstar's store pages). */
+    :root{color-scheme:dark;
+      --ground:#1e1728;--ground-deep:#140f1c;--surface:#261e33;--surface-2:#30263f;--violet:#5b4a6a;
+      --line:rgba(255,255,255,.1);--ink:rgba(255,255,255,.94);--ink-2:rgba(255,255,255,.8);--muted:rgba(255,255,255,.62);
+      --amber:#ffab00;--amber-ink:#1e1728;--amber-soft:rgba(255,171,0,.12);--pink:#ffc2d0;--pink-soft:rgba(255,194,208,.1);
+      --ok:#7fd39b;--warn:#ffcf70;
+      font-family:Archivo,"Segoe UI","Noto Sans TC",system-ui,sans-serif}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--ground);color:var(--ink-2);font-size:15px;line-height:1.5}
+    button{font:inherit;cursor:pointer}
+    button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+    a{color:var(--ink);text-underline-offset:3px;text-decoration-color:rgba(255,255,255,.35)}
+    a:hover{text-decoration-color:var(--amber)}
+    ::selection{background:var(--amber);color:var(--amber-ink)}
+    ::-webkit-scrollbar{width:10px}::-webkit-scrollbar-track{background:var(--ground-deep)}::-webkit-scrollbar-thumb{background:var(--violet);border-radius:999px;border:2px solid var(--ground-deep)}
+    code{font-family:Consolas,monospace;color:var(--pink)}
     [hidden]{display:none!important}
-    ::selection{background:#d9e8da;color:#17281d}
-    /* Live workspace: one column ordered by what the game asks for now (data-phase). */
-    .live-workspace{display:flex;flex-direction:column;gap:14px;max-width:760px;margin:0 auto}
-    .live-workspace .panel{border-radius:14px;box-shadow:none;min-width:0;transition:opacity .2s cubic-bezier(.16,1,.3,1)}
-    .live-workspace .panel-head{padding:14px 18px;border-color:var(--line)}
-    .live-workspace .panel-body{padding:0 18px 14px}
-    .live-workspace .panel-body>p:first-child{margin:12px 0;color:#48594e;line-height:1.55;overflow-wrap:anywhere}
-    .live-workspace .panel-title{display:flex;align-items:center;gap:9px;font-size:17px}
-    .live-workspace .head-action{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 11px;border:1px solid var(--line);border-radius:7px;white-space:nowrap}
-    .live-workspace .head-action:hover:not(:disabled){background:var(--green-soft)}
-    .live-workspace .head-action:disabled{cursor:wait;opacity:.55}
+
+    .topbar{height:60px;background:var(--ground-deep);color:var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 max(24px,calc((100vw - 760px)/2))}
+    .brand{font-weight:800;font-size:17px;letter-spacing:-.01em}
+    .version{color:var(--muted);font-size:12px}
+    .app{padding:24px 20px 48px}
+    .footer{max-width:760px;margin:0 auto;padding:0 20px 28px;color:var(--muted);font-size:12px}
+
+    /* Panels: soft violet surfaces, no shadows on the dark ground. */
+    .panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+    .panel-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .panel-title{margin:0;color:var(--ink);font-weight:800;letter-spacing:-.015em}
+    .panel-body{padding:0 18px 14px}
+    .rows{display:grid}
+    .row-caption{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+    .empty{margin:24px auto;max-width:560px;padding:18px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);text-align:center}
+    details summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;color:var(--ink);font-weight:700}
+    details summary::-webkit-details-marker{display:none}
+    details summary:after{content:"＋";color:var(--muted)}
+    details[open] summary:after{content:"−"}
+    .recommendation{border-radius:12px;background:var(--surface-2);padding:13px 14px;margin:12px 0}
+    .recommendation h2{font-size:18px;margin:0 0 4px;color:var(--ink)}
+    .recommendation p{font-size:13px;color:var(--muted);margin:4px 0 0}
+
+    /* Live workspace: one column ordered by what the game asks for now. */
+    .live-workspace{display:flex;flex-direction:column;gap:12px;max-width:760px;margin:0 auto}
+    .live-workspace .panel{transition:opacity .2s cubic-bezier(.16,1,.3,1)}
+    .live-workspace .panel-body>p:first-child{margin:12px 0;color:var(--ink-2);overflow-wrap:anywhere}
+    .live-workspace .panel-title{display:flex;align-items:center;gap:10px;font-size:22px}
+    .head-action{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:6px 14px;border:1px solid rgba(255,255,255,.22);border-radius:999px;background:transparent;color:var(--ink);font-size:13px;font-weight:700;white-space:nowrap;transition:background .15s,border-color .15s}
+    .head-action:hover:not(:disabled){background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.4)}
+    .head-action:disabled{cursor:wait;opacity:.5}
     .icon{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
     .head-action .icon{width:16px;height:16px}
-    .now-tag{display:none;margin-left:2px;padding:2px 8px;border-radius:999px;background:var(--accent);color:#fff;font-size:12px;font-weight:750;letter-spacing:.02em}
+    .now-tag{display:none;padding:3px 10px;border-radius:999px;background:var(--amber);color:var(--amber-ink);font-size:12px;font-weight:800;letter-spacing:.02em}
     /* The panel for the current game screen leads; the others shrink to their status line. */
-    .live-workspace .panel.is-now{order:-1;border-color:#9fb8a7}
+    .live-workspace .panel.is-now{order:-1;border-color:rgba(255,171,0,.45);background:linear-gradient(180deg,var(--surface-2),var(--surface) 140px)}
     .live-workspace .panel.is-now .now-tag{display:inline-block}
-    .live-workspace .panel.is-now .panel-head{background:var(--deep2);color:#f6f3e8}
-    .live-workspace .panel.is-now .panel-title{color:#f6f3e8}
-    .live-workspace .panel.is-now .head-action{color:#f6f3e8;border-color:#6c8475}
-    .live-workspace .panel.is-now .head-action:hover:not(:disabled){background:#31473a}
-    .live-workspace .panel.is-idle .panel-head{padding-block:10px}
-    .live-workspace .panel.is-idle .panel-title{font-size:14px;color:var(--muted)}
+    .live-workspace .panel.is-now .panel-title .icon{color:var(--amber)}
+    .live-workspace .panel.is-idle{background:transparent}
+    .live-workspace .panel.is-idle .panel-head{padding-block:10px;border-bottom:0}
+    .live-workspace .panel.is-idle .panel-title{font-size:15px;color:var(--muted)}
+    .live-workspace .panel.is-idle .head-action{min-height:32px;padding:4px 12px;color:var(--muted)}
     .live-workspace .panel.is-idle [id$=Results],.live-workspace .panel.is-idle .result-only{display:none}
-    .live-workspace .panel.is-idle .panel-body>p:first-child{margin:8px 0;font-size:13px;color:var(--muted)}
+    .live-workspace .panel.is-idle .panel-body>p:first-child{margin:0 0 4px;font-size:13px;color:var(--muted)}
     #livePanel{order:9}
-    #livePanel summary{padding:13px 18px;font-size:13px}
+    #livePanel summary{padding:13px 18px;font-size:14px}
     #livePanel .head-action{margin-top:10px}
-    .live-workspace .rows{gap:0}
-    .live-workspace .row-card{display:grid;grid-template-columns:24px minmax(0,1fr);column-gap:10px;background:transparent;border:0;border-top:1px solid var(--line);border-radius:0;padding:12px 0}
-    .live-workspace .row-card>.icon{grid-row:span 9;margin-top:2px;color:#5f7064}
+    #livePanel ol{padding-inline-start:20px}
+
+    /* Rows: icon gutter, hairline separators. */
+    .live-workspace .row-card{display:grid;grid-template-columns:24px minmax(0,1fr);column-gap:12px;border-top:1px solid var(--line);padding:13px 0}
+    .live-workspace .row-card>.icon{grid-row:span 9;margin-top:2px;color:var(--muted)}
     .live-workspace .row-card>:not(.icon){grid-column:2}
+    .live-workspace .row-card strong{color:var(--ink);font-size:16px}
     .live-workspace .row-card p{margin:5px 0 0}
-    .live-workspace .row-caption{font-size:12px;font-variant-numeric:tabular-nums}
-    /* The single best choice on a choice screen. */
-    .live-workspace .row-card.pick{margin-bottom:8px;padding:14px 16px;border:0;border-radius:10px;background:var(--gold-soft);color:#3d2d0c}
-    .live-workspace .row-card.pick>.icon{color:#8a6420;width:24px;height:24px}
-    .live-workspace .row-card.pick strong{font-size:18px}
-    .live-workspace .row-card.pick .row-caption{color:#6b5016}
-    .pick-label{display:block;margin-bottom:2px;font-size:12px;font-weight:750;color:#8a6420}
+    /* The single best choice. */
+    .live-workspace .row-card.pick{margin:4px 0 10px;padding:16px;border:1px solid rgba(255,171,0,.5);border-radius:12px;background:var(--amber-soft)}
+    .live-workspace .row-card.pick>.icon{color:var(--amber);width:24px;height:24px}
+    .live-workspace .row-card.pick strong{font-size:21px;letter-spacing:-.01em}
+    .live-workspace .row-card.pick .row-caption{color:var(--ink-2)}
+    .pick-label{display:block;margin-bottom:2px;font-size:13px;font-weight:800;color:var(--amber)}
+
     /* Combat: this turn first, the next action largest. */
-    .turn-now{padding:14px 16px;margin-bottom:10px;background:var(--green-soft);color:#163d2a;border-radius:10px}
-    .turn-title{margin:0;font-size:13px;color:#3b5c4d}
-    .turn-play{display:grid;gap:0;margin:6px 0 0;padding:0;list-style:none}
-    .turn-play li{display:grid;grid-template-columns:22px minmax(0,1fr);column-gap:10px;align-items:start;padding:7px 0;overflow-wrap:anywhere}
-    .turn-play li+li{border-top:1px solid #80978742}
-    .turn-play li .icon{margin-top:2px;color:#2e6a4c}
-    .turn-play li.next{padding:4px 0 10px}
-    .turn-play li.next strong{font-size:21px;line-height:1.25}
-    .turn-play li.next .icon{width:24px;height:24px}
-    .turn-context{display:block;color:#3b5c4d;font-size:13px}
-    .turn-potion{color:#2d5d68}
-    .turn-end{display:flex;align-items:center;gap:10px;margin:8px 0 0;padding-top:8px;border-top:1px solid #80978742;font-size:14px;font-weight:700;color:#3b5c4d}
-    .turn-end .icon{color:#2e6a4c}
-    .later-turns{margin:4px 0 0;background:transparent}
-    .later-turns summary{padding:12px 0;color:#385a48}
-    .live-notes{margin:10px 0;color:#685323;font-size:12px}
-    @media(max-width:480px){.live-workspace .panel-head{padding:12px 14px}.live-workspace .panel-body{padding:0 14px 12px}.turn-play li.next strong{font-size:19px}}
-    @media(prefers-reduced-motion:reduce){.live-workspace .panel{transition:none}}
+    .turn-now{padding:14px 16px;margin-bottom:10px;border-radius:12px;background:var(--surface-2)}
+    .turn-title{margin:0;font-size:13px;font-weight:700;color:var(--muted)}
+    .turn-play{display:grid;margin:6px 0 0;padding:0;list-style:none}
+    .turn-play li{display:grid;grid-template-columns:22px minmax(0,1fr);column-gap:12px;align-items:start;padding:8px 0;overflow-wrap:anywhere}
+    .turn-play li+li{border-top:1px solid var(--line)}
+    .turn-play li strong{color:var(--ink);font-size:16px}
+    .turn-play li .icon{margin-top:2px;color:var(--muted)}
+    .turn-play li.next{padding:4px 0 12px}
+    .turn-play li.next strong{font-size:26px;line-height:1.2;letter-spacing:-.02em}
+    .turn-play li.next .icon{width:26px;height:26px;color:var(--amber)}
+    .turn-context{display:block;color:var(--muted);font-size:14px}
+    .turn-potion{color:var(--pink)!important}
+    .turn-end{display:flex;align-items:center;gap:12px;margin:8px 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:15px;font-weight:700;color:var(--ink-2)}
+    .turn-end .icon{color:var(--muted)}
+    .later-turns{margin:4px 0 0}
+    .later-turns summary{padding:12px 0;font-size:14px}
+    .live-notes{margin:10px 0;color:var(--warn);font-size:13px}
+
+    @media(max-width:480px){.app{padding:16px 12px 36px}.panel-head{padding:12px 14px}.panel-body{padding:0 14px 12px}.live-workspace .panel-title{font-size:19px}.turn-play li.next strong{font-size:22px}}
+    @media(prefers-reduced-motion:reduce){.live-workspace .panel,.head-action{transition:none}}
     /* ?overlay: the always-on-top advice window drops the page chrome and the backup model. */
-    body.overlay .topbar, body.overlay #livePanel, body.overlay .footer { display: none; }
-    body.overlay main, body.overlay .app { padding: 8px; gap: 8px; }
-    body.overlay .live-workspace { gap: 8px; }
+    body.overlay .topbar,body.overlay #livePanel,body.overlay .footer{display:none}
+    body.overlay .app{padding:8px}
+    body.overlay .live-workspace{gap:8px}
   </style>
 </head>
 <body>
@@ -166,8 +202,8 @@
       const next=plan.turns[0]?.actions[0];
       const headline=next?.potion==="StrengthPotion"?"現在先喝力量藥水":
         next?.card?`現在先打出${next.card.name}`:"本回合建議不出牌";
-      $("#liveResults").innerHTML=`<div class="recommendation"><div class="kicker">${result.truncated?"搜尋預算內的最高分路線":"支援模型中的最高分路線"}</div>
-        <h2>${esc(headline)}</h2><p>${plan.won?"預測可擊敗敵人。":plan.dead?"目前搜尋到的路線預測會倒下。":"路線涵蓋目前可預測的回合。"} ${esc(result.stop)}</p>
+      $("#liveResults").innerHTML=`<div class="recommendation">
+        <h2>${esc(headline)}</h2><p>${result.truncated?"搜尋預算內的最高分路線。":"支援模型中的最高分路線。"}</p><p>${plan.won?"預測可擊敗敵人。":plan.dead?"目前搜尋到的路線預測會倒下。":"路線涵蓋目前可預測的回合。"} ${esc(result.stop)}</p>
         ${result.ignoredEffects?.length ? `<p>近似預測略過：${esc(result.ignoredEffects.join("、"))}</p>` : ""}
         ${result.estimatedShuffle?`<p>跨洗牌路線使用模擬牌序。${result.shuffleAgreement===3?"三個樣本的當回合建議一致。":"樣本的當回合建議有分歧。"}實際抽牌後會重新計算。</p>`:""}
         </div>
