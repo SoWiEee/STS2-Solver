@@ -743,7 +743,7 @@ internal static class LiveBattle
     {
         for (ClrType? t = obj.Type; t != null; t = t.BaseType)
             foreach (ClrInstanceField f in t.Fields)
-                if (f.Name == name || f.Name == Backing(name))
+                if (f.Name == name || f.Name == Backing(name) || f.Name == "_" + char.ToLowerInvariant(name[0]) + name[1..])
                     return f.ElementType switch
                     {
                         ClrElementType.Boolean => obj.ReadField<bool>(f.Name) ? 1 : 0,

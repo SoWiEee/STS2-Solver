@@ -299,6 +299,27 @@ internal static class LiveRules
             if (upgrade < current.MaxUpgradeLevel && !draft.HasCard(id, upgrade + 1))
                 draft.SetCard(id, upgrade + 1, Stat(upgrade + 1) ?? throw new LiveUnsupportedException($"規則目錄沒有 {name}+{upgrade + 1}"));
         }
+        // RulesCompiler.FreezeCardPool for the melody pools no frozen table recorded: every character-pool
+        // card carrying the tag. shortcut: assumes all such cards are unlocked; read UnlockState if a run lacks some.
+        ushort[]? TaggedPool(string key)
+        {
+            CardTag? tag = key switch
+            {
+                CardPools.Melodies => CardTag.Wah | CardTag.Cho | CardTag.Ki,
+                CardPools.Wah => CardTag.Wah, CardPools.Cho => CardTag.Cho, CardPools.Ki => CardTag.Ki,
+                _ => null,
+            };
+            if (tag == null) return null;
+            var ids = new List<ushort>();
+            for (int id = 0; id < Registry.CardCount; id++)
+            {
+                string name = Registry.Card((ushort)id).NativeId;
+                CardStats? stats = (catalogCards[id].Length > 0 ? catalogCards[id][0] : null) ?? CardSupplement.Stats(name, 0);
+                if (stats is { Pool: not (TransformPool.Colorless or TransformPool.Status or TransformPool.Curse) } && (stats.Tags & tag.Value) != 0)
+                    ids.Add((ushort)id);
+            }
+            return [.. ids];
+        }
         void Declare(ContentDef def)
         {
             identity |= def is CardDef { IsIdentityContent: true } or CardDef { UsesIdentityLedger: true } or PowerDef { IsIdentityContent: true };
@@ -357,7 +378,8 @@ internal static class LiveRules
                 while (pendingPools.Count > 0)
                 {
                     string key = pendingPools.Dequeue();
-                    Require(catalogPools.TryGetValue(key, out ushort[]? pool), $"規則目錄沒有卡池 {key}");
+                    ushort[]? pool = catalogPools.TryGetValue(key, out var frozen) ? frozen : TaggedPool(key);
+                    Require(pool != null, $"規則目錄沒有卡池 {key}");
                     draft.SetCardPool(key, pool!);
                     foreach (ushort id in pool!) { Declare(Registry.Card(id)); AddStats(id, 0); }
                 }
