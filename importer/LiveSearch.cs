@@ -34,6 +34,8 @@ public sealed record LiveSearchStep(int Turn, string Kind, string Card, string? 
 {
     /// <summary>Cards selected by the card's choice (e.g. what Brand exhausts), or null.</summary>
     public string[]? Choices { get; init; }
+    public string? Potion { get; init; }
+    public int? PotionSlot { get; init; }
 }
 
 public sealed record LiveSearchResult(bool Victory, double Score, int ExpandedNodes, int Turns, double Seconds,
@@ -97,11 +99,26 @@ internal static class LiveSearch
             for (int slot = 0; slot < root.PotionSlotCount; slot++) potions[slot] = root.Potions[slot];
             Set(copy, nameof(ScoreRules.RootPotions), potions);
             Set(copy, nameof(ScoreRules.RootPotionSlotCount), (int)root.PotionSlotCount);
+            // The final boss ends the run: a potion kept has no later fight to serve, so its strategic HP cost is 0.
+            if (act3Boss) Set(copy, nameof(ScoreRules.PotionStrategicCost), new int[source.PotionStrategicCost.Length]);
             return copy.WithRelicCounterTargets([]).WithRules(rules);
         }
         ScoreFeatures baseline = new Scorer(Build(0, 0, 0, 0)).Features(root, 0);
         var scorer = new Scorer(Build(baseline.PersistentBuffValue, baseline.EnemyStrengthSuppression,
             baseline.EnemyWeakTurns, baseline.RetainedAttackValue));
+
+        bool hasSearchablePotion = false;
+        bool hasPotion = false;
+        for (int slot = 0; slot < root.PotionSlotCount; slot++)
+            if (root.Potions[slot] != 0)
+            {
+                hasPotion = true;
+                if (Registry.Potion((ushort)(root.Potions[slot] - 1)).Searchable)
+                    hasSearchablePotion = true;
+            }
+        if (!hasSearchablePotion)
+            hasSearchablePotion = rules.PotionPool.Any(id => Registry.Potion(id).Searchable)
+                || rules.OutOfCombatPotionPool.Any(id => Registry.Potion(id).Searchable);
 
         BeamOptions options = template.Options with
         {
@@ -110,17 +127,22 @@ internal static class LiveSearch
             BeamWidth = 300,
             MaxExpandedNodes = 2_000_000,
             MaxTurns = 64,
-            SoftTimeBudget = budget,
+            // Normal and weak fights rarely need the full budget; elites and bosses keep it.
+            SoftTimeBudget = encounterId.EndsWith("_BOSS", StringComparison.Ordinal) || encounterId.EndsWith("_ELITE", StringComparison.Ordinal)
+                ? budget : TimeSpan.FromTicks(Math.Min(budget.Ticks, TimeSpan.FromSeconds(8).Ticks)),
             SearchThreads = Math.Max(1, Environment.ProcessorCount - 1),
             Ordering = new RouteOrdering(root.Player.CurrentHp, relief, healProfile),
             InitialPlayerTurn = root.PlayerTurn,
-            Potions = PotionPolicy.Disabled,
+            Potions = hasSearchablePotion
+                ? new PotionPolicy(new PotionStrategySnapshot(PotionUseMode.Smart, []), false)
+                : PotionPolicy.Disabled,
             SearchMemoryBudgetBytes = 3L << 30,
             StatePoolBudgetBytes = 1L << 30,
             Act3BossStrategy = act3Boss,
         };
         BeamResult result = new BeamSolver(rules, options).Solve([root], cancel);
-        notes.Add("目前搜尋不使用藥水");
+        if (!hasSearchablePotion && hasPotion)
+            notes.Add("目前持有的藥水尚無可搜尋效果；按無藥水路線求解");
 
         // Replay the route from the root to name each step and get the predicted final HP.
         var steps = new List<LiveSearchStep>();
@@ -132,6 +154,8 @@ internal static class LiveSearch
             {
                 case PlayerActionKind.PlayCard:
                     Card card = state.Cards[action.HandIndex]; // hand occupies the first rows
+                    if (Registry.Card(card.Id).GeneratedCardPools.Count > 0)
+                        notes.Add("路線有隨機生成卡牌。打出生成牌的來源後，請等新快照更新再執行後續步驟。");
                     string? target = action.Target == Limits.NoOwner ? null
                         : action.Target >= Limits.FirstEnemyOwner && action.Target < Limits.FirstEnemyOwner + state.EnemyCount
                             ? $"{Registry.Monster(state.Enemies[action.Target - Limits.FirstEnemyOwner].MonsterId).NativeId}#{action.Target - Limits.FirstEnemyOwner + 1}"
@@ -142,6 +166,18 @@ internal static class LiveSearch
                 case PlayerActionKind.EndTurn:
                     steps.Add(new LiveSearchStep(turn, "end", "", null, 0));
                     turn++;
+                    break;
+                case PlayerActionKind.UsePotion:
+                    ushort stored = state.Potions[action.PotionSlot];
+                    string potion = Registry.Potion((ushort)(stored - 1)).NativeId;
+                    string? potionTarget = action.Target >= Limits.FirstEnemyOwner
+                        && action.Target < Limits.FirstEnemyOwner + state.EnemyCount
+                        ? $"{Registry.Monster(state.Enemies[action.Target - Limits.FirstEnemyOwner].MonsterId).NativeId}#{action.Target - Limits.FirstEnemyOwner + 1}"
+                        : null;
+                    steps.Add(new LiveSearchStep(turn, "potion", "", potionTarget, 0)
+                        { Potion = potion, PotionSlot = action.PotionSlot });
+                    if (action.ChoiceCount > 0)
+                        notes.Add("藥水產生了選項；使用後請更新快照再執行後續步驟。");
                     break;
                 default:
                     steps.Add(new LiveSearchStep(turn, action.Kind.ToString(), "", null, 0));

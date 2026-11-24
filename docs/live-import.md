@@ -21,7 +21,15 @@
 
 ## 目前明確拒絕的局面
 
-匯入失敗時回傳原因，不給出半成品建議：多人、非出牌階段、非標準模式、恐懼領域、目錄外敵人中需要遊戲內求值的部分（條件分支、由 getter 計算的攻擊傷害或次數、非常數的隨機權重）、附魔或苦難卡、充能球、召喚物、愚者機制、小數傷害卡，以及上游有私有狀態投影但尚未移植的能力（清單見 `importer/LiveBattle.cs`）。上游有投影的遺物已全部移植，包括 Booming Conch、Tormentous Collar、Philosopher's Stone、Music Box、Pael's Legion、Emotion Chip、Velvet Choker、Fur Coat、Meat on the Bone 與 History Course；除 Meat on the Bone 外尚未實機遇到。
+匯入失敗時回傳原因，不給出半成品建議：多人、非出牌階段、非標準模式、恐懼領域、目錄外敵人中需要遊戲內求值的部分（條件分支、由 getter 計算的攻擊傷害或次數、非常數的隨機權重）、Osty 與 Wuppy 以外的召喚物、小數傷害卡，以及上游有私有狀態投影但尚未移植的能力（清單見 `importer/LiveBattle.cs`）。上游有投影的遺物已全部移植，包括 Booming Conch、Tormentous Collar、Philosopher's Stone、Music Box、Pael's Legion、Emotion Chip、Velvet Choker、Fur Coat、Meat on the Bone 與 History Course；除 Meat on the Bone 外尚未實機遇到。
+
+已登錄的附魔和苦難會匯入層數。附魔也匯入狀態和 Momentum 的累積傷害。未知遺物、未知附魔和未知苦難會從模擬省略，輸出會列出名稱。目前已結算在實機快照中的效果仍留在現有狀態。
+
+## 愚者與復活
+
+愚者（beta）的箭、穿刺鏈、炫技／瞄準所連結的卡牌、三種旋律的本回合次數與 Sadness 生成數，依上游 `FoolImporter` 從記憶體讀取。上游凍結規則表沒有的 12 張卡（多為愚者卡，另有 Amnesia、Calamity）由反編譯的 0.113.1 模型轉錄在 `importer/CardSupplement.cs`。
+
+血量歸零但下一步是 `REVIVE_MOVE`／`RESPAWN_MOVE` 的敵人（例如 Test Subject 換階段）以 `Reviving` 留在名單上。已死亡敵人只當能力的施加者或目標時對應為「無擁有者」，因為上游用跨回合追蹤保留死亡敵人，即時匯入看不到它們。
 
 ## 召喚物
 
@@ -32,7 +40,7 @@
 `importer/LiveSearch.cs` 用上游的 `BeamSolver` 搜尋到戰鬥結束。網頁的「整場戰鬥出牌建議」是主要面板：每次擷取到不同的局面就自動搜尋，逐回合顯示出牌、目標、選擇與預測的戰鬥結束 HP。原本的 JS 多回合模型改為「簡易模型（備用）」，離線開啟 `index.html` 的沙盒不變。
 
 - 評分表：卡牌、能力、藥水的評分項目與根無關，取自上游 Golden 的凍結請求（`reader/data/score-template-*.br`，一般戰與第三幕 Boss 各一份）。根相關欄位依上游 `ScoreCompiler` 用即時狀態重算：生命上限、敵人數、戰後回血遺物、Boss 生命策略（預設「推進優先」：第一、二章 Boss 計入章節回血，終局 Boss 只看存活）與四個排名基線。
-- 未使用上游的剪枝下界（只影響速度）；搜尋不使用藥水；束寬 300、時限 10 秒。
+- 未使用上游的剪枝下界（只影響速度）；搜尋不使用藥水；束寬 300、時限 30 秒（一般戰通常 1–3 秒就搜完）。
 - 第三幕雙 Boss 的第二個 Boss 尚未區分。
 
 ## 驗證
@@ -50,3 +58,13 @@ v0.113.1、進階 2、鐵甲戰士，第 4 層兩隻 Corpse Slug 戰第 1 回合
 REA 數值表（`reader/data/monster-statics.json`）涵蓋全部 108 種敵人的 522 個整數 getter；`tools/monster-statics/extract.mjs` 只辨識「常數」與「依進階等級二選一」兩種 getter，其他形式不收錄。
 
 目錄外的其他 17 種敵人尚未實機遇到，能否匯入取決於它們的狀態機是否只用常數閉包。
+
+### 第 30 層跨角色牌組
+
+進階 2 鐵甲戰士對四隻外骨骼蟲。實機打出攝政王的微光，抽三張並把防禦放回抽牌堆頂。第二回合地獄之刃實際生成踩踏，與原搜尋預測的 Fight Me 不同。加入臨時星能費用匯入後，求解器能讀取零費踩踏並重算路線。第三回合以兩張打擊結束戰鬥，玩家 44/85 HP，戰後回到 50/85 HP。
+
+戰後獎勵同時出現故障機器人的快速檢索和充電，以及鐵甲戰士的劍柄打擊。獎勵端點回傳兩種卡池與當前牌組。快速檢索以 13.63 分排第一，實際領取後牌組增為 15 張。充電的 7 格擋和下一回合 1 能量都計入評分。
+
+## 事件建議
+
+`/event` 讀取目前事件的 id、本局 DynamicVars（已含進階調整）與選項；選項效果依 TextKey 查 `reader/data/events.json`（由 0.113.1 反編譯事件模型轉錄，71 個事件）。`event-policy.js` 把效果換算成生命等值分數：生命 1（低於 50% 時 1.5）、最大生命 1.5、金幣 0.08、刪基本牌 6、升級 4、附魔 3、變化 2、選牌 2、遺物 8、藥水 3、詛咒 −7、戰鬥依種類 −8／−15／−30；隨機結果取期望值，可能致死的選項排除。古神事件的遺物被動能力、Neow 的模式選項與 Crystal Sphere 的小遊戲獎勵只部分表示（見各項 `note`）。自檢：`node tools/checks/event-policy.check.js`。

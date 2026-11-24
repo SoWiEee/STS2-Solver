@@ -1,0 +1,3232 @@
+{
+  "version": "0.113.1",
+  "events": {
+    "ABYSSAL_BATHS": {
+      "class": "AbyssalBaths",
+      "options": {
+        "ABYSSAL_BATHS.pages.INITIAL.options.IMMERSE": {
+          "effects": {
+            "maxHp": "$MaxHp",
+            "hp": "-$Damage"
+          },
+          "next": "ALL",
+          "note": "Damage var starts 3 and increases by 1 after every immerse/linger (linger count capped at 9 pages, damage keeps rising)."
+        },
+        "ABYSSAL_BATHS.pages.INITIAL.options.ABSTAIN": {
+          "effects": {
+            "hp": "$Heal"
+          },
+          "note": "Heal is a flat 10 HP (HealVar)."
+        },
+        "ABYSSAL_BATHS.pages.ALL.options.LINGER": {
+          "effects": {
+            "maxHp": "$MaxHp",
+            "hp": "-$Damage"
+          },
+          "next": "ALL",
+          "note": "Same as immerse; current Damage value is 1 higher each time. Repeatable."
+        },
+        "ABYSSAL_BATHS.pages.ALL.options.EXIT_BATHS": {
+          "proceed": true
+        }
+      }
+    },
+    "AMALGAMATOR": {
+      "class": "Amalgamator",
+      "options": {
+        "AMALGAMATOR.pages.INITIAL.options.COMBINE_STRIKES": {
+          "effects": {
+            "removeCards": 2,
+            "cards": [
+              {
+                "id": "ULTIMATE_STRIKE",
+                "count": 1
+              }
+            ]
+          },
+          "requires": "at least 2 basic Strike cards (removable) in deck",
+          "note": "The 2 removed cards must be Basic-rarity Strikes."
+        },
+        "AMALGAMATOR.pages.INITIAL.options.COMBINE_DEFENDS": {
+          "effects": {
+            "removeCards": 2,
+            "cards": [
+              {
+                "id": "ULTIMATE_DEFEND",
+                "count": 1
+              }
+            ]
+          },
+          "requires": "at least 2 basic Defend cards (removable) in deck",
+          "note": "The 2 removed cards must be Basic-rarity Defends."
+        }
+      }
+    },
+    "AROMA_OF_CHAOS": {
+      "class": "AromaOfChaos",
+      "options": {
+        "AROMA_OF_CHAOS.pages.INITIAL.options.LET_GO": {
+          "effects": {
+            "transformCards": 1
+          }
+        },
+        "AROMA_OF_CHAOS.pages.INITIAL.options.MAINTAIN_CONTROL": {
+          "effects": {
+            "upgradeCards": 1
+          }
+        }
+      }
+    },
+    "BATTLEWORN_DUMMY": {
+      "class": "BattlewornDummy",
+      "options": {
+        "BATTLEWORN_DUMMY.pages.INITIAL.options.SETTING_1": {
+          "effects": {
+            "fight": "monster",
+            "encounter": "BATTLEWORN_DUMMY_EVENT_V1_ENCOUNTER",
+            "rewards": {
+              "randomPotions": 1
+            }
+          },
+          "note": "Timed combat vs dummy with $Setting1Hp HP; if time runs out (RanOutOfTime) no reward. Reward potion offered from character+shared pool. Event is shared (multiplayer)."
+        },
+        "BATTLEWORN_DUMMY.pages.INITIAL.options.SETTING_2": {
+          "effects": {
+            "fight": "monster",
+            "encounter": "BATTLEWORN_DUMMY_EVENT_V2_ENCOUNTER",
+            "rewards": {
+              "upgradeRandom": 2
+            }
+          },
+          "note": "Timed combat vs dummy with $Setting2Hp HP; on win 2 random upgradable cards upgraded; no reward if out of time."
+        },
+        "BATTLEWORN_DUMMY.pages.INITIAL.options.SETTING_3": {
+          "effects": {
+            "fight": "monster",
+            "encounter": "BATTLEWORN_DUMMY_EVENT_V3_ENCOUNTER",
+            "rewards": {
+              "randomRelics": 1
+            }
+          },
+          "note": "Timed combat vs dummy with $Setting3Hp HP; on win a relic reward (next relic from front of pool); no reward if out of time."
+        }
+      }
+    },
+    "BRAIN_LEECH": {
+      "class": "BrainLeech",
+      "options": {
+        "BRAIN_LEECH.pages.INITIAL.options.SHARE_KNOWLEDGE": {
+          "effects": {
+            "cardChoice": 1,
+            "pool": "character"
+          },
+          "note": "Choose 1 of $FromCardChoiceCount (5) character-pool cards, added to deck (not skippable)."
+        },
+        "BRAIN_LEECH.pages.INITIAL.options.RIP": {
+          "effects": {
+            "hp": "-$RipHpLoss",
+            "cardChoice": 1,
+            "pool": "colorless"
+          },
+          "note": "Unblockable damage; then a card reward of 3 colorless cards (no rarity modification)."
+        }
+      }
+    },
+    "BUGSLAYER": {
+      "class": "Bugslayer",
+      "options": {
+        "BUGSLAYER.pages.INITIAL.options.EXTERMINATION": {
+          "effects": {
+            "cards": [
+              {
+                "id": "EXTERMINATE",
+                "count": 1
+              }
+            ]
+          }
+        },
+        "BUGSLAYER.pages.INITIAL.options.SQUASH": {
+          "effects": {
+            "cards": [
+              {
+                "id": "SQUASH",
+                "count": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    "BYRDONIS_NEST": {
+      "class": "ByrdonisNest",
+      "options": {
+        "BYRDONIS_NEST.pages.INITIAL.options.EAT": {
+          "effects": {
+            "maxHp": "$MaxHp"
+          }
+        },
+        "BYRDONIS_NEST.pages.INITIAL.options.TAKE": {
+          "effects": {
+            "cards": [
+              {
+                "id": "BYRDONIS_EGG",
+                "count": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    "COLORFUL_PHILOSOPHERS": {
+      "class": "ColorfulPhilosophers",
+      "requires": "at least 2 character pools unlocked (excluding Fool pool) for every player",
+      "options": {
+        "COLORFUL_PHILOSOPHERS.pages.INITIAL.options.NECROBINDER": {
+          "effects": {
+            "cardChoice": 3,
+            "pool": "necrobinder"
+          },
+          "requires": "not the player's own character; pool unlocked (3 of the eligible colors are offered at random)",
+          "note": "Three card rewards from the necrobinder pool: one of $Cards=3 Common cards, one of 3 Uncommon, one of 3 Rare (choose 1 from each; each reward skippable)."
+        },
+        "COLORFUL_PHILOSOPHERS.pages.INITIAL.options.IRONCLAD": {
+          "effects": {
+            "cardChoice": 3,
+            "pool": "ironclad"
+          },
+          "requires": "not the player's own character; pool unlocked (3 of the eligible colors are offered at random)",
+          "note": "Three card rewards from the ironclad pool: one of $Cards=3 Common cards, one of 3 Uncommon, one of 3 Rare (choose 1 from each; each reward skippable)."
+        },
+        "COLORFUL_PHILOSOPHERS.pages.INITIAL.options.REGENT": {
+          "effects": {
+            "cardChoice": 3,
+            "pool": "regent"
+          },
+          "requires": "not the player's own character; pool unlocked (3 of the eligible colors are offered at random)",
+          "note": "Three card rewards from the regent pool: one of $Cards=3 Common cards, one of 3 Uncommon, one of 3 Rare (choose 1 from each; each reward skippable)."
+        },
+        "COLORFUL_PHILOSOPHERS.pages.INITIAL.options.FOOL": {
+          "effects": {
+            "cardChoice": 3,
+            "pool": "fool"
+          },
+          "requires": "not the player's own character; pool unlocked (3 of the eligible colors are offered at random)",
+          "note": "Three card rewards from the fool pool: one of $Cards=3 Common cards, one of 3 Uncommon, one of 3 Rare (choose 1 from each; each reward skippable)."
+        },
+        "COLORFUL_PHILOSOPHERS.pages.INITIAL.options.SILENT": {
+          "effects": {
+            "cardChoice": 3,
+            "pool": "silent"
+          },
+          "requires": "not the player's own character; pool unlocked (3 of the eligible colors are offered at random)",
+          "note": "Three card rewards from the silent pool: one of $Cards=3 Common cards, one of 3 Uncommon, one of 3 Rare (choose 1 from each; each reward skippable)."
+        },
+        "COLORFUL_PHILOSOPHERS.pages.INITIAL.options.DEFECT": {
+          "effects": {
+            "cardChoice": 3,
+            "pool": "defect"
+          },
+          "requires": "not the player's own character; pool unlocked (3 of the eligible colors are offered at random)",
+          "note": "Three card rewards from the defect pool: one of $Cards=3 Common cards, one of 3 Uncommon, one of 3 Rare (choose 1 from each; each reward skippable)."
+        }
+      }
+    },
+    "COLOSSAL_FLOWER": {
+      "class": "ColossalFlower",
+      "requires": "event only allowed if every player has HP >= 19",
+      "options": {
+        "COLOSSAL_FLOWER.pages.INITIAL.options.EXTRACT_CURRENT_PRIZE_1": {
+          "effects": {
+            "gold": "$Prize1"
+          }
+        },
+        "COLOSSAL_FLOWER.pages.INITIAL.options.REACH_DEEPER_1": {
+          "effects": {
+            "hp": -5
+          },
+          "next": "REACH_DEEPER_1",
+          "note": "Unblockable 5 damage (hard-coded)."
+        },
+        "COLOSSAL_FLOWER.pages.REACH_DEEPER_1.options.EXTRACT_CURRENT_PRIZE_2": {
+          "effects": {
+            "gold": "$Prize2"
+          }
+        },
+        "COLOSSAL_FLOWER.pages.REACH_DEEPER_1.options.REACH_DEEPER_2": {
+          "effects": {
+            "hp": -6
+          },
+          "next": "REACH_DEEPER_2",
+          "note": "Unblockable 6 damage."
+        },
+        "COLOSSAL_FLOWER.pages.REACH_DEEPER_2.options.EXTRACT_INSTEAD": {
+          "effects": {
+            "gold": "$Prize3"
+          }
+        },
+        "COLOSSAL_FLOWER.pages.REACH_DEEPER_2.options.POLLINOUS_CORE": {
+          "effects": {
+            "hp": -7,
+            "relics": [
+              "POLLINOUS_CORE"
+            ]
+          },
+          "note": "Unblockable 7 damage."
+        }
+      }
+    },
+    "CRYSTAL_SPHERE": {
+      "class": "CrystalSphere",
+      "requires": "all players gold >= 100 and act index > 0",
+      "options": {
+        "CRYSTAL_SPHERE.pages.INITIAL.options.UNCOVER_FUTURE": {
+          "effects": {
+            "loseGold": "$UncoverFutureCost"
+          },
+          "note": "Cost = 50 + rng(1..49) fixed when event is generated (DynamicVar). Then plays CrystalSphere minigame with 3 divinations/clicks; random hidden items reveal rewards (not enumerated)."
+        },
+        "CRYSTAL_SPHERE.pages.INITIAL.options.PAYMENT_PLAN": {
+          "effects": {
+            "curses": [
+              {
+                "id": "DEBT",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Free, but adds Debt curse; plays CrystalSphere minigame with 6 divinations/clicks; random hidden items reveal rewards (not enumerated)."
+        }
+      }
+    },
+    "DARV": {
+      "class": "Darv",
+      "note": "Offers 3 options: one random relic from each of 3 random valid relic sets (11 sets, one relic each); with 50% probability the third option is replaced by DUSTY_TOME. Option key is DARV.pages.INITIAL.options.<RELIC_ID>.",
+      "options": {
+        "DARV.pages.INITIAL.options.ASTROLABE": {
+          "effects": {
+            "relics": [
+              "ASTROLABE"
+            ],
+            "transformCards": 3
+          },
+          "note": "Transforms 3 chosen cards into random cards that are then upgraded."
+        },
+        "DARV.pages.INITIAL.options.BLACK_STAR": {
+          "effects": {
+            "relics": [
+              "BLACK_STAR"
+            ]
+          },
+          "note": "Passive relic; no immediate effect on obtain."
+        },
+        "DARV.pages.INITIAL.options.CALLING_BELL": {
+          "effects": {
+            "relics": [
+              "CALLING_BELL"
+            ],
+            "curses": [
+              {
+                "id": "CURSE_OF_THE_BELL",
+                "count": 1
+              }
+            ],
+            "randomRelics": 3
+          },
+          "note": "Also offers 3 relic rewards: one Common, one Uncommon, one Rare (fixed relics Anchor/GremlinHorn/MummifiedHand only in test mode)."
+        },
+        "DARV.pages.INITIAL.options.EMPTY_CAGE": {
+          "effects": {
+            "relics": [
+              "EMPTY_CAGE"
+            ],
+            "removeCards": 2
+          }
+        },
+        "DARV.pages.INITIAL.options.PANDORAS_BOX": {
+          "effects": {
+            "relics": [
+              "PANDORAS_BOX"
+            ],
+            "transformCards": "all basic Strikes and Defends"
+          },
+          "note": "Transforms every removable basic Strike/Defend into random cards.",
+          "requires": "no run modifier that clears the deck"
+        },
+        "DARV.pages.INITIAL.options.RUNIC_PYRAMID": {
+          "effects": {
+            "relics": [
+              "RUNIC_PYRAMID"
+            ]
+          },
+          "note": "Passive relic; no immediate effect on obtain."
+        },
+        "DARV.pages.INITIAL.options.SNECKO_EYE": {
+          "effects": {
+            "relics": [
+              "SNECKO_EYE"
+            ]
+          },
+          "note": "Passive relic; no immediate effect on obtain."
+        },
+        "DARV.pages.INITIAL.options.ECTOPLASM": {
+          "effects": {
+            "relics": [
+              "ECTOPLASM"
+            ]
+          },
+          "note": "Passive relic; no immediate effect on obtain.",
+          "requires": "act index == 1 (Act 2)"
+        },
+        "DARV.pages.INITIAL.options.SOZU": {
+          "effects": {
+            "relics": [
+              "SOZU"
+            ]
+          },
+          "note": "Passive relic; no immediate effect on obtain.",
+          "requires": "act index == 1 (Act 2)"
+        },
+        "DARV.pages.INITIAL.options.PHILOSOPHERS_STONE": {
+          "effects": {
+            "relics": [
+              "PHILOSOPHERS_STONE"
+            ]
+          },
+          "note": "Passive relic; no immediate effect on obtain.",
+          "requires": "act index >= 1"
+        },
+        "DARV.pages.INITIAL.options.VELVET_CHOKER": {
+          "effects": {
+            "relics": [
+              "VELVET_CHOKER"
+            ]
+          },
+          "note": "Passive relic; no immediate effect on obtain.",
+          "requires": "act index >= 1"
+        },
+        "DARV.pages.INITIAL.options.DUSTY_TOME": {
+          "effects": {
+            "relics": [
+              "DUSTY_TOME"
+            ],
+            "randomCards": 1
+          },
+          "note": "Adds 1 random upgraded Ancient-rarity card of the character pool to the deck (rolled at event generation)."
+        }
+      }
+    },
+    "DENSE_VEGETATION": {
+      "class": "DenseVegetation",
+      "options": {
+        "DENSE_VEGETATION.pages.INITIAL.options.TRUDGE_ON": {
+          "effects": {
+            "hp": "-$HpLoss",
+            "gold": "$Gold"
+          },
+          "note": "HpLoss 8 unblockable; Gold = rng(61..99) fixed when event is generated. Event is shared in multiplayer."
+        },
+        "DENSE_VEGETATION.pages.INITIAL.options.REST": {
+          "effects": {
+            "healPct": 0.3
+          },
+          "next": "REST",
+          "note": "Mimics a rest-site heal (30% max HP, modifiable by relics/hooks; may also trigger rest-site-heal rewards), then forces a fight on next page."
+        },
+        "DENSE_VEGETATION.pages.REST.options.FIGHT": {
+          "effects": {
+            "fight": "monster",
+            "encounter": "DENSE_VEGETATION_EVENT_ENCOUNTER"
+          },
+          "note": "Empty extra-reward list (normal combat rewards presumably apply); event does not resume after combat."
+        }
+      }
+    },
+    "DOLL_ROOM": {
+      "class": "DollRoom",
+      "requires": "act index == 1 (Act 2)",
+      "options": {
+        "DOLL_ROOM.pages.INITIAL.options.RANDOM": {
+          "outcomes": [
+            {
+              "p": 0.3333333333333333,
+              "effects": {
+                "relics": [
+                  "DAUGHTER_OF_THE_WIND"
+                ]
+              }
+            },
+            {
+              "p": 0.3333333333333333,
+              "effects": {
+                "relics": [
+                  "MR_STRUGGLES"
+                ]
+              }
+            },
+            {
+              "p": 0.3333333333333333,
+              "effects": {
+                "relics": [
+                  "BING_BONG"
+                ]
+              }
+            }
+          ]
+        },
+        "DOLL_ROOM.pages.INITIAL.options.TAKE_SOME_TIME": {
+          "effects": {
+            "hp": "-$TakeTimeHpLoss"
+          },
+          "next": "TAKE_SOME_TIME",
+          "note": "Damage is unblockable/unpowered flagged only via DamageVar (5). Then offers 2 randomly chosen dolls of the 3 (DAUGHTER_OF_THE_WIND, MR_STRUGGLES, BING_BONG); pick 1 -> relic. Offered options have dynamic titles (relic names)."
+        },
+        "DOLL_ROOM.pages.INITIAL.options.EXAMINE": {
+          "effects": {
+            "hp": "-$ExamineHpLoss"
+          },
+          "next": "EXAMINE",
+          "note": "15 damage; then offers all 3 dolls (DAUGHTER_OF_THE_WIND, MR_STRUGGLES, BING_BONG); pick 1 -> relic. Offered options have dynamic titles."
+        },
+        "DOLL_ROOM.pages.TAKE.options.TAKE": {
+          "effects": {
+            "randomRelics": 1
+          },
+          "note": "Dynamic-title option: chosen doll relic, one of DAUGHTER_OF_THE_WIND, MR_STRUGGLES, BING_BONG (subset shown depends on previous page)."
+        }
+      }
+    },
+    "DOORS_OF_LIGHT_AND_DARK": {
+      "class": "DoorsOfLightAndDark",
+      "options": {
+        "DOORS_OF_LIGHT_AND_DARK.pages.INITIAL.options.LIGHT": {
+          "effects": {
+            "upgradeCards": 1
+          }
+        },
+        "DOORS_OF_LIGHT_AND_DARK.pages.INITIAL.options.DARK": {
+          "effects": {
+            "removeCards": 1
+          }
+        }
+      }
+    },
+    "DROWNING_BEACON": {
+      "class": "DrowningBeacon",
+      "options": {
+        "DROWNING_BEACON.pages.INITIAL.options.BOTTLE": {
+          "effects": {
+            "potions": [
+              "GLOWWATER_POTION"
+            ]
+          }
+        },
+        "DROWNING_BEACON.pages.INITIAL.options.CLIMB": {
+          "effects": {
+            "maxHp": "-$HpLoss",
+            "relics": [
+              "FRESNEL_LENS"
+            ]
+          }
+        }
+      }
+    },
+    "ENDLESS_CONVEYOR": {
+      "class": "EndlessConveyor",
+      "requires": "all players gold >= 120",
+      "options": {
+        "ENDLESS_CONVEYOR.pages.INITIAL.options.OBSERVE_CHEF": {
+          "effects": {
+            "upgradeRandom": 1
+          }
+        },
+        "ENDLESS_CONVEYOR.pages.ALL.options.LOCKED": {
+          "requires": "gold < $Gold (40)",
+          "note": "Locked placeholder (no handler); shown when player cannot afford the current dish."
+        },
+        "ENDLESS_CONVEYOR.pages.ALL.options.CAVIAR": {
+          "effects": {
+            "gold": "-$Gold",
+            "maxHp": "$CaviarMaxHp"
+          },
+          "next": "GRAB_SOMETHING_OFF_THE_BELT",
+          "note": "Dish option (weight 6). Costs $Gold=40 and repeats: after a grab a new dish is rolled (never same as last). Every 5th grab is forced SEAPUNK_SALAD. The dish shown is random; see sibling ALL.* keys."
+        },
+        "ENDLESS_CONVEYOR.pages.ALL.options.SPICY_SNAPPY": {
+          "effects": {
+            "gold": "-$Gold",
+            "upgradeRandom": 1
+          },
+          "next": "GRAB_SOMETHING_OFF_THE_BELT",
+          "note": "Dish option (weight 3)."
+        },
+        "ENDLESS_CONVEYOR.pages.ALL.options.JELLY_LIVER": {
+          "effects": {
+            "gold": "-$Gold",
+            "transformCards": 1
+          },
+          "next": "GRAB_SOMETHING_OFF_THE_BELT",
+          "note": "Dish option (weight 3)."
+        },
+        "ENDLESS_CONVEYOR.pages.ALL.options.FRIED_EEL": {
+          "effects": {
+            "gold": "-$Gold",
+            "randomCards": 1,
+            "pool": "colorless"
+          },
+          "next": "GRAB_SOMETHING_OFF_THE_BELT",
+          "note": "Dish option (weight 3): 1 colorless card added to deck."
+        },
+        "ENDLESS_CONVEYOR.pages.ALL.options.SUSPICIOUS_CONDIMENT": {
+          "effects": {
+            "gold": "-$Gold",
+            "randomPotions": 1
+          },
+          "next": "GRAB_SOMETHING_OFF_THE_BELT",
+          "requires": "open potion slot (else dish not offered)",
+          "note": "Dish option (weight 3)."
+        },
+        "ENDLESS_CONVEYOR.pages.ALL.options.CLAM_ROLL": {
+          "effects": {
+            "gold": "-$Gold",
+            "hp": "$ClamRollHeal"
+          },
+          "next": "GRAB_SOMETHING_OFF_THE_BELT",
+          "requires": "HP not full (else dish not offered)",
+          "note": "Dish option (weight 6)."
+        },
+        "ENDLESS_CONVEYOR.pages.ALL.options.GOLDEN_FYSH": {
+          "effects": {
+            "gold": "$GoldenFyshGold"
+          },
+          "next": "GRAB_SOMETHING_OFF_THE_BELT",
+          "requires": "not offered on first dish (needs more than 1 grab)",
+          "note": "Dish option (weight 1); FREE (no gold cost) and gives 75 gold."
+        },
+        "ENDLESS_CONVEYOR.pages.ALL.options.SEAPUNK_SALAD": {
+          "effects": {
+            "gold": "-$Gold",
+            "cards": [
+              {
+                "id": "FEEDING_FRENZY",
+                "count": 1
+              }
+            ]
+          },
+          "next": "GRAB_SOMETHING_OFF_THE_BELT",
+          "note": "Forced dish on every 5th grab."
+        },
+        "ENDLESS_CONVEYOR.pages.GRAB_SOMETHING_OFF_THE_BELT.options.LEAVE": {
+          "proceed": true
+        }
+      }
+    },
+    "FAKE_MERCHANT": {
+      "class": "FakeMerchant",
+      "requires": "act index >= 1, single player, gold >= 100 or owns FOUL_POTION",
+      "note": "No EventOption text keys: custom-layout shop. 6 of 9 fake relics (FAKE_ANCHOR, FAKE_BLOOD_VIAL, FAKE_HAPPY_FLOWER, FAKE_LEES_WAFFLE, FAKE_MANGO, FAKE_ORICHALCUM, FAKE_SNECKO_EYE, FAKE_STRIKE_DUMMY, FAKE_VENERABLE_TEA_SET) sold for 50 gold each. Throwing a FOUL_POTION starts a fight (FAKE_MERCHANT_EVENT_ENCOUNTER) rewarding FAKE_MERCHANTS_RUG + remaining stocked relics.",
+      "options": {}
+    },
+    "FIELD_OF_MAN_SIZED_HOLES": {
+      "class": "FieldOfManSizedHoles",
+      "options": {
+        "FIELD_OF_MAN_SIZED_HOLES.pages.INITIAL.options.RESIST": {
+          "effects": {
+            "removeCards": "$Cards",
+            "curses": [
+              {
+                "id": "NORMALITY",
+                "count": 1
+              }
+            ]
+          }
+        },
+        "FIELD_OF_MAN_SIZED_HOLES.pages.INITIAL.options.ENTER_YOUR_HOLE": {
+          "effects": {
+            "enchantCards": 1,
+            "enchantment": "PERFECT_FIT"
+          },
+          "note": "Player picks 1 enchantable card. GoldVar 75 defined but unused by handlers."
+        }
+      }
+    },
+    "GRAVE_OF_THE_FORGOTTEN": {
+      "class": "GraveOfTheForgotten",
+      "options": {
+        "GRAVE_OF_THE_FORGOTTEN.pages.INITIAL.options.CONFRONT": {
+          "effects": {
+            "curses": [
+              {
+                "id": "DECAY",
+                "count": 1
+              }
+            ],
+            "enchantCards": 1,
+            "enchantment": "SOULS_POWER"
+          }
+        },
+        "GRAVE_OF_THE_FORGOTTEN.pages.INITIAL.options.CONFRONT_LOCKED": {
+          "requires": "no enchantable (SOULS_POWER) cards in deck",
+          "note": "Locked placeholder."
+        },
+        "GRAVE_OF_THE_FORGOTTEN.pages.INITIAL.options.ACCEPT": {
+          "effects": {
+            "relics": [
+              "FORGOTTEN_SOUL"
+            ]
+          }
+        }
+      }
+    },
+    "HUNGRY_FOR_MUSHROOMS": {
+      "class": "HungryForMushrooms",
+      "options": {
+        "HUNGRY_FOR_MUSHROOMS.pages.INITIAL.options.BIG_MUSHROOM": {
+          "effects": {
+            "relics": [
+              "BIG_MUSHROOM"
+            ],
+            "maxHp": 20
+          },
+          "note": "Relic BigMushroom on obtain: +20 max HP (MaxHpVar); also reduces first hand draw by 2 (CardsVar)."
+        },
+        "HUNGRY_FOR_MUSHROOMS.pages.INITIAL.options.FRAGRANT_MUSHROOM": {
+          "effects": {
+            "relics": [
+              "FRAGRANT_MUSHROOM"
+            ],
+            "hp": -15,
+            "upgradeRandom": 2
+          },
+          "note": "Relic FragrantMushroom on obtain: 15 unblockable damage + upgrades 2 random upgradable cards."
+        }
+      }
+    },
+    "INFESTED_AUTOMATON": {
+      "class": "InfestedAutomaton",
+      "options": {
+        "INFESTED_AUTOMATON.pages.INITIAL.options.STUDY": {
+          "effects": {
+            "randomCards": 1
+          },
+          "note": "1 random Power card from character pool added to deck (no choice)."
+        },
+        "INFESTED_AUTOMATON.pages.INITIAL.options.TOUCH_CORE": {
+          "effects": {
+            "randomCards": 1
+          },
+          "note": "1 random 0-cost (non-X) card from character pool added to deck (no choice)."
+        }
+      }
+    },
+    "JUNGLE_MAZE_ADVENTURE": {
+      "class": "JungleMazeAdventure",
+      "options": {
+        "JUNGLE_MAZE_ADVENTURE.pages.INITIAL.options.SOLO_QUEST": {
+          "effects": {
+            "hp": "-$SoloHp",
+            "gold": "$SoloGold"
+          },
+          "note": "SoloGold = 150 +/- up to 15 (random float, fixed at event generation); SoloHp 18 unblockable."
+        },
+        "JUNGLE_MAZE_ADVENTURE.pages.INITIAL.options.JOIN_FORCES": {
+          "effects": {
+            "gold": "$JoinForcesGold"
+          },
+          "note": "JoinForcesGold = 50 +/- up to 15 (fixed at generation). Shared event (multiplayer)."
+        }
+      }
+    },
+    "LOST_WISP": {
+      "class": "LostWisp",
+      "options": {
+        "LOST_WISP.pages.INITIAL.options.CLAIM": {
+          "effects": {
+            "curses": [
+              {
+                "id": "DECAY",
+                "count": 1
+              }
+            ],
+            "relics": [
+              "LOST_WISP"
+            ]
+          }
+        },
+        "LOST_WISP.pages.INITIAL.options.SEARCH": {
+          "effects": {
+            "gold": "$Gold"
+          },
+          "note": "Gold = 60 + rng(-15..15), fixed at generation."
+        }
+      }
+    },
+    "LUMINOUS_CHOIR": {
+      "class": "LuminousChoir",
+      "options": {
+        "LUMINOUS_CHOIR.pages.INITIAL.options.REACH_INTO_THE_FLESH": {
+          "effects": {
+            "removeCards": 2,
+            "curses": [
+              {
+                "id": "SPORE_MIND",
+                "count": 1
+              }
+            ]
+          }
+        },
+        "LUMINOUS_CHOIR.pages.INITIAL.options.OFFER_TRIBUTE": {
+          "effects": {
+            "loseGold": "$Gold",
+            "randomRelics": 1
+          },
+          "requires": "gold >= $Gold",
+          "note": "Gold = 149 - rng(0..49), fixed at generation. Relic = next relic from pool front."
+        },
+        "LUMINOUS_CHOIR.pages.INITIAL.options.OFFER_TRIBUTE_LOCKED": {
+          "requires": "gold < $Gold",
+          "note": "Locked placeholder."
+        }
+      }
+    },
+    "MORPHIC_GROVE": {
+      "class": "MorphicGrove",
+      "options": {
+        "MORPHIC_GROVE.pages.INITIAL.options.GROUP": {
+          "effects": {
+            "loseGold": "all",
+            "transformCards": 2
+          },
+          "note": "All gold is stolen. Shared event."
+        },
+        "MORPHIC_GROVE.pages.INITIAL.options.LONER": {
+          "effects": {
+            "maxHp": "$MaxHp"
+          }
+        }
+      }
+    },
+    "MUSEUM_OF_TORTURE": {
+      "class": "MuseumOfTorture",
+      "requires": "act index == 1 (Act 2)",
+      "options": {
+        "MUSEUM_OF_TORTURE.pages.INITIAL.options.CONTINUE": {
+          "next": "LOCKED"
+        },
+        "MUSEUM_OF_TORTURE.pages.LOCKED.options.CONTINUE": {
+          "next": "DISPLAY"
+        },
+        "MUSEUM_OF_TORTURE.pages.DISPLAY.options.TAKE": {
+          "outcomes": [
+            {
+              "p": 0.3333333333333333,
+              "effects": {
+                "relics": [
+                  "OBSIDIAN_VICE"
+                ],
+                "maxHp": "-$MaxHp",
+                "randomCurses": 1
+              }
+            },
+            {
+              "p": 0.3333333333333333,
+              "effects": {
+                "relics": [
+                  "THUMBSCREW"
+                ],
+                "maxHp": "-$MaxHp",
+                "randomCurses": 1
+              }
+            },
+            {
+              "p": 0.3333333333333333,
+              "effects": {
+                "relics": [
+                  "TORMENTOUS_COLLAR"
+                ],
+                "maxHp": "-$MaxHp",
+                "randomCurses": 1
+              }
+            }
+          ],
+          "note": "Relic rolled uniformly among 3 when event is generated. Loses $MaxHp=10 max HP and gains a random curse card from the curse pool."
+        },
+        "MUSEUM_OF_TORTURE.pages.DISPLAY.options.BREAK_OUT": {
+          "proceed": true,
+          "note": "No effect in handler."
+        }
+      }
+    },
+    "NEOW": {
+      "class": "Neow",
+      "note": "Offers 3 options: 1 random curse-relic option plus 2 random positive options from the pool (pool gets one of LAVA_ROCK/SMALL_CAPSULE (unless LARGE_CAPSULE), one of NUTRITIOUS_OYSTER/STONE_HUMIDIFIER and one of NEOWS_TALISMAN/POMANDER added, with some exclusions per curse). Options filtered by IsAllowedAtNeow. With run modifiers, option keys are the modifier ids (dynamic, not enumerated); a BLITZ option exists in Blitz mode.",
+      "options": {
+        "NEOW.pages.INITIAL.options.CURSED_PEARL": {
+          "effects": {
+            "relics": [
+              "CURSED_PEARL"
+            ],
+            "curses": [
+              {
+                "id": "GREED",
+                "count": 1
+              }
+            ],
+            "gold": 333
+          },
+          "note": "Curse option (1 offered at random)."
+        },
+        "NEOW.pages.INITIAL.options.DOWSING_ROD": {
+          "effects": {
+            "relics": [
+              "DOWSING_ROD"
+            ],
+            "cards": [
+              {
+                "id": "DOWSING",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Curse option."
+        },
+        "NEOW.pages.INITIAL.options.HEFTY_TABLET": {
+          "effects": {
+            "relics": [
+              "HEFTY_TABLET"
+            ],
+            "cardChoice": 1,
+            "pool": "character rare",
+            "curses": [
+              {
+                "id": "INJURY",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Curse option: choose 1 of 3 Rare character cards (skippable), plus Injury."
+        },
+        "NEOW.pages.INITIAL.options.LARGE_CAPSULE": {
+          "effects": {
+            "relics": [
+              "LARGE_CAPSULE"
+            ],
+            "randomRelics": 2
+          },
+          "note": "Curse option: +2 relics and 1 extra basic Strike and 1 extra basic Defend of the character added to deck."
+        },
+        "NEOW.pages.INITIAL.options.LEAFY_POULTICE": {
+          "effects": {
+            "relics": [
+              "LEAFY_POULTICE"
+            ],
+            "maxHp": -12,
+            "transformCards": 2
+          },
+          "note": "Curse option: transforms 1 basic Strike and 1 basic Defend (auto-chosen)."
+        },
+        "NEOW.pages.INITIAL.options.NEOWS_BONES": {
+          "effects": {
+            "relics": [
+              "NEOWS_BONES"
+            ],
+            "randomRelics": 2,
+            "randomCurses": 1
+          },
+          "note": "Curse option: 2 relic rewards drawn from the other Neow relic options (cannot skip) and 1 random curse."
+        },
+        "NEOW.pages.INITIAL.options.NEOWS_SACRIFICE": {
+          "effects": {
+            "relics": [
+              "NEOWS_SACRIFICE"
+            ],
+            "potions": [
+              "AMBERGRIS"
+            ],
+            "curses": [
+              {
+                "id": "GUILTY",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Curse option."
+        },
+        "NEOW.pages.INITIAL.options.PRECARIOUS_SHEARS": {
+          "effects": {
+            "relics": [
+              "PRECARIOUS_SHEARS"
+            ],
+            "removeCards": 2,
+            "hp": -16
+          },
+          "note": "Curse option: 16 damage (Unpowered flag only)."
+        },
+        "NEOW.pages.INITIAL.options.SILKEN_TRESS": {
+          "effects": {
+            "relics": [
+              "SILKEN_TRESS"
+            ],
+            "loseGold": "all"
+          },
+          "note": "Curse option; passive: modifies card rewards."
+        },
+        "NEOW.pages.INITIAL.options.SILVER_CRUCIBLE": {
+          "effects": {
+            "relics": [
+              "SILVER_CRUCIBLE"
+            ]
+          },
+          "note": "Curse option; passive relic (CardsVar 3)."
+        },
+        "NEOW.pages.INITIAL.options.ARCANE_SCROLL": {
+          "effects": {
+            "relics": [
+              "ARCANE_SCROLL"
+            ],
+            "randomCards": 1
+          },
+          "note": "Positive: 1 random Rare character card (no upgrade roll) added to deck. Not offered with HEFTY_TABLET."
+        },
+        "NEOW.pages.INITIAL.options.BOOMING_CONCH": {
+          "effects": {
+            "relics": [
+              "BOOMING_CONCH"
+            ]
+          },
+          "note": "Passive relic; no immediate effect on obtain."
+        },
+        "NEOW.pages.INITIAL.options.FISHING_ROD": {
+          "effects": {
+            "relics": [
+              "FISHING_ROD"
+            ]
+          },
+          "note": "Passive (upgrades a card every 3 combats)."
+        },
+        "NEOW.pages.INITIAL.options.GOLDEN_PEARL": {
+          "effects": {
+            "relics": [
+              "GOLDEN_PEARL"
+            ],
+            "gold": 150
+          },
+          "note": "Not offered with CURSED_PEARL."
+        },
+        "NEOW.pages.INITIAL.options.KALEIDOSCOPE": {
+          "effects": {
+            "relics": [
+              "KALEIDOSCOPE"
+            ],
+            "cardChoice": 2
+          },
+          "note": "Two card rewards each offering 3 cards (one from each of 3 other character pools); requires all character pools unlocked."
+        },
+        "NEOW.pages.INITIAL.options.LEAD_PAPERWEIGHT": {
+          "effects": {
+            "relics": [
+              "LEAD_PAPERWEIGHT"
+            ],
+            "cardChoice": 1,
+            "pool": "colorless"
+          },
+          "note": "Choose 1 of 2 colorless cards (skippable)."
+        },
+        "NEOW.pages.INITIAL.options.LOST_COFFER": {
+          "effects": {
+            "relics": [
+              "LOST_COFFER"
+            ],
+            "cardChoice": 1,
+            "randomPotions": 1
+          },
+          "note": "One card reward (3 cards) + one potion. Not offered with NEOWS_SACRIFICE."
+        },
+        "NEOW.pages.INITIAL.options.MASSIVE_SCROLL": {
+          "effects": {
+            "relics": [
+              "MASSIVE_SCROLL"
+            ],
+            "cardChoice": 1
+          },
+          "note": "Choose 1 of 3 multiplayer-only cards (skippable)."
+        },
+        "NEOW.pages.INITIAL.options.NEOWS_TORMENT": {
+          "effects": {
+            "relics": [
+              "NEOWS_TORMENT"
+            ],
+            "cards": [
+              {
+                "id": "NEOWS_FURY",
+                "count": 1
+              }
+            ]
+          }
+        },
+        "NEOW.pages.INITIAL.options.NEW_LEAF": {
+          "effects": {
+            "relics": [
+              "NEW_LEAF"
+            ],
+            "transformCards": 1
+          },
+          "note": "Not offered with LEAFY_POULTICE."
+        },
+        "NEOW.pages.INITIAL.options.PHIAL_HOLSTER": {
+          "effects": {
+            "relics": [
+              "PHIAL_HOLSTER"
+            ],
+            "potionSlots": 1,
+            "randomPotions": 2
+          },
+          "note": "Not offered with NEOWS_SACRIFICE."
+        },
+        "NEOW.pages.INITIAL.options.PRECISE_SCISSORS": {
+          "effects": {
+            "relics": [
+              "PRECISE_SCISSORS"
+            ],
+            "removeCards": 1
+          },
+          "note": "Not offered with PRECARIOUS_SHEARS."
+        },
+        "NEOW.pages.INITIAL.options.SCROLL_BOXES": {
+          "effects": {
+            "relics": [
+              "SCROLL_BOXES"
+            ],
+            "cardChoice": 1
+          },
+          "note": "Choose 1 bundle of cards from random bundles; all cards in the bundle are added."
+        },
+        "NEOW.pages.INITIAL.options.WINGED_BOOTS": {
+          "effects": {
+            "relics": [
+              "WINGED_BOOTS"
+            ]
+          },
+          "note": "Passive relic; no immediate effect on obtain."
+        },
+        "NEOW.pages.INITIAL.options.LAVA_ROCK": {
+          "effects": {
+            "relics": [
+              "LAVA_ROCK"
+            ]
+          },
+          "note": "Passive (extra boss relics); offered 50% vs SMALL_CAPSULE, never with LARGE_CAPSULE."
+        },
+        "NEOW.pages.INITIAL.options.SMALL_CAPSULE": {
+          "effects": {
+            "relics": [
+              "SMALL_CAPSULE"
+            ],
+            "randomRelics": 1
+          },
+          "note": "Offered 50% vs LAVA_ROCK; never with LARGE_CAPSULE."
+        },
+        "NEOW.pages.INITIAL.options.NUTRITIOUS_OYSTER": {
+          "effects": {
+            "relics": [
+              "NUTRITIOUS_OYSTER"
+            ],
+            "maxHp": 11
+          },
+          "note": "Offered 50% vs STONE_HUMIDIFIER."
+        },
+        "NEOW.pages.INITIAL.options.STONE_HUMIDIFIER": {
+          "effects": {
+            "relics": [
+              "STONE_HUMIDIFIER"
+            ]
+          },
+          "note": "Passive: +5 max HP after each rest-site heal."
+        },
+        "NEOW.pages.INITIAL.options.NEOWS_TALISMAN": {
+          "effects": {
+            "relics": [
+              "NEOWS_TALISMAN"
+            ],
+            "upgradeFixed": 2
+          },
+          "note": "Upgrades the last basic Strike and last basic Defend in the deck. Offered 50% vs POMANDER."
+        },
+        "NEOW.pages.INITIAL.options.POMANDER": {
+          "effects": {
+            "relics": [
+              "POMANDER"
+            ],
+            "upgradeCards": 1
+          }
+        },
+        "BLITZ": {
+          "effects": {
+            "cardChoice": 3
+          },
+          "note": "Blitz only: pick 3 of 10 unupgraded character cards (BlitzRunModel.GiveNeowRewards)."
+        }
+      }
+    },
+    "NONUPEIPE": {
+      "class": "Nonupeipe",
+      "note": "Offers 3 random options from this pool (BEAUTIFUL_BRACELET only if >= 4 cards can take Swift).",
+      "options": {
+        "NONUPEIPE.pages.INITIAL.options.BLESSED_ANTLER": {
+          "effects": {
+            "relics": [
+              "BLESSED_ANTLER"
+            ]
+          },
+          "note": "Passive relic; no immediate effect on obtain."
+        },
+        "NONUPEIPE.pages.INITIAL.options.BRILLIANT_SCARF": {
+          "effects": {
+            "relics": [
+              "BRILLIANT_SCARF"
+            ]
+          },
+          "note": "Passive relic; no immediate effect on obtain."
+        },
+        "NONUPEIPE.pages.INITIAL.options.DELICATE_FROND": {
+          "effects": {
+            "relics": [
+              "DELICATE_FROND"
+            ]
+          },
+          "note": "Passive relic; no immediate effect on obtain."
+        },
+        "NONUPEIPE.pages.INITIAL.options.DIAMOND_DIADEM": {
+          "effects": {
+            "relics": [
+              "DIAMOND_DIADEM"
+            ]
+          },
+          "note": "Passive: 20 block at start of first turn."
+        },
+        "NONUPEIPE.pages.INITIAL.options.FUR_COAT": {
+          "effects": {
+            "relics": [
+              "FUR_COAT"
+            ]
+          },
+          "note": "Marks upcoming map rooms (combats) on the current act map."
+        },
+        "NONUPEIPE.pages.INITIAL.options.GLITTER": {
+          "effects": {
+            "relics": [
+              "GLITTER"
+            ]
+          },
+          "note": "Passive relic; no immediate effect on obtain."
+        },
+        "NONUPEIPE.pages.INITIAL.options.JEWELRY_BOX": {
+          "effects": {
+            "relics": [
+              "JEWELRY_BOX"
+            ],
+            "cards": [
+              {
+                "id": "APOTHEOSIS",
+                "count": 1
+              }
+            ]
+          }
+        },
+        "NONUPEIPE.pages.INITIAL.options.LOOMING_FRUIT": {
+          "effects": {
+            "relics": [
+              "LOOMING_FRUIT"
+            ],
+            "maxHp": 31
+          }
+        },
+        "NONUPEIPE.pages.INITIAL.options.SIGNET_RING": {
+          "effects": {
+            "relics": [
+              "SIGNET_RING"
+            ],
+            "gold": 888
+          }
+        },
+        "NONUPEIPE.pages.INITIAL.options.BEAUTIFUL_BRACELET": {
+          "effects": {
+            "relics": [
+              "BEAUTIFUL_BRACELET"
+            ],
+            "enchantRandom": 4,
+            "enchantment": "SWIFT",
+            "enchantAmount": 2
+          },
+          "note": "Enchants 4 random enchantable cards with Swift 2.",
+          "requires": "at least 4 cards that can be enchanted with SWIFT"
+        }
+      }
+    },
+    "OROBAS": {
+      "class": "Orobas",
+      "note": "Offers 3 options, one from each of 3 pools (pool 1 gets SEA_GLASS of a random other character with 2/3 chance, else PRISMATIC_GEM; pool 3: TOUCH_OF_OROBAS / ARCHAIC_TOOTH if usable, else OPTION_POOL_3_LOCKED placeholder).",
+      "options": {
+        "OROBAS.pages.INITIAL.options.ELECTRIC_SHRYMP": {
+          "effects": {
+            "relics": [
+              "ELECTRIC_SHRYMP"
+            ],
+            "enchantCards": 1,
+            "enchantment": "IMBUED"
+          },
+          "note": "Pool 1."
+        },
+        "OROBAS.pages.INITIAL.options.GLASS_EYE": {
+          "effects": {
+            "relics": [
+              "GLASS_EYE"
+            ],
+            "cardChoice": 5
+          },
+          "note": "Pool 1: five card rewards (2 Common, 2 Uncommon, 1 Rare), each choose 1 of 3 character cards."
+        },
+        "OROBAS.pages.INITIAL.options.ALCHEMICAL_COFFER": {
+          "effects": {
+            "relics": [
+              "ALCHEMICAL_COFFER"
+            ],
+            "potionSlots": 4,
+            "randomPotions": 4
+          },
+          "note": "Pool 2."
+        },
+        "OROBAS.pages.INITIAL.options.DRIFTWOOD": {
+          "effects": {
+            "relics": [
+              "DRIFTWOOD"
+            ]
+          },
+          "note": "Pool 2. Passive relic; no immediate effect on obtain."
+        },
+        "OROBAS.pages.INITIAL.options.RADIANT_PEARL": {
+          "effects": {
+            "relics": [
+              "RADIANT_PEARL"
+            ]
+          },
+          "note": "Pool 2. Passive relic; no immediate effect on obtain."
+        },
+        "OROBAS.pages.INITIAL.options.SAND_CASTLE": {
+          "effects": {
+            "relics": [
+              "SAND_CASTLE"
+            ],
+            "upgradeRandom": 6
+          },
+          "note": "Pool 2."
+        },
+        "OROBAS.pages.INITIAL.options.SEA_GLASS": {
+          "effects": {
+            "relics": [
+              "SEA_GLASS"
+            ],
+            "cardChoice": 15,
+            "pool": "another character"
+          },
+          "note": "Pool 1 (2/3 chance vs PRISMATIC_GEM). 15 cards (5 Common, 5 Uncommon, 5 Rare) from another unlocked character's pool; player may add any number (0..15) to the deck."
+        },
+        "OROBAS.pages.INITIAL.options.PRISMATIC_GEM": {
+          "effects": {
+            "relics": [
+              "PRISMATIC_GEM"
+            ]
+          },
+          "note": "Pool 1 (1/3 chance in place of SEA_GLASS). Passive: +1 energy."
+        },
+        "OROBAS.pages.INITIAL.options.TOUCH_OF_OROBAS": {
+          "effects": {
+            "relics": [
+              "TOUCH_OF_OROBAS"
+            ]
+          },
+          "note": "Pool 3: replaces the starter relic with its upgraded version (relic swap).",
+          "requires": "starter relic has an upgraded version"
+        },
+        "OROBAS.pages.INITIAL.options.ARCHAIC_TOOTH": {
+          "effects": {
+            "relics": [
+              "ARCHAIC_TOOTH"
+            ]
+          },
+          "note": "Pool 3: transforms a starter card into its Ancient-rarity version.",
+          "requires": "deck contains a transcendence-upgradable starter card"
+        },
+        "OROBAS.pages.INITIAL.options.OPTION_POOL_3_LOCKED": {
+          "requires": "neither TOUCH_OF_OROBAS nor ARCHAIC_TOOTH is usable",
+          "note": "Locked placeholder."
+        }
+      }
+    },
+    "PAEL": {
+      "class": "Pael",
+      "note": "Offers 3 options, one from each of 3 pools (some conditional extras added to pools 2/3).",
+      "options": {
+        "PAEL.pages.INITIAL.options.PAELS_FLESH": {
+          "effects": {
+            "relics": [
+              "PAELS_FLESH"
+            ]
+          },
+          "note": "Pool 1. Passive: +1 energy."
+        },
+        "PAEL.pages.INITIAL.options.PAELS_HORN": {
+          "effects": {
+            "relics": [
+              "PAELS_HORN"
+            ],
+            "cards": [
+              {
+                "id": "RELAX",
+                "count": 2
+              }
+            ]
+          },
+          "note": "Pool 1."
+        },
+        "PAEL.pages.INITIAL.options.PAELS_TEARS": {
+          "effects": {
+            "relics": [
+              "PAELS_TEARS"
+            ]
+          },
+          "note": "Pool 1. Passive: energy-related (EnergyVar 2)."
+        },
+        "PAEL.pages.INITIAL.options.PAELS_WING": {
+          "effects": {
+            "relics": [
+              "PAELS_WING"
+            ]
+          },
+          "note": "Pool 2. Passive (sacrifice cards for rewards)."
+        },
+        "PAEL.pages.INITIAL.options.PAELS_EYE": {
+          "effects": {
+            "relics": [
+              "PAELS_EYE"
+            ]
+          },
+          "note": "Pool 3. Passive."
+        },
+        "PAEL.pages.INITIAL.options.PAELS_BLOOD": {
+          "effects": {
+            "relics": [
+              "PAELS_BLOOD"
+            ]
+          },
+          "note": "Pool 3. Passive: +1 card draw."
+        },
+        "PAEL.pages.INITIAL.options.PAELS_CLAW": {
+          "effects": {
+            "relics": [
+              "PAELS_CLAW"
+            ],
+            "enchantAll": true,
+            "enchantment": "GOOPY"
+          },
+          "note": "Pool 2 (extra). Enchants every card that can take Goopy.",
+          "requires": "at least 3 cards enchantable with GOOPY"
+        },
+        "PAEL.pages.INITIAL.options.PAELS_TOOTH": {
+          "effects": {
+            "relics": [
+              "PAELS_TOOTH"
+            ],
+            "removeCards": 5
+          },
+          "note": "Pool 2 (extra). Removes 5 upgradable cards (chosen) and stores them; they return upgraded after combats.",
+          "requires": "at least 5 removable cards"
+        },
+        "PAEL.pages.INITIAL.options.PAELS_LEGION": {
+          "effects": {
+            "relics": [
+              "PAELS_LEGION"
+            ]
+          },
+          "note": "Pool 3 (extra). Summons a pet in combat.",
+          "requires": "player has no event pet"
+        },
+        "PAEL.pages.INITIAL.options.PAELS_GROWTH": {
+          "effects": {
+            "relics": [
+              "PAELS_GROWTH"
+            ],
+            "enchantCards": 1,
+            "enchantment": "CLONE",
+            "enchantAmount": 4
+          },
+          "note": "Pool 2 (extra)."
+        }
+      }
+    },
+    "POTION_COURIER": {
+      "class": "PotionCourier",
+      "requires": "act index > 0",
+      "options": {
+        "POTION_COURIER.pages.INITIAL.options.GRAB_POTIONS": {
+          "effects": {
+            "potions": [
+              "FOUL_POTION",
+              "FOUL_POTION",
+              "FOUL_POTION"
+            ]
+          },
+          "note": "$FoulPotions = 3 Foul Potions (offered as potion rewards; need open slots)."
+        },
+        "POTION_COURIER.pages.INITIAL.options.RANSACK": {
+          "effects": {
+            "randomPotions": 1
+          },
+          "note": "1 random Uncommon potion from character+shared pools."
+        }
+      }
+    },
+    "PUNCH_OFF": {
+      "class": "PunchOff",
+      "requires": "total floor >= 6",
+      "options": {
+        "PUNCH_OFF.pages.INITIAL.options.NAB": {
+          "effects": {
+            "curses": [
+              {
+                "id": "INJURY",
+                "count": 1
+              }
+            ],
+            "randomRelics": 1
+          }
+        },
+        "PUNCH_OFF.pages.INITIAL.options.I_CAN_TAKE_THEM": {
+          "next": "I_CAN_TAKE_THEM"
+        },
+        "PUNCH_OFF.pages.I_CAN_TAKE_THEM.options.FIGHT": {
+          "effects": {
+            "fight": "monster",
+            "encounter": "PUNCH_OFF_EVENT_ENCOUNTER",
+            "rewards": {
+              "randomRelics": 1,
+              "randomPotions": 1
+            }
+          },
+          "note": "Gold var (91..98) set in CalculateVars; not used by handlers shown. Shared event."
+        }
+      }
+    },
+    "RANWID_THE_ELDER": {
+      "class": "RanwidTheElder",
+      "requires": "act index > 0, gold >= 100, has potion, has tradable relic",
+      "options": {
+        "RANWID_THE_ELDER.pages.INITIAL.options.POTION": {
+          "effects": {
+            "losePotions": 1,
+            "randomRelics": 1
+          },
+          "note": "Dynamic title: gives up one randomly chosen held potion (chosen at event generation); relic = next from pool front. Potions cannot be used/removed during the event."
+        },
+        "RANWID_THE_ELDER.pages.INITIAL.options.POTION_LOCKED": {
+          "requires": "no potion held",
+          "note": "Locked placeholder."
+        },
+        "RANWID_THE_ELDER.pages.INITIAL.options.GOLD": {
+          "effects": {
+            "loseGold": "$Gold",
+            "randomRelics": 1
+          },
+          "note": "Gold = 100."
+        },
+        "RANWID_THE_ELDER.pages.INITIAL.options.RELIC": {
+          "effects": {
+            "loseRelic": 1,
+            "randomRelics": 2
+          },
+          "note": "Dynamic title: gives up one randomly chosen tradable relic (chosen at generation); gets 2 relics from pool front."
+        },
+        "RANWID_THE_ELDER.pages.INITIAL.options.RELIC_LOCKED": {
+          "requires": "no tradable relic",
+          "note": "Locked placeholder."
+        }
+      }
+    },
+    "REFLECTIONS": {
+      "class": "Reflections",
+      "options": {
+        "REFLECTIONS.pages.INITIAL.options.TOUCH_A_MIRROR": {
+          "effects": {
+            "upgradeRandom": 4,
+            "downgradeRandom": 2
+          },
+          "note": "First downgrades up to 2 random upgraded cards, then upgrades up to 4 random upgradable cards."
+        },
+        "REFLECTIONS.pages.INITIAL.options.SHATTER": {
+          "effects": {
+            "duplicateCards": "deck",
+            "curses": [
+              {
+                "id": "BAD_LUCK",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Every card in the deck is cloned (deck size doubles), then Bad Luck curse added."
+        }
+      }
+    },
+    "RELIC_TRADER": {
+      "class": "RelicTrader",
+      "requires": "act index > 0, >= 5 tradable relics",
+      "note": "A fallback option with textKey PROCEED exists only if no owned relics (not normally reachable).",
+      "options": {
+        "RELIC_TRADER.pages.INITIAL.options.TOP": {
+          "effects": {
+            "loseRelic": 1,
+            "randomRelics": 1
+          },
+          "note": "Trades a pre-chosen random owned tradable relic (#1 of 3 shuffled) for the pre-rolled next-from-pool relic."
+        },
+        "RELIC_TRADER.pages.INITIAL.options.MIDDLE": {
+          "effects": {
+            "loseRelic": 1,
+            "randomRelics": 1
+          },
+          "note": "Same as TOP for the 2nd pair."
+        },
+        "RELIC_TRADER.pages.INITIAL.options.BOTTOM": {
+          "effects": {
+            "loseRelic": 1,
+            "randomRelics": 1
+          },
+          "note": "Same as TOP for the 3rd pair."
+        }
+      }
+    },
+    "ROOM_FULL_OF_CHEESE": {
+      "class": "RoomFullOfCheese",
+      "requires": "act index < 2",
+      "options": {
+        "ROOM_FULL_OF_CHEESE.pages.INITIAL.options.GORGE": {
+          "effects": {
+            "cardChoice": 2,
+            "pool": "character"
+          },
+          "note": "Choose 2 of 8 Common character cards, added to deck."
+        },
+        "ROOM_FULL_OF_CHEESE.pages.INITIAL.options.SEARCH": {
+          "effects": {
+            "hp": "-$Damage",
+            "relics": [
+              "CHOSEN_CHEESE"
+            ]
+          },
+          "note": "Damage 14 unblockable."
+        }
+      }
+    },
+    "ROUND_TEA_PARTY": {
+      "class": "RoundTeaParty",
+      "requires": "all players HP >= 12",
+      "options": {
+        "ROUND_TEA_PARTY.pages.INITIAL.options.ENJOY_TEA": {
+          "effects": {
+            "relics": [
+              "ROYAL_POISON"
+            ],
+            "healPct": 1
+          }
+        },
+        "ROUND_TEA_PARTY.pages.INITIAL.options.PICK_FIGHT": {
+          "next": "PICK_FIGHT"
+        },
+        "ROUND_TEA_PARTY.pages.PICK_FIGHT.options.CONTINUE_FIGHT": {
+          "effects": {
+            "hp": "-$Damage",
+            "randomRelics": 1
+          },
+          "note": "Damage 11 unblockable; relic = next from pool front."
+        }
+      }
+    },
+    "SAPPHIRE_SEED": {
+      "class": "SapphireSeed",
+      "options": {
+        "SAPPHIRE_SEED.pages.INITIAL.options.EAT": {
+          "effects": {
+            "hp": "$Heal",
+            "upgradeCards": 1
+          },
+          "note": "Heal 9 HP."
+        },
+        "SAPPHIRE_SEED.pages.INITIAL.options.PLANT": {
+          "effects": {
+            "enchantCards": 1,
+            "enchantment": "SOWN"
+          }
+        }
+      }
+    },
+    "SELF_HELP_BOOK": {
+      "class": "SelfHelpBook",
+      "options": {
+        "SELF_HELP_BOOK.pages.INITIAL.options.READ_THE_BACK": {
+          "effects": {
+            "enchantCards": 1,
+            "enchantment": "SHARP",
+            "enchantAmount": 2
+          },
+          "requires": "has enchantable Attack card"
+        },
+        "SELF_HELP_BOOK.pages.INITIAL.options.READ_THE_BACK_LOCKED": {
+          "requires": "no enchantable Attack card",
+          "note": "Locked placeholder."
+        },
+        "SELF_HELP_BOOK.pages.INITIAL.options.READ_PASSAGE": {
+          "effects": {
+            "enchantCards": 1,
+            "enchantment": "NIMBLE",
+            "enchantAmount": 2
+          },
+          "requires": "has enchantable Skill card"
+        },
+        "SELF_HELP_BOOK.pages.INITIAL.options.READ_PASSAGE_LOCKED": {
+          "requires": "no enchantable Skill card",
+          "note": "Locked placeholder."
+        },
+        "SELF_HELP_BOOK.pages.INITIAL.options.READ_ENTIRE_BOOK": {
+          "effects": {
+            "enchantCards": 1,
+            "enchantment": "SWIFT",
+            "enchantAmount": 2
+          },
+          "requires": "has enchantable Power card"
+        },
+        "SELF_HELP_BOOK.pages.INITIAL.options.READ_ENTIRE_BOOK_LOCKED": {
+          "requires": "no enchantable Power card",
+          "note": "Locked placeholder."
+        },
+        "SELF_HELP_BOOK.pages.INITIAL.options.NO_OPTIONS": {
+          "proceed": true,
+          "note": "Only shown if none of the three card types are enchantable."
+        }
+      }
+    },
+    "SHRINE_OF_THE_WARLORD": {
+      "class": "ShrineOfTheWarlord",
+      "requires": "not allowed if the act ancient is Tanx",
+      "options": {
+        "SHRINE_OF_THE_WARLORD.pages.INITIAL.options.TAKE_WEAPON": {
+          "effects": {
+            "cards": [
+              {
+                "id": "MIGHTY_WEAPON",
+                "count": 1
+              }
+            ]
+          }
+        },
+        "SHRINE_OF_THE_WARLORD.pages.INITIAL.options.TAKE_SHIELD": {
+          "effects": {
+            "cards": [
+              {
+                "id": "MIGHTY_SHIELD",
+                "count": 1
+              }
+            ]
+          }
+        },
+        "SHRINE_OF_THE_WARLORD.pages.INITIAL.options.TAKE_WINGS": {
+          "effects": {
+            "curses": [
+              {
+                "id": "CLUMSY",
+                "count": 1
+              }
+            ],
+            "relics": [
+              "MIGHTY_WINGS"
+            ]
+          }
+        }
+      }
+    },
+    "SLIPPERY_BRIDGE": {
+      "class": "SlipperyBridge",
+      "requires": "total floor > 6 and every player has a removable card",
+      "options": {
+        "SLIPPERY_BRIDGE.pages.INITIAL.options.OVERCOME": {
+          "effects": {
+            "removeCards": 1
+          },
+          "note": "Removes the specific random card displayed (RandomCard: random removable non-Basic card, rerolled on each hold-on). Same textKey is reused on all HOLD_ON pages."
+        },
+        "SLIPPERY_BRIDGE.pages.INITIAL.options.HOLD_ON_0": {
+          "effects": {
+            "hp": -3
+          },
+          "next": "HOLD_ON_0",
+          "note": "Damage = 3 + number of previous hold-ons (unblockable); rerolls the card to lose."
+        },
+        "SLIPPERY_BRIDGE.pages.HOLD_ON_0.options.HOLD_ON_1": {
+          "effects": {
+            "hp": -4
+          },
+          "next": "HOLD_ON_1",
+          "note": "Damage 3 + holds so far (here 4)."
+        },
+        "SLIPPERY_BRIDGE.pages.HOLD_ON_1.options.HOLD_ON_2": {
+          "effects": {
+            "hp": -5
+          },
+          "next": "HOLD_ON_2"
+        },
+        "SLIPPERY_BRIDGE.pages.HOLD_ON_2.options.HOLD_ON_3": {
+          "effects": {
+            "hp": -6
+          },
+          "next": "HOLD_ON_3"
+        },
+        "SLIPPERY_BRIDGE.pages.HOLD_ON_3.options.HOLD_ON_4": {
+          "effects": {
+            "hp": -7
+          },
+          "next": "HOLD_ON_4"
+        },
+        "SLIPPERY_BRIDGE.pages.HOLD_ON_4.options.HOLD_ON_5": {
+          "effects": {
+            "hp": -8
+          },
+          "next": "HOLD_ON_5"
+        },
+        "SLIPPERY_BRIDGE.pages.HOLD_ON_5.options.HOLD_ON_6": {
+          "effects": {
+            "hp": -9
+          },
+          "next": "HOLD_ON_6"
+        },
+        "SLIPPERY_BRIDGE.pages.HOLD_ON_6.options.HOLD_ON_LOOP": {
+          "effects": {
+            "hp": -10
+          },
+          "next": "HOLD_ON_LOOP"
+        },
+        "SLIPPERY_BRIDGE.pages.HOLD_ON_LOOP.options.HOLD_ON_LOOP": {
+          "effects": {
+            "hp": "-(3+holds)"
+          },
+          "next": "HOLD_ON_LOOP",
+          "note": "Loops forever; damage keeps growing by 1 each hold (11, 12, ...)."
+        }
+      }
+    },
+    "SPIRALING_WHIRLPOOL": {
+      "class": "SpiralingWhirlpool",
+      "options": {
+        "SPIRALING_WHIRLPOOL.pages.INITIAL.options.OBSERVE": {
+          "effects": {
+            "enchantCards": 1,
+            "enchantment": "SPIRAL"
+          }
+        },
+        "SPIRALING_WHIRLPOOL.pages.INITIAL.options.DRINK": {
+          "effects": {
+            "healPct": 0.33
+          },
+          "note": "Heal = 33% of max HP ($Heal computed at generation)."
+        }
+      }
+    },
+    "SPIRIT_GRAFTER": {
+      "class": "SpiritGrafter",
+      "options": {
+        "SPIRIT_GRAFTER.pages.INITIAL.options.LET_IT_IN": {
+          "effects": {
+            "hp": "$LetItInHealAmount",
+            "cards": [
+              {
+                "id": "METAMORPHOSIS",
+                "count": 1
+              }
+            ]
+          }
+        },
+        "SPIRIT_GRAFTER.pages.INITIAL.options.REJECTION": {
+          "effects": {
+            "upgradeCards": 1,
+            "hp": "-$RejectionHpLoss"
+          }
+        }
+      }
+    },
+    "STONE_OF_ALL_TIME": {
+      "class": "StoneOfAllTime",
+      "requires": "act index == 1 (Act 2) and every player holds a potion",
+      "options": {
+        "STONE_OF_ALL_TIME.pages.INITIAL.options.LIFT": {
+          "effects": {
+            "losePotions": 1,
+            "maxHp": "$DrinkMaxHpGain"
+          },
+          "note": "Discards one randomly chosen held potion (chosen at generation); potions cannot be used during the event."
+        },
+        "STONE_OF_ALL_TIME.pages.INITIAL.options.LIFT_LOCKED": {
+          "requires": "no potion held",
+          "note": "Locked placeholder."
+        },
+        "STONE_OF_ALL_TIME.pages.INITIAL.options.PUSH": {
+          "effects": {
+            "hp": "-$PushHpLoss",
+            "enchantCards": 1,
+            "enchantment": "VIGOROUS",
+            "enchantAmount": "$PushVigorousAmount"
+          },
+          "requires": "has Vigorous-enchantable card"
+        },
+        "STONE_OF_ALL_TIME.pages.INITIAL.options.PUSH_LOCKED": {
+          "requires": "no Vigorous-enchantable card",
+          "note": "Locked placeholder."
+        }
+      }
+    },
+    "SUNKEN_STATUE": {
+      "class": "SunkenStatue",
+      "options": {
+        "SUNKEN_STATUE.pages.INITIAL.options.GRAB_SWORD": {
+          "effects": {
+            "relics": [
+              "SWORD_OF_STONE"
+            ]
+          }
+        },
+        "SUNKEN_STATUE.pages.INITIAL.options.DIVE_INTO_WATER": {
+          "effects": {
+            "gold": "$Gold",
+            "hp": "-$HpLoss"
+          },
+          "note": "Gold = 111 + rng(-10..10) fixed at generation; HpLoss 7 unblockable."
+        }
+      }
+    },
+    "SUNKEN_TREASURY": {
+      "class": "SunkenTreasury",
+      "options": {
+        "SUNKEN_TREASURY.pages.INITIAL.options.FIRST_CHEST": {
+          "effects": {
+            "gold": "$SmallChestGold"
+          },
+          "note": "60 + rng(-8..7) fixed at generation."
+        },
+        "SUNKEN_TREASURY.pages.INITIAL.options.SECOND_CHEST": {
+          "effects": {
+            "gold": "$LargeChestGold",
+            "curses": [
+              {
+                "id": "GREED",
+                "count": 1
+              }
+            ]
+          },
+          "note": "333 + rng(-30..30) fixed at generation."
+        }
+      }
+    },
+    "SYMBIOTE": {
+      "class": "Symbiote",
+      "requires": "act index > 0",
+      "options": {
+        "SYMBIOTE.pages.INITIAL.options.APPROACH": {
+          "effects": {
+            "enchantCards": 1,
+            "enchantment": "CORRUPTED"
+          }
+        },
+        "SYMBIOTE.pages.INITIAL.options.APPROACH_LOCKED": {
+          "requires": "no Corrupted-enchantable card in deck",
+          "note": "Locked placeholder."
+        },
+        "SYMBIOTE.pages.INITIAL.options.KILL_WITH_FIRE": {
+          "effects": {
+            "transformCards": "$Cards"
+          },
+          "note": "$Cards = 1."
+        }
+      }
+    },
+    "TABLET_OF_TRUTH": {
+      "class": "TabletOfTruth",
+      "options": {
+        "TABLET_OF_TRUTH.pages.INITIAL.options.DECIPHER_1": {
+          "effects": {
+            "maxHp": "-$DecipherMaxHpLoss",
+            "upgradeRandom": 1
+          },
+          "next": "DECIPHER_1",
+          "note": "Lose 3 max HP, upgrade 1 random upgradable card."
+        },
+        "TABLET_OF_TRUTH.pages.INITIAL.options.SMASH": {
+          "effects": {
+            "hp": "$SmashHPGain"
+          },
+          "note": "Heal 20 HP."
+        },
+        "TABLET_OF_TRUTH.pages.DECIPHER_1.options.DECIPHER": {
+          "effects": {
+            "maxHp": -6,
+            "upgradeRandom": 1
+          },
+          "next": "DECIPHER_2"
+        },
+        "TABLET_OF_TRUTH.pages.DECIPHER_2.options.DECIPHER": {
+          "effects": {
+            "maxHp": -12,
+            "upgradeRandom": 1
+          },
+          "next": "DECIPHER_3"
+        },
+        "TABLET_OF_TRUTH.pages.DECIPHER_3.options.DECIPHER": {
+          "effects": {
+            "maxHp": -24,
+            "upgradeRandom": 1
+          },
+          "next": "DECIPHER_4"
+        },
+        "TABLET_OF_TRUTH.pages.DECIPHER_4.options.DECIPHER": {
+          "effects": {
+            "maxHp": "-(MaxHp-1)",
+            "upgradeAll": true
+          },
+          "note": "Reduces max HP to 1 and upgrades every upgradable card; event then finishes (page DECIPHER_5)."
+        },
+        "TABLET_OF_TRUTH.pages.DECIPHER.options.GIVE_UP": {
+          "proceed": true,
+          "note": "Leave after at least one decipher; shared textKey on pages DECIPHER_1..4."
+        }
+      }
+    },
+    "TANX": {
+      "class": "Tanx",
+      "note": "Offers 3 random options from the pool.",
+      "options": {
+        "TANX.pages.INITIAL.options.CLAWS": {
+          "effects": {
+            "relics": [
+              "CLAWS"
+            ],
+            "transformCards": "up to 6"
+          },
+          "note": "Choose up to 6 cards to transform into Maul variants."
+        },
+        "TANX.pages.INITIAL.options.CROSSBOW": {
+          "effects": {
+            "relics": [
+              "CROSSBOW"
+            ]
+          },
+          "note": "Passive relic; no immediate effect on obtain."
+        },
+        "TANX.pages.INITIAL.options.IRON_CLUB": {
+          "effects": {
+            "relics": [
+              "IRON_CLUB"
+            ]
+          },
+          "note": "Passive relic; no immediate effect on obtain."
+        },
+        "TANX.pages.INITIAL.options.MEAT_CLEAVER": {
+          "effects": {
+            "relics": [
+              "MEAT_CLEAVER"
+            ]
+          },
+          "note": "Passive relic; no immediate effect on obtain."
+        },
+        "TANX.pages.INITIAL.options.SAI": {
+          "effects": {
+            "relics": [
+              "SAI"
+            ]
+          },
+          "note": "Passive: 7 block each turn start."
+        },
+        "TANX.pages.INITIAL.options.SPIKED_GAUNTLETS": {
+          "effects": {
+            "relics": [
+              "SPIKED_GAUNTLETS"
+            ]
+          },
+          "note": "Passive: +1 energy."
+        },
+        "TANX.pages.INITIAL.options.TANXS_WHISTLE": {
+          "effects": {
+            "relics": [
+              "TANXS_WHISTLE"
+            ],
+            "cards": [
+              {
+                "id": "WHISTLE",
+                "count": 1
+              }
+            ]
+          }
+        },
+        "TANX.pages.INITIAL.options.THROWING_AXE": {
+          "effects": {
+            "relics": [
+              "THROWING_AXE"
+            ]
+          },
+          "note": "Passive relic; no immediate effect on obtain."
+        },
+        "TANX.pages.INITIAL.options.WAR_HAMMER": {
+          "effects": {
+            "relics": [
+              "WAR_HAMMER"
+            ]
+          },
+          "note": "Passive: upgrades 4 cards after elite combats."
+        },
+        "TANX.pages.INITIAL.options.TRI_BOOMERANG": {
+          "effects": {
+            "relics": [
+              "TRI_BOOMERANG"
+            ],
+            "enchantCards": 3,
+            "enchantment": "INSTINCT",
+            "enchantAmount": 1
+          },
+          "note": "Choose 3 cards to enchant.",
+          "requires": "at least 3 cards enchantable with INSTINCT"
+        }
+      }
+    },
+    "TEA_MASTER": {
+      "class": "TeaMaster",
+      "requires": "act index < 2 and every player gold >= 150",
+      "options": {
+        "TEA_MASTER.pages.INITIAL.options.BONE_TEA": {
+          "effects": {
+            "loseGold": "$BoneTeaCost",
+            "relics": [
+              "BONE_TEA"
+            ]
+          },
+          "requires": "gold >= 50",
+          "note": "Bone Tea: next combat upgrades the starting hand."
+        },
+        "TEA_MASTER.pages.INITIAL.options.BONE_TEA_LOCKED": {
+          "requires": "gold < 50",
+          "note": "Locked placeholder."
+        },
+        "TEA_MASTER.pages.INITIAL.options.EMBER_TEA": {
+          "effects": {
+            "loseGold": "$EmberTeaCost",
+            "relics": [
+              "EMBER_TEA"
+            ]
+          },
+          "requires": "gold >= 150",
+          "note": "Ember Tea: +2 Strength for next 5 combats."
+        },
+        "TEA_MASTER.pages.INITIAL.options.EMBER_TEA_LOCKED": {
+          "requires": "gold < 150",
+          "note": "Locked placeholder."
+        },
+        "TEA_MASTER.pages.INITIAL.options.TEA_OF_DISCOURTESY": {
+          "effects": {
+            "relics": [
+              "TEA_OF_DISCOURTESY"
+            ]
+          },
+          "note": "Free; relic adds 2 Dazed to draw pile at start of next combat only (1 combat)."
+        }
+      }
+    },
+    "TEZCATARA": {
+      "class": "Tezcatara",
+      "note": "Offers 3 options, one from each of 3 pools.",
+      "options": {
+        "TEZCATARA.pages.INITIAL.options.VERY_HOT_COCOA": {
+          "effects": {
+            "relics": [
+              "VERY_HOT_COCOA"
+            ]
+          },
+          "note": "Pool 1. Passive: +4 energy on first turn."
+        },
+        "TEZCATARA.pages.INITIAL.options.YUMMY_COOKIE": {
+          "effects": {
+            "relics": [
+              "YUMMY_COOKIE"
+            ],
+            "upgradeCards": 4
+          },
+          "note": "Pool 1."
+        },
+        "TEZCATARA.pages.INITIAL.options.NUTRITIOUS_SOUP": {
+          "effects": {
+            "relics": [
+              "NUTRITIOUS_SOUP"
+            ],
+            "enchantAll": true,
+            "enchantment": "TEZCATARAS_EMBER"
+          },
+          "note": "Pool 1 (extra). Enchants every basic Strike.",
+          "requires": "deck contains a basic Strike"
+        },
+        "TEZCATARA.pages.INITIAL.options.BIIIG_HUG": {
+          "effects": {
+            "relics": [
+              "BIIIG_HUG"
+            ],
+            "removeCards": 4
+          },
+          "note": "Pool 2."
+        },
+        "TEZCATARA.pages.INITIAL.options.STORYBOOK": {
+          "effects": {
+            "relics": [
+              "STORYBOOK"
+            ],
+            "cards": [
+              {
+                "id": "BRIGHTEST_FLAME",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Pool 2."
+        },
+        "TEZCATARA.pages.INITIAL.options.TOASTY_MITTENS": {
+          "effects": {
+            "relics": [
+              "TOASTY_MITTENS"
+            ]
+          },
+          "note": "Pool 2. Passive (Strength)."
+        },
+        "TEZCATARA.pages.INITIAL.options.GOLDEN_COMPASS": {
+          "effects": {
+            "relics": [
+              "GOLDEN_COMPASS"
+            ]
+          },
+          "note": "Pool 3. Regenerates the act map with a golden path."
+        },
+        "TEZCATARA.pages.INITIAL.options.PUMPKIN_CANDLE": {
+          "effects": {
+            "relics": [
+              "PUMPKIN_CANDLE"
+            ]
+          },
+          "note": "Pool 3. Passive (+1 energy for 5 combats)."
+        },
+        "TEZCATARA.pages.INITIAL.options.TOY_BOX": {
+          "effects": {
+            "relics": [
+              "TOY_BOX"
+            ],
+            "randomRelics": 5
+          },
+          "note": "Pool 3. Offers 5 wax relics as rewards."
+        },
+        "TEZCATARA.pages.INITIAL.options.SEAL_OF_GOLD": {
+          "effects": {
+            "relics": [
+              "SEAL_OF_GOLD"
+            ]
+          },
+          "note": "Pool 3. Passive (gold for energy)."
+        }
+      }
+    },
+    "THERMAE_NONUPEIPE": {
+      "class": "ThermaeNonupeipe",
+      "requires": "gold > 175, HP <= 75% max HP, act ancient is not Nonupeipe",
+      "options": {
+        "THERMAE_NONUPEIPE.pages.INITIAL.options.THERMAL_BATHS": {
+          "effects": {
+            "loseGold": "$ThermalBathsCost",
+            "relics": [
+              "BATH_TOWEL"
+            ]
+          },
+          "note": "88 gold. Bath Towel: heal 8 at first turn of each combat."
+        },
+        "THERMAE_NONUPEIPE.pages.INITIAL.options.PRIVATE_OASIS": {
+          "effects": {
+            "loseGold": "all",
+            "relics": [
+              "BATH_ROBES"
+            ]
+          },
+          "note": "Bath Robes: full heal once before the boss fight."
+        },
+        "THERMAE_NONUPEIPE.pages.INITIAL.options.DRINK_WATERS": {
+          "effects": {
+            "hp": "-$DrinkHpLoss",
+            "curses": [
+              {
+                "id": "GUILTY",
+                "count": "$DrinkGuiltyCount"
+              }
+            ],
+            "randomRelics": 1
+          },
+          "note": "31 unblockable damage, 3 Guilty. Relic = random one of Nonupeipe's possible relic options excluding LOOMING_FRUIT, rolled at generation (DrinkRelic)."
+        }
+      }
+    },
+    "THE_ARCHITECT": {
+      "class": "TheArchitect",
+      "note": "Dialogue-only event with no pages.*.options keys.",
+      "options": {
+        "THE_ARCHITECT.dialogue.N": {
+          "note": "Dialogue-advance option (textKey THE_ARCHITECT.dialogue.<line index>); no effect."
+        },
+        "PROCEED": {
+          "proceed": true,
+          "note": "Final option (textKey PROCEED): WinRun - ends the run as a victory."
+        }
+      }
+    },
+    "THE_FUTURE_OF_POTIONS": {
+      "class": "TheFutureOfPotions",
+      "requires": "every player holds >= 2 potions",
+      "options": {
+        "THE_FUTURE_OF_POTIONS.pages.INITIAL.options.POTION": {
+          "effects": {
+            "losePotions": 1,
+            "cardChoice": 1,
+            "pool": "character"
+          },
+          "note": "Up to 3 such options (one per first-3 held potions, dynamic title). Trades that potion for a card reward: choose 1 of 3 UPGRADED character cards of a random type (Attack/Skill; Power also possible only for Uncommon+ potions) and rarity by potion rarity (Common/Token->Common, Uncommon->Uncommon, Rare/Event->Rare). Type pre-rolled at generation."
+        }
+      }
+    },
+    "THE_LANTERN_KEY": {
+      "class": "TheLanternKey",
+      "options": {
+        "THE_LANTERN_KEY.pages.INITIAL.options.RETURN_THE_KEY": {
+          "effects": {
+            "gold": "$Gold"
+          },
+          "note": "Gold = 100. Shared event."
+        },
+        "THE_LANTERN_KEY.pages.INITIAL.options.KEEP_THE_KEY": {
+          "next": "KEEP_THE_KEY"
+        },
+        "THE_LANTERN_KEY.pages.KEEP_THE_KEY.options.FIGHT": {
+          "effects": {
+            "fight": "monster",
+            "encounter": "MYSTERIOUS_KNIGHT_EVENT_ENCOUNTER",
+            "rewards": {
+              "cards": [
+                {
+                  "id": "LANTERN_KEY",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "note": "Reward is a special card reward (LANTERN_KEY) in addition to normal combat rewards."
+        },
+        "THE_LANTERN_KEY.pages.DONE.options.RETURN_THE_KEY": {
+          "effects": {
+            "gold": "$Gold"
+          },
+          "note": "Alias: this textKey is only used for the result-page description lookup (L10NLookup); the actual option is INITIAL.RETURN_THE_KEY."
+        }
+      }
+    },
+    "THE_LEGENDS_WERE_TRUE": {
+      "class": "TheLegendsWereTrue",
+      "requires": "act index == 0, HP >= 10, deck not empty",
+      "options": {
+        "THE_LEGENDS_WERE_TRUE.pages.INITIAL.options.NAB_THE_MAP": {
+          "effects": {
+            "cards": [
+              {
+                "id": "SPOILS_MAP",
+                "count": 1
+              }
+            ]
+          }
+        },
+        "THE_LEGENDS_WERE_TRUE.pages.INITIAL.options.SLOWLY_FIND_AN_EXIT": {
+          "effects": {
+            "hp": "-$Damage",
+            "randomPotions": 1
+          },
+          "note": "Damage 8 (unblockable flags)."
+        }
+      }
+    },
+    "THIS_OR_THAT": {
+      "class": "ThisOrThat",
+      "options": {
+        "THIS_OR_THAT.pages.INITIAL.options.PLAIN": {
+          "effects": {
+            "hp": "-$HpLoss",
+            "gold": "$Gold"
+          },
+          "note": "HpLoss 6 unblockable; Gold = rng(41..68) fixed at generation."
+        },
+        "THIS_OR_THAT.pages.INITIAL.options.ORNATE": {
+          "effects": {
+            "randomRelics": 1,
+            "curses": [
+              {
+                "id": "CLUMSY",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Relic = next from pool front."
+        }
+      }
+    },
+    "TINKER_TIME": {
+      "class": "TinkerTime",
+      "options": {
+        "TINKER_TIME.pages.INITIAL.options.CHOOSE_CARD_TYPE": {
+          "next": "CHOOSE_CARD_TYPE",
+          "note": "Offers 2 random of Attack/Skill/Power."
+        },
+        "TINKER_TIME.pages.CHOOSE_CARD_TYPE.options.ATTACK": {
+          "next": "CHOOSE_RIDER",
+          "note": "Mad Science card of Attack type; riders offered: 2 of SAPPING/VIOLENCE/CHOKING."
+        },
+        "TINKER_TIME.pages.CHOOSE_CARD_TYPE.options.SKILL": {
+          "next": "CHOOSE_RIDER",
+          "note": "Mad Science card of Skill type; riders offered: 2 of ENERGIZED/WISDOM/CHAOS."
+        },
+        "TINKER_TIME.pages.CHOOSE_CARD_TYPE.options.POWER": {
+          "next": "CHOOSE_RIDER",
+          "note": "Mad Science card of Power type; riders offered: 2 of EXPERTISE/CURIOUS/IMPROVEMENT."
+        },
+        "TINKER_TIME.pages.CHOOSE_RIDER.options.SAPPING": {
+          "effects": {
+            "cards": [
+              {
+                "id": "MAD_SCIENCE",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Adds Mad Science card with type Attack and this rider. Card applies SappingWeak 2 + SappingVulnerable 2 (rider). Only 2 of the 3 riders for the chosen type are offered (random)."
+        },
+        "TINKER_TIME.pages.CHOOSE_RIDER.options.VIOLENCE": {
+          "effects": {
+            "cards": [
+              {
+                "id": "MAD_SCIENCE",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Adds Mad Science card with type Attack and this rider. Card hits ViolenceHits=3 times (rider). Only 2 of the 3 riders for the chosen type are offered (random)."
+        },
+        "TINKER_TIME.pages.CHOOSE_RIDER.options.CHOKING": {
+          "effects": {
+            "cards": [
+              {
+                "id": "MAD_SCIENCE",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Adds Mad Science card with type Attack and this rider. Card applies Strangle ChokingDamage=6 (rider). Only 2 of the 3 riders for the chosen type are offered (random)."
+        },
+        "TINKER_TIME.pages.CHOOSE_RIDER.options.ENERGIZED": {
+          "effects": {
+            "cards": [
+              {
+                "id": "MAD_SCIENCE",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Adds Mad Science card with type Skill and this rider. Card grants EnergizedEnergy=2 energy (rider). Only 2 of the 3 riders for the chosen type are offered (random)."
+        },
+        "TINKER_TIME.pages.CHOOSE_RIDER.options.WISDOM": {
+          "effects": {
+            "cards": [
+              {
+                "id": "MAD_SCIENCE",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Adds Mad Science card with type Skill and this rider. Card draws WisdomCards=3 (rider). Only 2 of the 3 riders for the chosen type are offered (random)."
+        },
+        "TINKER_TIME.pages.CHOOSE_RIDER.options.CHAOS": {
+          "effects": {
+            "cards": [
+              {
+                "id": "MAD_SCIENCE",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Adds Mad Science card with type Skill and this rider. Card rider: chaos (random effect). Only 2 of the 3 riders for the chosen type are offered (random)."
+        },
+        "TINKER_TIME.pages.CHOOSE_RIDER.options.EXPERTISE": {
+          "effects": {
+            "cards": [
+              {
+                "id": "MAD_SCIENCE",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Adds Mad Science card with type Power and this rider. Card grants ExpertiseStrength=2 Strength and ExpertiseDexterity=2 Dexterity (rider). Only 2 of the 3 riders for the chosen type are offered (random)."
+        },
+        "TINKER_TIME.pages.CHOOSE_RIDER.options.CURIOUS": {
+          "effects": {
+            "cards": [
+              {
+                "id": "MAD_SCIENCE",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Adds Mad Science card with type Power and this rider. Card rider: CuriousReduction=1 cost reduction (rider). Only 2 of the 3 riders for the chosen type are offered (random)."
+        },
+        "TINKER_TIME.pages.CHOOSE_RIDER.options.IMPROVEMENT": {
+          "effects": {
+            "cards": [
+              {
+                "id": "MAD_SCIENCE",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Adds Mad Science card with type Power and this rider. Card rider: improvement (upgrades cards) (rider). Only 2 of the 3 riders for the chosen type are offered (random)."
+        }
+      }
+    },
+    "TRASH_HEAP": {
+      "class": "TrashHeap",
+      "requires": "all players HP > 5",
+      "options": {
+        "TRASH_HEAP.pages.INITIAL.options.DIVE_IN": {
+          "effects": {
+            "hp": "-$HpLoss"
+          },
+          "outcomes": [
+            {
+              "p": 0.2,
+              "effects": {
+                "relics": [
+                  "DARKSTONE_PERIAPT"
+                ]
+              }
+            },
+            {
+              "p": 0.2,
+              "effects": {
+                "relics": [
+                  "DREAM_CATCHER"
+                ]
+              }
+            },
+            {
+              "p": 0.2,
+              "effects": {
+                "relics": [
+                  "HAND_DRILL"
+                ]
+              }
+            },
+            {
+              "p": 0.2,
+              "effects": {
+                "relics": [
+                  "MAW_BANK"
+                ]
+              }
+            },
+            {
+              "p": 0.2,
+              "effects": {
+                "relics": [
+                  "THE_BOOT"
+                ]
+              }
+            }
+          ],
+          "note": "HpLoss 8 unblockable (applies in every outcome); relic uniformly one of 5."
+        },
+        "TRASH_HEAP.pages.INITIAL.options.GRAB": {
+          "effects": {
+            "gold": "$Gold"
+          },
+          "outcomes": [
+            {
+              "p": 0.1,
+              "effects": {
+                "cards": [
+                  {
+                    "id": "CALTROPS",
+                    "count": 1
+                  }
+                ]
+              }
+            },
+            {
+              "p": 0.1,
+              "effects": {
+                "cards": [
+                  {
+                    "id": "CLASH",
+                    "count": 1
+                  }
+                ]
+              }
+            },
+            {
+              "p": 0.1,
+              "effects": {
+                "cards": [
+                  {
+                    "id": "DISTRACTION",
+                    "count": 1
+                  }
+                ]
+              }
+            },
+            {
+              "p": 0.1,
+              "effects": {
+                "cards": [
+                  {
+                    "id": "DUAL_WIELD",
+                    "count": 1
+                  }
+                ]
+              }
+            },
+            {
+              "p": 0.1,
+              "effects": {
+                "cards": [
+                  {
+                    "id": "ENTRENCH",
+                    "count": 1
+                  }
+                ]
+              }
+            },
+            {
+              "p": 0.1,
+              "effects": {
+                "cards": [
+                  {
+                    "id": "HELLO_WORLD",
+                    "count": 1
+                  }
+                ]
+              }
+            },
+            {
+              "p": 0.1,
+              "effects": {
+                "cards": [
+                  {
+                    "id": "OUTMANEUVER",
+                    "count": 1
+                  }
+                ]
+              }
+            },
+            {
+              "p": 0.1,
+              "effects": {
+                "cards": [
+                  {
+                    "id": "REBOUND",
+                    "count": 1
+                  }
+                ]
+              }
+            },
+            {
+              "p": 0.1,
+              "effects": {
+                "cards": [
+                  {
+                    "id": "RIP_AND_TEAR",
+                    "count": 1
+                  }
+                ]
+              }
+            },
+            {
+              "p": 0.1,
+              "effects": {
+                "cards": [
+                  {
+                    "id": "STACK",
+                    "count": 1
+                  }
+                ]
+              }
+            }
+          ],
+          "note": "Gold 100 (applies in every outcome); one random card of 10 added to deck."
+        }
+      }
+    },
+    "TRIAL": {
+      "class": "Trial",
+      "options": {
+        "TRIAL.pages.INITIAL.options.ACCEPT": {
+          "outcomes": [
+            {
+              "p": 0.3333333333333333,
+              "effects": {},
+              "next": "MERCHANT"
+            },
+            {
+              "p": 0.3333333333333333,
+              "effects": {},
+              "next": "NOBLE"
+            },
+            {
+              "p": 0.3333333333333333,
+              "effects": {},
+              "next": "NONDESCRIPT"
+            }
+          ],
+          "note": "Randomly goes to one of three trial pages (MERCHANT, NOBLE, NONDESCRIPT), each with GUILTY/INNOCENT options."
+        },
+        "TRIAL.pages.INITIAL.options.REJECT": {
+          "next": "REJECT"
+        },
+        "TRIAL.pages.REJECT.options.ACCEPT": {
+          "outcomes": [
+            {
+              "p": 0.3333333333333333,
+              "effects": {},
+              "next": "MERCHANT"
+            },
+            {
+              "p": 0.3333333333333333,
+              "effects": {},
+              "next": "NOBLE"
+            },
+            {
+              "p": 0.3333333333333333,
+              "effects": {},
+              "next": "NONDESCRIPT"
+            }
+          ],
+          "note": "Same as INITIAL.ACCEPT."
+        },
+        "TRIAL.pages.REJECT.options.DOUBLE_DOWN": {
+          "note": "Opens the abandon-run confirmation popup (ends the run if confirmed)."
+        },
+        "TRIAL.pages.MERCHANT.options.GUILTY": {
+          "effects": {
+            "curses": [
+              {
+                "id": "REGRET",
+                "count": 1
+              }
+            ],
+            "randomRelics": 2
+          },
+          "note": "Relics = next 2 from pool front."
+        },
+        "TRIAL.pages.MERCHANT.options.INNOCENT": {
+          "effects": {
+            "curses": [
+              {
+                "id": "SHAME",
+                "count": 1
+              }
+            ],
+            "upgradeCards": 2
+          }
+        },
+        "TRIAL.pages.NOBLE.options.GUILTY": {
+          "effects": {
+            "hp": 10
+          }
+        },
+        "TRIAL.pages.NOBLE.options.INNOCENT": {
+          "effects": {
+            "curses": [
+              {
+                "id": "REGRET",
+                "count": 1
+              }
+            ],
+            "gold": 300
+          }
+        },
+        "TRIAL.pages.NONDESCRIPT.options.GUILTY": {
+          "effects": {
+            "curses": [
+              {
+                "id": "DOUBT",
+                "count": 1
+              }
+            ],
+            "cardChoice": 2,
+            "pool": "character"
+          },
+          "note": "Two separate card rewards (choose 1 of 3 each)."
+        },
+        "TRIAL.pages.NONDESCRIPT.options.INNOCENT": {
+          "effects": {
+            "curses": [
+              {
+                "id": "DOUBT",
+                "count": 1
+              }
+            ],
+            "transformCards": 2
+          }
+        }
+      }
+    },
+    "UNREST_SITE": {
+      "class": "UnrestSite",
+      "requires": "every player HP <= 70% of max HP",
+      "options": {
+        "UNREST_SITE.pages.INITIAL.options.REST": {
+          "effects": {
+            "healPct": 1,
+            "curses": [
+              {
+                "id": "POOR_SLEEP",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Heals to full HP."
+        },
+        "UNREST_SITE.pages.INITIAL.options.KILL": {
+          "effects": {
+            "maxHp": "-$MaxHpLoss",
+            "randomRelics": 1
+          },
+          "note": "MaxHpLoss 8; relic = next from pool front."
+        }
+      }
+    },
+    "VAKUU": {
+      "class": "Vakuu",
+      "note": "Offers 3 options, one from each of 3 pools.",
+      "options": {
+        "VAKUU.pages.INITIAL.options.BLOOD_SOAKED_ROSE": {
+          "effects": {
+            "relics": [
+              "BLOOD_SOAKED_ROSE"
+            ],
+            "curses": [
+              {
+                "id": "ENTHRALLED",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Pool 1. Passive: +1 energy."
+        },
+        "VAKUU.pages.INITIAL.options.WHISPERING_EARRING": {
+          "effects": {
+            "relics": [
+              "WHISPERING_EARRING"
+            ]
+          },
+          "note": "Pool 1. Passive: +1 energy."
+        },
+        "VAKUU.pages.INITIAL.options.FIDDLE": {
+          "effects": {
+            "relics": [
+              "FIDDLE"
+            ]
+          },
+          "note": "Pool 1. Passive: +2 card draw."
+        },
+        "VAKUU.pages.INITIAL.options.PRESERVED_FOG": {
+          "effects": {
+            "relics": [
+              "PRESERVED_FOG"
+            ],
+            "removeCards": 3,
+            "curses": [
+              {
+                "id": "FOLLY",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Pool 2."
+        },
+        "VAKUU.pages.INITIAL.options.SERE_TALON": {
+          "effects": {
+            "relics": [
+              "SERE_TALON"
+            ],
+            "maxHp": -9,
+            "cards": [
+              {
+                "id": "WISH",
+                "count": 3
+              }
+            ]
+          },
+          "note": "Pool 2."
+        },
+        "VAKUU.pages.INITIAL.options.DISTINGUISHED_CAPE": {
+          "effects": {
+            "relics": [
+              "DISTINGUISHED_CAPE"
+            ],
+            "randomCurses": 2,
+            "cards": [
+              {
+                "id": "APPARITION",
+                "count": 3
+              }
+            ]
+          },
+          "note": "Pool 2."
+        },
+        "VAKUU.pages.INITIAL.options.CHOICES_PARADOX": {
+          "effects": {
+            "relics": [
+              "CHOICES_PARADOX"
+            ]
+          },
+          "note": "Pool 3. Passive relic; no immediate effect on obtain."
+        },
+        "VAKUU.pages.INITIAL.options.MUSIC_BOX": {
+          "effects": {
+            "relics": [
+              "MUSIC_BOX"
+            ]
+          },
+          "note": "Pool 3. Passive relic; no immediate effect on obtain."
+        },
+        "VAKUU.pages.INITIAL.options.LORDS_PARASOL": {
+          "effects": {
+            "relics": [
+              "LORDS_PARASOL"
+            ]
+          },
+          "note": "Pool 3. Passive relic; no immediate effect on obtain."
+        },
+        "VAKUU.pages.INITIAL.options.JEWELED_MASK": {
+          "effects": {
+            "relics": [
+              "JEWELED_MASK"
+            ]
+          },
+          "note": "Pool 3. Passive relic; no immediate effect on obtain."
+        }
+      }
+    },
+    "WAR_HISTORIAN_REPY": {
+      "class": "WarHistorianRepy",
+      "requires": "IsAllowed always false (disabled)",
+      "options": {
+        "WAR_HISTORIAN_REPY.pages.INITIAL.options.UNLOCK_CAGE": {
+          "effects": {
+            "relics": [
+              "HISTORY_COURSE"
+            ]
+          },
+          "note": "Consumes a LANTERN_KEY card from deck (quest complete) and frees Repy. In single-player with a second Lantern Key in deck a second reward page offers UNLOCK_CHEST (same textKey reused on that follow-up page). Event IsAllowed returns false (never generated)."
+        },
+        "WAR_HISTORIAN_REPY.pages.INITIAL.options.UNLOCK_CHEST": {
+          "effects": {
+            "randomPotions": 2,
+            "randomRelics": 2
+          },
+          "note": "Consumes a LANTERN_KEY card; offers 2 potion rewards + 2 relic rewards. May be followed by a second page offering UNLOCK_CAGE (same textKey reused). Event IsAllowed returns false (never generated)."
+        }
+      }
+    },
+    "WATERFALL_OF_OBVIOUS_SECRETS": {
+      "class": "WaterfallOfObviousSecrets",
+      "options": {
+        "WATERFALL_OF_OBVIOUS_SECRETS.pages.INITIAL.options.ENTER": {
+          "next": "ENTER"
+        },
+        "WATERFALL_OF_OBVIOUS_SECRETS.pages.ENTER.options.BE_NICE": {
+          "effects": {
+            "cards": [
+              {
+                "id": "DINGY_DAGGER",
+                "count": 1
+              }
+            ]
+          }
+        },
+        "WATERFALL_OF_OBVIOUS_SECRETS.pages.ENTER.options.BEAT_UP": {
+          "effects": {
+            "randomRelics": 1,
+            "curses": [
+              {
+                "id": "GUILTY",
+                "count": "$BeatUpCurseCount"
+              }
+            ]
+          },
+          "note": "Relic = next from pool front; BeatUpCurseCount 2."
+        },
+        "WATERFALL_OF_OBVIOUS_SECRETS.pages.ENTER.options.NEGOTIATE": {
+          "effects": {
+            "loseGold": "$NegotiateCostKey",
+            "randomCards": 1
+          },
+          "requires": "gold >= 70",
+          "note": "1 random Rare character card (no upgrade roll) added to deck. Cost 70."
+        },
+        "WATERFALL_OF_OBVIOUS_SECRETS.pages.ENTER.options.NEGOTIATE_LOCKED": {
+          "requires": "gold < 70",
+          "note": "Locked placeholder."
+        }
+      }
+    },
+    "WATERLOGGED_SCRIPTORIUM": {
+      "class": "WaterloggedScriptorium",
+      "requires": "all players gold >= 55",
+      "options": {
+        "WATERLOGGED_SCRIPTORIUM.pages.INITIAL.options.BLOODY_INK": {
+          "effects": {
+            "maxHp": "$MaxHp"
+          },
+          "note": "MaxHp 6."
+        },
+        "WATERLOGGED_SCRIPTORIUM.pages.INITIAL.options.TENTACLE_QUILL": {
+          "effects": {
+            "loseGold": "$Gold",
+            "enchantCards": 1,
+            "enchantment": "STEADY"
+          },
+          "requires": "gold >= 55",
+          "note": "Cost 55."
+        },
+        "WATERLOGGED_SCRIPTORIUM.pages.INITIAL.options.TENTACLE_QUILL_LOCKED": {
+          "requires": "gold < 55",
+          "note": "Locked placeholder."
+        },
+        "WATERLOGGED_SCRIPTORIUM.pages.INITIAL.options.PRICKLY_SPONGE": {
+          "effects": {
+            "loseGold": "$PricklySpongeGold",
+            "enchantCards": "$Cards",
+            "enchantment": "STEADY"
+          },
+          "requires": "gold >= 120",
+          "note": "Cost 120; enchants up to 2 cards (each Steady x1)."
+        },
+        "WATERLOGGED_SCRIPTORIUM.pages.INITIAL.options.PRICKLY_SPONGE_LOCKED": {
+          "requires": "gold < 120",
+          "note": "Locked placeholder."
+        }
+      }
+    },
+    "WELCOME_TO_WONGOS": {
+      "class": "WelcomeToWongos",
+      "requires": "act index == 1 (Act 2) and every player gold >= 100",
+      "options": {
+        "WELCOME_TO_WONGOS.pages.INITIAL.options.BARGAIN_BIN": {
+          "effects": {
+            "loseGold": "$BargainBinCost",
+            "randomRelics": 1,
+            "tier": "common"
+          },
+          "requires": "gold >= 100",
+          "note": "Common shop-allowed relic from pool front. Also earns 32 Wongo points (badge relic WONGO_CUSTOMER_APPRECIATION_BADGE every 2000 points, meta-progress)."
+        },
+        "WELCOME_TO_WONGOS.pages.INITIAL.options.BARGAIN_BIN_LOCKED": {
+          "requires": "gold < 100",
+          "note": "Locked placeholder."
+        },
+        "WELCOME_TO_WONGOS.pages.INITIAL.options.FEATURED_ITEM": {
+          "effects": {
+            "loseGold": "$FeaturedItemCost",
+            "randomRelics": 1,
+            "tier": "rare"
+          },
+          "requires": "gold >= 200",
+          "note": "Pre-rolled shop-allowed Rare relic (shown as RandomRelic). Earns 16 Wongo points."
+        },
+        "WELCOME_TO_WONGOS.pages.INITIAL.options.FEATURED_ITEM_LOCKED": {
+          "requires": "gold < 200",
+          "note": "Locked placeholder."
+        },
+        "WELCOME_TO_WONGOS.pages.INITIAL.options.MYSTERY_BOX": {
+          "effects": {
+            "loseGold": "$MysteryBoxCost",
+            "relics": [
+              "WONGOS_MYSTERY_TICKET"
+            ]
+          },
+          "requires": "gold >= 300",
+          "note": "Wongo's Mystery Ticket relic (grants $MysteryBoxRelicCount relics after $MysteryBoxCombatCount combats). Earns 8 Wongo points."
+        },
+        "WELCOME_TO_WONGOS.pages.INITIAL.options.MYSTERY_BOX_LOCKED": {
+          "requires": "gold < 300",
+          "note": "Locked placeholder."
+        },
+        "WELCOME_TO_WONGOS.pages.INITIAL.options.LEAVE": {
+          "effects": {
+            "downgradeRandom": 1
+          },
+          "proceed": true,
+          "note": "Downgrades 1 random upgraded card (if any)."
+        }
+      }
+    },
+    "WELLSPRING": {
+      "class": "Wellspring",
+      "options": {
+        "WELLSPRING.pages.INITIAL.options.BOTTLE": {
+          "effects": {
+            "randomPotions": 1
+          },
+          "note": "Potion reward from character+shared potion pool."
+        },
+        "WELLSPRING.pages.INITIAL.options.BATHE": {
+          "effects": {
+            "removeCards": 1,
+            "curses": [
+              {
+                "id": "GUILTY",
+                "count": "$BatheCurses"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "WHISPERING_HOLLOW": {
+      "class": "WhisperingHollow",
+      "requires": "all players gold >= 44",
+      "options": {
+        "WHISPERING_HOLLOW.pages.INITIAL.options.GOLD": {
+          "effects": {
+            "loseGold": "$Gold",
+            "randomPotions": 2
+          },
+          "note": "Gold cost = 35 + rng(-9..9) fixed at generation; 2 potion rewards."
+        },
+        "WHISPERING_HOLLOW.pages.INITIAL.options.HUG": {
+          "effects": {
+            "transformCards": 1,
+            "hp": "-$HpLoss"
+          },
+          "note": "HpLoss 9 unblockable."
+        }
+      }
+    },
+    "WOOD_CARVINGS": {
+      "class": "WoodCarvings",
+      "requires": "every player has a removable Basic card",
+      "options": {
+        "WOOD_CARVINGS.pages.INITIAL.options.BIRD": {
+          "effects": {
+            "transformCards": 1,
+            "transformTo": "PECK"
+          },
+          "note": "Transform 1 Basic-rarity card into the specific card PECK."
+        },
+        "WOOD_CARVINGS.pages.INITIAL.options.SNAKE": {
+          "effects": {
+            "enchantCards": 1,
+            "enchantment": "SLITHER"
+          }
+        },
+        "WOOD_CARVINGS.pages.INITIAL.options.SNAKE_LOCKED": {
+          "requires": "no Slither-enchantable card",
+          "note": "Locked placeholder."
+        },
+        "WOOD_CARVINGS.pages.INITIAL.options.TORUS": {
+          "effects": {
+            "transformCards": 1,
+            "transformTo": "TORIC_TOUGHNESS"
+          },
+          "note": "Transform 1 Basic-rarity card into the specific card TORIC_TOUGHNESS."
+        }
+      }
+    },
+    "WUPPY_IN_TROUBLE": {
+      "class": "WuppyInTrouble",
+      "requires": "HP > 5% current HP and no existing event pet",
+      "options": {
+        "WUPPY_IN_TROUBLE.pages.INITIAL.options.HELP_IMMEDIATELY": {
+          "effects": {
+            "curses": [
+              {
+                "id": "INJURY",
+                "count": 1
+              }
+            ],
+            "relics": [
+              "WUPPY"
+            ]
+          },
+          "note": "Wuppy relic (event pet) with MaxHp $ImmediateWuppyHp = 60. Shared event."
+        },
+        "WUPPY_IN_TROUBLE.pages.INITIAL.options.BE_CAUTIOUS": {
+          "effects": {
+            "hp": "-$HpLoss",
+            "relics": [
+              "WUPPY"
+            ]
+          },
+          "note": "HpLoss = 5% of current HP (computed at generation, unblockable); Wuppy relic with MaxHp $CautiousWuppyHp = 30."
+        },
+        "WUPPY_IN_TROUBLE.pages.INITIAL.options.IGNORE": {
+          "effects": {
+            "randomPotions": 1
+          }
+        }
+      }
+    },
+    "ZEN_WEAVER": {
+      "class": "ZenWeaver",
+      "requires": "all players gold >= 125",
+      "options": {
+        "ZEN_WEAVER.pages.INITIAL.options.BREATHING_TECHNIQUES": {
+          "effects": {
+            "loseGold": "$BreathingTechniquesCost",
+            "cards": [
+              {
+                "id": "ENLIGHTENMENT",
+                "count": 1
+              }
+            ]
+          },
+          "note": "Cost 25."
+        },
+        "ZEN_WEAVER.pages.INITIAL.options.EMOTIONAL_AWARENESS": {
+          "effects": {
+            "loseGold": "$EmotionalAwarenessCost",
+            "removeCards": 1
+          },
+          "requires": "gold >= 125",
+          "note": "Cost 125."
+        },
+        "ZEN_WEAVER.pages.INITIAL.options.ARACHNID_ACUPUNCTURE": {
+          "effects": {
+            "loseGold": "$ArachnidAcupunctureCost",
+            "removeCards": 2
+          },
+          "requires": "gold >= 250",
+          "note": "Cost 250."
+        },
+        "ZEN_WEAVER.pages.INITIAL.options.LOCKED": {
+          "requires": "gold below the cost of the corresponding option",
+          "note": "Locked placeholder shared by EMOTIONAL_AWARENESS / ARACHNID_ACUPUNCTURE when unaffordable."
+        }
+      }
+    }
+  }
+}

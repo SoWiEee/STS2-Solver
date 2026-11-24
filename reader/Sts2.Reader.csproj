@@ -19,6 +19,7 @@
     <Content Include="../live-policy.js" Link="live-policy.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../map-policy.js" Link="map-policy.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../reward-policy.js" Link="reward-policy.js" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../event-policy.js" Link="event-policy.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../docs/*.md" Link="docs/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="data/*.br;data/*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
