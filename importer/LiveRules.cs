@@ -175,7 +175,12 @@ internal static class LiveRules
 
         ClrObject encounter = Obj(live.Combat, "_encounter");
         draft.HasEncounter = !encounter.IsNull;
-        draft.EncounterSlots = encounter.IsNull ? [] : EncounterSlots(encounter, live);
+        // Encounter.Slots is a computed override (empty spawn slots such as wriggler1-4 included); the
+        // registry's encounter definition carries the same list. Without one, use the filled slots.
+        draft.EncounterSlots = encounter.IsNull ? []
+            : Registry.TryEncounter(Id(encounter), out ushort encounterDef) && Registry.Encounter(encounterDef).Slots.Count > 0
+                ? [.. Registry.Encounter(encounterDef).Slots]
+                : EncounterSlots(encounter, live);
         string? encounterId = encounter.IsNull ? null : Id(encounter);
         draft.HasTheftContent = encounterId is "GREMLIN_MERC_NORMAL" or "THIEVING_HOPPER_WEAK";
         draft.Dominion = CompileDominion(Obj(live.Combat, "Dominion"), encounterId, draft.EncounterSlots.Length);
