@@ -137,6 +137,22 @@ static class GameReader
         finally { foreach (var game in games) game.Dispose(); }
     }
 
+    /// <summary>
+    /// The player on this machine. Over Steam a player's NetId is their SteamID64
+    /// (SteamClient/SteamHost.NetId), and Steam records the signed-in account under
+    /// HKCU\Software\Valve\Steam\ActiveProcess\ActiveUser (32-bit account id).
+    /// </summary>
+    static int LocalPlayerIndex(ClrRuntime runtime, ClrObject[] players)
+    {
+        if (players.Length == 1) return 0;
+        object? account = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\Valve\Steam\ActiveProcess", "ActiveUser", null);
+        Require(account is int id && id != 0, "讀不到目前登入的 Steam 帳號。");
+        ulong me = 76561197960265728UL + (uint)(int)account!;
+        int index = Array.FindIndex(players, p => Field<ulong>(p, Backing("NetId")) == me);
+        Require(index >= 0, "多人遊戲中找不到本機玩家（目前只支援 Steam 連線）。");
+        return index;
+    }
+
     static ClrObject FindManager(ClrRuntime runtime, string type)
     {
         var managers = runtime.Heap.EnumerateObjects()
@@ -150,12 +166,9 @@ static class GameReader
             var manager = FindManager(runtime, "MegaCrit.Sts2.Core.Combat.CombatManager");
             var turn = Object(manager, "_turnState");
             Require(!turn.IsNull && Field<bool>(turn, Backing("IsInProgress")), "請進入一場戰鬥。");
-            Require(!Field<bool>(manager, "_playerActionsDisabled") &&
-                !Field<bool>(turn, Backing("IsStarting")) &&
-                !Field<bool>(turn, Backing("IsEnemyTurnStarted")) &&
-                !Field<bool>(turn, Backing("EndingPlayerTurnPhaseOne")) &&
-                !Field<bool>(turn, Backing("EndingPlayerTurnPhaseTwo")),
-                "戰鬥正在結算。請等到可出牌時擷取。");
+            foreach (var (obj, flag) in new[] { (manager, "_playerActionsDisabled"), (turn, Backing("IsStarting")),
+                (turn, Backing("IsEnemyTurnStarted")), (turn, Backing("EndingPlayerTurnPhaseOne")), (turn, Backing("EndingPlayerTurnPhaseTwo")) })
+                Require(!Field<bool>(obj, flag), $"戰鬥正在結算（{flag.Trim('<', '>').Replace(">k__BackingField", "")}）。請等到可出牌時擷取。");
             var combat = Object(turn, Backing("State"));
             Require(Field<int>(combat, Backing("CurrentSide")) == 1, "請在玩家回合擷取。");
             var players = List(Object(combat, "_allies"), 32)
@@ -221,14 +234,14 @@ static class GameReader
         var run = Object(runManager, Backing("State"));
         Require(!run.IsNull, "請先開始遊戲。");
         var players = List(Object(run, "_players"), 4).ToArray();
-        Require(players.Length == 1, "事件建議目前限單人。");
-        var player = players[0];
+        int me = LocalPlayerIndex(runtime, players);
+        var player = players[me];
         var creature = Object(player, Backing("Creature"));
         Require(List(Object(run, "_currentRooms"), 8).LastOrDefault() is { IsNull: false } room && ShortName(room) == "EventRoom",
             "請在遊戲進入事件。");
         var events = List(Object(Object(runManager, Backing("EventSynchronizer")), "_events"), 4).ToList();
-        Require(events.Count == 1, "事件建議目前限單人。");
-        var model = events[0];
+        Require(me < events.Count, "找不到本機玩家的事件。");
+        var model = events[me]; // EventSynchronizer.GetEventForPlayer: one event per player slot
         string id = Object(model, Backing("Id")).ReadStringField(Backing("Entry")) ?? "";
         var vars = new Dictionary<string, decimal>();
         foreach (var entry in DynamicVarEntries(model))
@@ -279,8 +292,7 @@ static class GameReader
         var run = Object(runManager, Backing("State"));
         Require(!run.IsNull, "請先開始遊戲。");
         var players = List(Object(run, "_players"), 4).ToArray();
-        Require(players.Length == 1, "獎勵建議目前限單人。");
-        var player = players[0];
+        var player = players[LocalPlayerIndex(runtime, players)];
         var creature = Object(player, Backing("Creature"));
         var stack = FindManager(runtime, "MegaCrit.Sts2.Core.Nodes.Screens.Overlays.NOverlayStack");
         var overlays = List(Object(stack, "_overlays"), 32).ToArray();
@@ -515,10 +527,10 @@ static class GameReader
         var run = Object(manager, Backing("State"));
         Require(!run.IsNull && !Field<bool>(manager, Backing("HasRunEnded")), "請先開始一局遊戲。");
         Require(!Field<bool>(manager, Backing("IsChangingRooms")), "正在切換房間。");
-        Require(!Field<bool>(run, Backing("IsCustomGame")), "地圖規劃適用於單人標準與進階模式。");
-        var player = List(Object(run, "_players"), 4).ToArray();
-        Require(player.Length == 1, "地圖規劃目前限單人。");
-        var creature = Object(player[0], Backing("Creature"));
+        Require(!Field<bool>(run, Backing("IsCustomGame")), "地圖規劃不適用於自訂模式。");
+        var players = List(Object(run, "_players"), 4).ToArray();
+        var me = players[LocalPlayerIndex(runtime, players)];
+        var creature = Object(me, Backing("Creature"));
         var map = Object(run, Backing("Map"));
         Require(!map.IsNull, "目前章節的地圖尚未生成。");
 
@@ -558,7 +570,7 @@ static class GameReader
         {
             hp = Field<int>(creature, "_currentHp"),
             maxHp = Field<int>(creature, "_maxHp"),
-            gold = Field<int>(player[0], "_gold"),
+            gold = Field<int>(me, "_gold"),
             act = Field<int>(run, "_currentActIndex") + 1,
             ascension = Field<int>(run, Backing("AscensionLevel")),
             nodes = points.Values, startIds = starts, current = current?.id
