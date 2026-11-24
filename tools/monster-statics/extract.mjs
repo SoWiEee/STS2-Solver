@@ -32,5 +32,17 @@ for (const type of nr.types) {
   result[snake(type.name)] = getters;
 }
 }
+// Getters of the form GetValueIfAscension(L, H, B) + (IsDread() ? k : 0) do not match the CIL patterns
+// above; transcribed from the 0.113.1 decompilation. "dread" is added in Dread mode (LiveRules).
+const DREAD = [
+  ["AEONGLASS", "WitherAmount", 9, 2, 1, 1], ["CEREMONIAL_BEAST", "MinInitialHp", 8, 262, 252, 30],
+  ["LAGAVULIN_MATRIARCH", "MinInitialHp", 8, 233, 222, 22], ["LAGAVULIN_MATRIARCH", "Slash2Damage", 9, 14, 12, 2],
+  ["LAGAVULIN_MATRIARCH", "Slash2Block", 8, 14, 12, 2], ["ROCKET", "RocketClawDamage", 9, 35, 31, 5],
+  ["TEST_SUBJECT", "EnrageAmount", 9, 3, 2, 1], ["TEST_SUBJECT", "BurningGrowlStrengthGain", 9, 3, 2, 3],
+  ["THE_INSATIABLE", "MinInitialHp", 8, 341, 321, 20], ["TORCH_HEAD_AMALGAM", "StrongTackleDamage", 9, 32, 26, 5],
+  ["VANTOM", "SlipperyAmt", 8, 9, 8, 2],
+];
+for (const [monster, name, ascension, high, low, dread] of DREAD)
+  (result[monster] ??= {})[name] = { ascension, high, low, dread };
 fs.writeFileSync(output, JSON.stringify(result, null, 1) + "\n");
 console.log(Object.entries(result).map(([k, v]) => `${k}: ${Object.keys(v).length}`).join("\n"));

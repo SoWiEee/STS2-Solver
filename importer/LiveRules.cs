@@ -32,7 +32,15 @@ public sealed class RulesCatalog
     }
 
     // Integer getters of uncatalogued monsters, extracted from sts2.dll CIL by REA (tools/monster-statics).
-    public sealed record StaticGetter(int? Value, int? Ascension, int? High, int? Low);
+    public sealed record StaticGetter(int? Value, int? Ascension, int? High, int? Low, int? Dread);
+
+    // Set per request while Rules are built (each HTTP request compiles on its own thread).
+    [ThreadStatic] internal static bool DreadMode, BlitzMode;
+
+    // AscensionManager: Blitz level i grants AscensionHelper.GetLevelForBlitz(i), not level i.
+    static readonly int[] BlitzLevels = [2, 4, 8, 9, 5]; // WearyTraveler, TightBelt, ToughEnemies, DeadlyEnemies, AscendersBane
+    static bool HasAscension(int ascension, int level) =>
+        BlitzMode ? BlitzLevels.Take(Math.Min(ascension, BlitzLevels.Length)).Contains(level) : ascension >= level;
     readonly Dictionary<string, Dictionary<string, StaticGetter>> _statics = [];
 
     internal bool TryStatic(string monster, string name, int ascension, out int value)
@@ -40,7 +48,11 @@ public sealed class RulesCatalog
         value = 0;
         if (!_statics.TryGetValue(monster, out var getters) || !getters.TryGetValue(name, out var g)) return false;
         if (g.Value is int constant) { value = constant; return true; }
-        if (g is { Ascension: int level, High: int high, Low: int low }) { value = ascension >= level ? high : low; return true; }
+        if (g is { Ascension: int level, High: int high, Low: int low })
+        {
+            value = (HasAscension(ascension, level) ? high : low) + (DreadMode ? g.Dread ?? 0 : 0);
+            return true;
+        }
         return false;
     }
 
@@ -166,11 +178,18 @@ internal static class LiveRules
         draft.EncounterSlots = encounter.IsNull ? [] : EncounterSlots(encounter, live);
         string? encounterId = encounter.IsNull ? null : Id(encounter);
         draft.HasTheftContent = encounterId is "GREMLIN_MERC_NORMAL" or "THIEVING_HOPPER_WEAK";
-        Require(Obj(live.Combat, "Dominion").IsNull, "恐懼模式領域暫不支援");
+        draft.Dominion = CompileDominion(Obj(live.Combat, "Dominion"), encounterId, draft.EncounterSlots.Length);
         draft.TotalFloor = List(Obj(live.Run, "_mapPointHistory")).Sum(act => Get<int>(act, "_size"));
-        int mode = Get<int>(live.Run, "GameMode");
-        Require(mode == 1, "目前只支援標準模式");
-        draft.Mode = CombatMode.Standard;
+        // RulesCompiler: native GameMode Standard=1, Daily=2, Dread=3, Blitz=4.
+        draft.Mode = Get<int>(live.Run, "GameMode") switch
+        {
+            1 => CombatMode.Standard,
+            3 => CombatMode.Dread,
+            4 => CombatMode.Blitz,
+            int other => throw new LiveUnsupportedException($"未支援的遊戲模式 {other}（每日挑戰等）"),
+        };
+        RulesCatalog.DreadMode = draft.Mode == CombatMode.Dread;
+        RulesCatalog.BlitzMode = draft.Mode == CombatMode.Blitz;
         draft.RootEnemyCount = live.Enemies.Count;
         Require(live.Enemies.Count <= Limits.Enemies, $"敵人數 {live.Enemies.Count}");
 
@@ -360,6 +379,34 @@ internal static class LiveRules
             break;
         }
         draft.HasIdentityContent |= identity;
+    }
+
+    /// <summary>Port of upstream DominionCompiler.CompileDominion: Dread mode's per-boss rule frozen at the root.</summary>
+    static DominionRules CompileDominion(ClrObject dominion, string? encounterId, int slotCount)
+    {
+        if (dominion.IsNull) return default;
+        string type = dominion.Type?.Name?.Split('.').Last() ?? "";
+        (DominionKind kind, string? power, int amount) = type switch
+        {
+            "AeonglassDominion" => (DominionKind.Aeonglass, null, 0),
+            "CeremonialBeastDominion" => (DominionKind.CeremonialBeast, "RITUAL_POWER", 1),
+            "InsatiableDominion" => (DominionKind.Insatiable, null, 0),
+            "KaiserCrabDominion" => (DominionKind.KaiserCrab, "PLATING_POWER", 7),
+            "KinDominion" => (DominionKind.Kin, null, 0),
+            "KnowledgeDemonDominion" => (DominionKind.KnowledgeDemon, null, 0),
+            "LagavulinMatriarchDominion" => (DominionKind.LagavulinMatriarch, null, 0),
+            "QueenDominion" => (DominionKind.Queen, null, 0),
+            "SoulFyshDominion" => (DominionKind.SoulFysh, null, 0),
+            "TestSubjectDominion" => (DominionKind.TestSubject, "STRENGTH_POWER", 3),
+            "VantomDominion" => (DominionKind.Vantom, "SLIPPERY_POWER", 1),
+            "WaterfallGiantDominion" => (DominionKind.WaterfallGiant, "EXPLOSIVE_POWER",
+                slotCount > 1 ? 3 : encounterId?.EndsWith("_WEAK", StringComparison.Ordinal) == true ? 4
+                    : encounterId?.EndsWith("_ELITE", StringComparison.Ordinal) == true ? 7 : 5),
+            _ => throw new LiveUnsupportedException($"領域 {type} 尚未建模"),
+        };
+        ushort id = 0;
+        Require(power is null || Registry.TryPower(power, out id), $"未支援的能力 {power}");
+        return new(kind, id, amount);
     }
 
     static string CharacterPool(string character) => character switch

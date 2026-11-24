@@ -377,7 +377,9 @@
           solvedState=stateKey;
           // The route is deterministic until something random happens: when the change is exactly the
           // first planned step, drop it and keep the rest instead of searching again.
-          if(lastPlan&&!solveBusy&&followsRoute(lastSnapshot,snapshot,lastPlan.route[0])){
+          if(lastPlan&&!solveBusy&&sameDecision(lastSnapshot,snapshot)){
+            // Animations settling (block, HP, powers) after a play: same decision point, keep the route.
+          } else if(lastPlan&&!solveBusy&&followsRoute(lastSnapshot,snapshot,lastPlan.route[0])){
             lastPlan.route.shift();
             renderPlan(lastPlan);
           } else runSolve();
@@ -446,6 +448,10 @@
     $("#mapRefresh").addEventListener("click",refreshMap);
     // Whole-fight search (rank-Yu solver). Runs on demand and whenever the live capture changes.
     let solveBusy=false, solvePending=false, gameNames=null, lastPlan=null, lastSnapshot=null;
+    function sameDecision(prev,next){
+      const pick=s=>JSON.stringify([s.round,s.players[0].energy,s.players[0].hand.map(c=>[c.name,c.upgrades]),s.players[0].potions]);
+      return !!prev&&pick(prev)===pick(next);
+    }
     // True when next differs from prev only by playing step (card left hand, or potion slot emptied).
     function followsRoute(prev,next,step){
       if(!prev||!step||prev.round!==next.round||step.kind==="end")return false;
@@ -456,6 +462,8 @@
       const played=`${step.card.replace(/_/g,"").toLowerCase()}+${step.upgrade?1:0}`;
       const i=before.indexOf(played);
       if(i<0)return false;
+      // Cards that return to hand (Trick Shot, Mourning Blow, Particle Wall) leave the hand as it was.
+      if(before.join()===after.join()&&next.players[0].energy<prev.players[0].energy)return potions(next)===potions(prev);
       before.splice(i,1);
       return before.join()===after.join()&&potions(next)===potions(prev);
     }
@@ -540,8 +548,8 @@
     $("#rewardRefresh").addEventListener("click",async()=>{
       const button=$("#rewardRefresh"),status=$("#rewardStatus"),output=$("#rewardResults");
       button.disabled=true;
-      output.replaceChildren();
-      status.textContent="正在讀取獎勵…";
+      // Keep the last advice on screen while re-reading (the overlay refreshes every few seconds).
+      if(!output.childElementCount)status.textContent="正在讀取獎勵…";
       try {
         const response=await fetch("/rewards",{headers:{"X-STS2-Capture":"1"}});
         const reward=await response.json();
@@ -575,6 +583,7 @@
             ${choice.reasons.filter(reason=>!reason.endsWith("依 0 分排序。")).map(reason=>`<p>${esc(reason)}</p>`).join("")}</article>`;
         }).join("");
       } catch(error) {
+        output.replaceChildren();
         status.textContent=error.message;
       } finally {
         button.disabled=false;

@@ -7,7 +7,7 @@ const table = { events: { WELLSPRING: { options: {
   D: { outcomes: [{ p: 0.5, effects: { gold: 50 } }, { p: 0.5, effects: { hp: -100 } }] },
   E: { proceed: true } } } } };
 const r = P.planEvent({ eventId: "WELLSPRING", vars: { BatheCurses: 1, Dmg: 10 }, hp: 60, maxHp: 80, gold: 0,
-  deck: [{ name: "StrikeFool" }], potions: ["X", null, null],
+  deck: [{ name: "StrikeFool" }], potions: ["X"], potionSlots: 3,
   options: ["A", "B", "C", "D", "E"].map(k => ({ textKey: k })) }, table);
 const s = Object.fromEntries(r.ranked.map(o => [o.textKey, o.score]));
 assert.equal(s.A, 3);            // one free potion slot used

@@ -28,6 +28,12 @@
    "ascension": 9,
    "high": 4,
    "low": 3
+  },
+  "WitherAmount": {
+   "ascension": 9,
+   "high": 2,
+   "low": 1,
+   "dread": 1
   }
  },
  "ARCHITECT": {
@@ -356,6 +362,12 @@
   },
   "TakeDamageSfxType": {
    "value": 3
+  },
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 262,
+   "low": 252,
+   "dread": 30
   }
  },
  "CHOMPER": {
@@ -1167,6 +1179,24 @@
   },
   "TakeDamageSfxType": {
    "value": 2
+  },
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 233,
+   "low": 222,
+   "dread": 22
+  },
+  "Slash2Damage": {
+   "ascension": 9,
+   "high": 14,
+   "low": 12,
+   "dread": 2
+  },
+  "Slash2Block": {
+   "ascension": 8,
+   "high": 14,
+   "low": 12,
+   "dread": 2
   }
  },
  "LEAF_SLIME_M": {
@@ -1688,6 +1718,12 @@
    "ascension": 9,
    "high": 3,
    "low": 2
+  },
+  "RocketClawDamage": {
+   "ascension": 9,
+   "high": 35,
+   "low": 31,
+   "dread": 5
   }
  },
  "SCROLL_OF_BITING": {
@@ -2198,6 +2234,18 @@
   },
   "_phase3LacerateRepeat": {
    "value": 3
+  },
+  "EnrageAmount": {
+   "ascension": 9,
+   "high": 3,
+   "low": 2,
+   "dread": 1
+  },
+  "BurningGrowlStrengthGain": {
+   "ascension": 9,
+   "high": 3,
+   "low": 2,
+   "dread": 3
   }
  },
  "THE_FORGOTTEN": {
@@ -2242,6 +2290,12 @@
   },
   "_thrashRepeat": {
    "value": 2
+  },
+  "MinInitialHp": {
+   "ascension": 8,
+   "high": 341,
+   "low": 321,
+   "dread": 20
   }
  },
  "THE_LOST": {
@@ -2374,6 +2428,12 @@
   },
   "_soulBeamRepeat": {
    "value": 3
+  },
+  "StrongTackleDamage": {
+   "ascension": 9,
+   "high": 32,
+   "low": 26,
+   "dread": 5
   }
  },
  "TOUGH_EGG": {
@@ -2580,6 +2640,12 @@
   },
   "_dismemberWounds": {
    "value": 3
+  },
+  "SlipperyAmt": {
+   "ascension": 8,
+   "high": 9,
+   "low": 8,
+   "dread": 2
   }
  },
  "VINE_SHAMBLER": {

@@ -104,7 +104,7 @@
     const ctx = {
       vars: input.vars ?? {}, hp: input.hp ?? 0, maxHp: Math.max(1, input.maxHp ?? 1), gold: input.gold ?? 0,
       deck: input.deck ?? [], potions: (input.potions ?? []).filter(Boolean).length,
-      potionSlots: (input.potions ?? []).length || 3, name: input.name ?? (id => id),
+      potionSlots: input.potionSlots ?? 3, name: input.name ?? (id => id),
     };
     const ranked = (input.options ?? []).map((option, index) => {
       const data = entry?.options?.[option.textKey];
