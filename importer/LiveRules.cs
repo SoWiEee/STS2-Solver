@@ -299,24 +299,47 @@ internal static class LiveRules
             if (upgrade < current.MaxUpgradeLevel && !draft.HasCard(id, upgrade + 1))
                 draft.SetCard(id, upgrade + 1, Stat(upgrade + 1) ?? throw new LiveUnsupportedException($"規則目錄沒有 {name}+{upgrade + 1}"));
         }
-        // RulesCompiler.FreezeCardPool for the melody pools no frozen table recorded: every character-pool
-        // card carrying the tag. shortcut: assumes all such cards are unlocked; read UnlockState if a run lacks some.
+        // RulesCompiler.FreezeCardPool for pools no frozen table recorded, built from card stats.
+        // shortcut: treats every card as unlocked and skips FilterForCombat's per-card flags; read UnlockState if a run lacks cards.
+        TransformPool own = Enum.Parse<TransformPool>(CharacterPool(live.Character));
         ushort[]? TaggedPool(string key)
         {
-            CardTag? tag = key switch
+            const CardTag melody = CardTag.Wah | CardTag.Cho | CardTag.Ki;
+            static bool Character(CardStats c) => c.Pool is not (TransformPool.Colorless or TransformPool.Status or TransformPool.Curse);
+            static bool Generable(CardStats c) => c.Rarity is not (CardRarity.Basic or CardRarity.Token or CardRarity.Event or CardRarity.Ancient);
+            Func<CardStats, bool>? keep = key switch
             {
-                CardPools.Melodies => CardTag.Wah | CardTag.Cho | CardTag.Ki,
-                CardPools.Wah => CardTag.Wah, CardPools.Cho => CardTag.Cho, CardPools.Ki => CardTag.Ki,
+                CardPools.IroncladAll => c => c.Pool == TransformPool.Ironclad && Generable(c),
+                CardPools.SilentAll => c => c.Pool == TransformPool.Silent && Generable(c),
+                CardPools.DefectAll => c => c.Pool == TransformPool.Defect && Generable(c),
+                CardPools.NecrobinderAll => c => c.Pool == TransformPool.Necrobinder && Generable(c),
+                CardPools.RegentAll => c => c.Pool == TransformPool.Regent && Generable(c),
+                CardPools.FoolAll => c => c.Pool == TransformPool.Fool && Generable(c),
+                CardPools.CharacterAll => c => c.Pool == own && Generable(c),
+                CardPools.CharacterAttacks => c => c.Pool == own && Generable(c) && c.Type == CardType.Attack,
+                CardPools.CharacterPowers => c => c.Pool == own && Generable(c) && c.Type == CardType.Power,
+                CardPools.CharacterEthereal => c => c.Pool == own && Generable(c) && (c.Keywords & Keywords.Ethereal) != 0,
+                CardPools.CharacterZeroCost => c => c.Pool == own && Generable(c) && c.EnergyCost == 0 && !c.CostsX,
+                CardPools.CharacterShots => c => c.Pool == own && Generable(c) && (c.Tags & CardTag.Shoot) != 0,
+                CardPools.OtherCharacterCards => c => Character(c) && c.Pool != own && Generable(c),
+                CardPools.OtherCharacterAttacks => c => Character(c) && c.Pool != own && Generable(c) && c.Type == CardType.Attack,
+                CardPools.Melodies => c => Character(c) && (c.Tags & melody) != 0,
+                CardPools.Wah => c => Character(c) && (c.Tags & CardTag.Wah) != 0,
+                CardPools.Cho => c => Character(c) && (c.Tags & CardTag.Cho) != 0,
+                CardPools.Ki => c => Character(c) && (c.Tags & CardTag.Ki) != 0,
+                CardPools.ColorlessAll => c => c.Pool == TransformPool.Colorless && c.IsColorless && Generable(c),
+                CardPools.ColorlessExceptJackOfAllTrades => c => c.Pool == TransformPool.Colorless && c.IsColorless && Generable(c),
+                CardPools.StatusAll => c => c.Type == CardType.Status,
+                CardPools.CurseAll => c => c.Type == CardType.Curse && c.Rarity == CardRarity.Curse,
                 _ => null,
             };
-            if (tag == null) return null;
+            if (keep == null) return null;
             var ids = new List<ushort>();
             for (int id = 0; id < Registry.CardCount; id++)
             {
                 string name = Registry.Card((ushort)id).NativeId;
                 CardStats? stats = (catalogCards[id].Length > 0 ? catalogCards[id][0] : null) ?? CardSupplement.Stats(name, 0);
-                if (stats is { Pool: not (TransformPool.Colorless or TransformPool.Status or TransformPool.Curse) } && (stats.Tags & tag.Value) != 0)
-                    ids.Add((ushort)id);
+                if (stats != null && keep(stats) && !(key == CardPools.ColorlessExceptJackOfAllTrades && name == "JACK_OF_ALL_TRADES")) ids.Add((ushort)id);
             }
             return [.. ids];
         }
