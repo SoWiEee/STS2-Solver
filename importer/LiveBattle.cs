@@ -371,7 +371,7 @@ internal static class LiveBattle
             case "LULLABY_POWER": target.Aux0 = Get<bool>(power, "_proccdThisTurn") ? 1 : 0; break;
             case "NEMESIS_POWER": target.Aux0 = Get<bool>(power, "_shouldApplyIntangible") ? 1 : 0; break;
             case "SLOTH_POWER": target.Aux0 = Get<int>(power, "_cardsPlayedThisTurn"); break;
-            case "SKITTISH_POWER": target.Aux0 = Get<bool>(power, "HasGainedBlockThisTurn") ? 1 : 0; break;
+            case "SKITTISH_POWER": target.Aux0 = Data(power, "hasGainedBlockThisTurn"); break;
             case "SURROUNDED_POWER": target.Aux0 = Get<int>(power, "Facing"); break;
             case "CURL_UP_POWER": target.Aux0 = 0; target.Aux1 = 0; break;
             case "MYTHIC_FORM_POWER": target.Aux0 = Var(power, "Upgraded"); break;

@@ -56,6 +56,9 @@
     .live-notes{margin:10px 0;color:#685323;font-size:12px}
     @media(max-width:800px){.live-workspace{grid-template-columns:minmax(0,1fr);gap:20px}.live-rail{gap:16px}}
     @media(max-width:480px){.live-workspace .panel-head{padding:12px 14px}.live-workspace .panel-body{padding:0 14px 12px}}
+    /* ?overlay: the always-on-top advice window shows only the route and the reward/event advice. */
+    body.overlay .topbar, body.overlay #livePanel, body.overlay #mapPanel, body.overlay .footer { display: none; }
+    body.overlay main, body.overlay .app { padding: 8px; gap: 8px; }
   </style>
 </head>
 <body>
@@ -372,7 +375,13 @@
         if(stateKey!==solvedState){
           // The whole-fight search does not depend on the fallback planner supporting this state.
           solvedState=stateKey;
-          runSolve();
+          // The route is deterministic until something random happens: when the change is exactly the
+          // first planned step, drop it and keep the rest instead of searching again.
+          if(lastPlan&&!solveBusy&&followsRoute(lastSnapshot,snapshot,lastPlan.route[0])){
+            lastPlan.route.shift();
+            renderPlan(lastPlan);
+          } else runSolve();
+          lastSnapshot=snapshot;
         }
         if(stateKey!==previousState){
           previousState=stateKey;
@@ -388,7 +397,7 @@
         status.textContent=error.message;
         // Out of combat or between turns: drop the finished fight's route so it is not followed by mistake.
         if(solvedState&&!solveBusy){
-          solvedState="";
+          solvedState="";lastPlan=null;
           $("#solveResults").replaceChildren();
           $("#solveStatus").textContent=`等待玩家回合（${error.message}）`;
         }
@@ -436,13 +445,44 @@
     }
     $("#mapRefresh").addEventListener("click",refreshMap);
     // Whole-fight search (rank-Yu solver). Runs on demand and whenever the live capture changes.
-    let solveBusy=false, solvePending=false, gameNames=null;
+    let solveBusy=false, solvePending=false, gameNames=null, lastPlan=null, lastSnapshot=null;
+    // True when next differs from prev only by playing step (card left hand, or potion slot emptied).
+    function followsRoute(prev,next,step){
+      if(!prev||!step||prev.round!==next.round||step.kind==="end")return false;
+      const key=c=>`${c.name.toLowerCase()}+${c.upgrades?1:0}`;
+      const before=prev.players[0].hand.map(key), after=next.players[0].hand.map(key);
+      const potions=p=>p.players[0].potions.filter(Boolean).length;
+      if(step.kind==="potion")return before.join()===after.join()&&potions(next)===potions(prev)-1;
+      const played=`${step.card.replace(/_/g,"").toLowerCase()}+${step.upgrade?1:0}`;
+      const i=before.indexOf(played);
+      if(i<0)return false;
+      before.splice(i,1);
+      return before.join()===after.join()&&potions(next)===potions(prev);
+    }
     async function runSolve(){
       if(solveBusy){solvePending=true;return;}
       solveBusy=true;
-      const button=$("#solveRefresh"),status=$("#solveStatus"),output=$("#solveResults");
+      const button=$("#solveRefresh"),status=$("#solveStatus");
       button.disabled=true;
       status.textContent="正在搜尋出牌路線…";
+      try {
+        const response=await fetch("/solve",{headers:{"X-STS2-Capture":"1"}});
+        const plan=await response.json();
+        if(!response.ok)throw new Error(plan.error||"搜尋失敗。");
+        lastPlan=plan;
+        await renderPlan(plan);
+      } catch(error) {
+        lastPlan=null;
+        $("#solveResults").replaceChildren();
+        status.textContent=error.message;
+      } finally {
+        button.disabled=false;
+        solveBusy=false;
+        if(solvePending){solvePending=false;runSolve();}
+      }
+    }
+    async function renderPlan(plan){
+      const status=$("#solveStatus"),output=$("#solveResults");
       // Chinese titles from the game's localization (/names); unknown ids fall back to a readable id.
       if(!gameNames){try{const r=await fetch("/names",{headers:{"X-STS2-Capture":"1"}});if(r.ok)gameNames=await r.json();}catch{}}
       const name=id=>{
@@ -452,10 +492,7 @@
         const title=tables.map(t=>t?.[key]).find(Boolean)??key.toLowerCase().replace(/_/g," ");
         return title+suffix+(slot&&slot!=="1"?` #${slot}`:"");
       };
-      try {
-        const response=await fetch("/solve",{headers:{"X-STS2-Capture":"1"}});
-        const plan=await response.json();
-        if(!response.ok)throw new Error(plan.error||"搜尋失敗。");
+      {
         const turns=[];
         for(const step of plan.route){
           const turn=turns[step.turn-1]??={plays:[],end:false};
@@ -478,13 +515,6 @@
           +(notes.length?`<p class="live-notes">${notes.map(esc).join("。")}</p>`:"")
           +(turns.length>1?`<details class="later-turns"><summary>後續 ${turns.length-1} 回合預測</summary>${turns.slice(1).map((turn,i)=>renderTurn(turn,i+1)).join("")}</details>`:"");
         status.textContent=plan.victory?`預測獲勝 · 剩餘 ${plan.finalHp}/${plan.maxHp} HP`:"搜尋未找到勝利路線。";
-      } catch(error) {
-        output.replaceChildren();
-        status.textContent=error.message;
-      } finally {
-        button.disabled=false;
-        solveBusy=false;
-        if(solvePending){solvePending=false;runSolve();}
       }
     }
     $("#solveRefresh").addEventListener("click",runSolve);
@@ -550,9 +580,15 @@
         button.disabled=false;
       }
     });
+    const overlay=new URLSearchParams(location.search).has("overlay");
     if(livePage){
       refreshLive();
-      setInterval(refreshLive,5000);
+      setInterval(refreshLive,overlay?2000:5000);
+      // Outside combat the overlay refreshes reward/shop/rest/event advice by itself.
+      if(overlay){
+        document.body.classList.add("overlay");
+        setInterval(()=>{ if(!solvedState&&!$("#rewardRefresh").disabled)$("#rewardRefresh").click(); },4000);
+      }
       document.addEventListener("visibilitychange",refreshLive);
     } else {
       renderPlayers();calculate();

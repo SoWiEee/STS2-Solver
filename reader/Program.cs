@@ -31,10 +31,10 @@ app.MapGet("/event-policy.js", () => Results.File(Path.Combine(root, "event-poli
 app.MapGet("/events.json", () => Results.File(Path.Combine(root, "data", "events.json"), "application/json; charset=utf-8"));
 foreach (string doc in new[] { "game", "policy", "live-import", "rules-catalog" })
     app.MapGet($"/docs/{doc}.md", () => Results.File(Path.Combine(root, "docs", doc + ".md"), "text/plain; charset=utf-8"));
-IResult ReadSnapshot(HttpContext request, Func<object> read)
+IResult ReadSnapshot(HttpContext request, Func<object> read, object? gate = null)
 {
     if (request.Request.Headers["X-STS2-Capture"] != "1") return Results.StatusCode(403);
-    lock (captureLock)
+    lock (gate ?? captureLock)
     {
         try { return Results.Json(read()); }
         catch (Exception error) when (error is not OutOfMemoryException)
@@ -50,7 +50,9 @@ app.MapGet("/rewards", (HttpContext request) => ReadSnapshot(request, GameReader
 app.MapGet("/import", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureImport));
 app.MapGet("/event", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureEvent));
 app.MapGet("/names", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureNames));
-app.MapGet("/solve", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureSolve));
+// Searches take seconds; their own lock keeps /capture polling responsive meanwhile (each read takes its own snapshot).
+var solveLock = new object();
+app.MapGet("/solve", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureSolve, solveLock));
 app.Run();
 
 static class GameReader
@@ -59,6 +61,7 @@ static class GameReader
     const string DllHash = "62ECBE91093E1FA862DE4329AAC865209DCB297804CAF0F0520D92D8C0B4A9C3";
 
     public static object Capture() => WithRuntime(ReadCombat);
+
     public static object CaptureMap() => WithRuntime(ReadMap);
     public static object CaptureRewards() => WithRuntime(ReadRewards);
     public static object CaptureEvent() => WithRuntime(ReadEvent);
@@ -71,8 +74,19 @@ static class GameReader
         Path.Combine(AppContext.BaseDirectory, "data", "score-template-act3-boss.br"));
 
     // rank-Yu beam search over the whole remaining fight from the current root (~10 s).
+    static string? solvedKey;
+    static object? solvedResult;
+    // Several clients (page, overlay) poll /solve: the same combat state is searched once and shared.
     public static object CaptureSolve() => WithRuntime(runtime =>
-        Sts2Solver.LiveImport.LiveImporter.Solve(runtime, Catalog.Value, Templates, TimeSpan.FromSeconds(30))); // easy fights end early (frontier empty); elites and bosses need the room
+    {
+        var state = System.Text.Json.JsonSerializer.SerializeToNode(ReadCombat(runtime))!.AsObject();
+        state.Remove("capturedAt");
+        string key = state.ToJsonString();
+        if (key == solvedKey) return solvedResult!;
+        var result = Sts2Solver.LiveImport.LiveImporter.Solve(runtime, Catalog.Value, Templates, TimeSpan.FromSeconds(30)); // easy fights end early (frontier empty); elites and bosses need the room
+        (solvedKey, solvedResult) = (key, result);
+        return result;
+    });
 
     // rank-Yu solver import of the current root (Battle + Rules), with the kernel's end-turn prediction.
     // Chinese titles from the game's zht localization, keyed by content id: {cards, monsters, potions, powers, relics}.

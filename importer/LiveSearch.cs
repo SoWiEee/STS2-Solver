@@ -127,7 +127,9 @@ internal static class LiveSearch
             BeamWidth = 300,
             MaxExpandedNodes = 2_000_000,
             MaxTurns = 64,
-            SoftTimeBudget = budget,
+            // Normal and weak fights rarely need the full budget; elites and bosses keep it.
+            SoftTimeBudget = encounterId.EndsWith("_BOSS", StringComparison.Ordinal) || encounterId.EndsWith("_ELITE", StringComparison.Ordinal)
+                ? budget : TimeSpan.FromTicks(Math.Min(budget.Ticks, TimeSpan.FromSeconds(8).Ticks)),
             SearchThreads = Math.Max(1, Environment.ProcessorCount - 1),
             Ordering = new RouteOrdering(root.Player.CurrentHp, relief, healProfile),
             InitialPlayerTurn = root.PlayerTurn,
