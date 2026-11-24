@@ -1158,6 +1158,12 @@
             ],
             "upgradeCards": 1
           }
+        },
+        "BLITZ": {
+          "effects": {
+            "cardChoice": 3
+          },
+          "note": "Blitz only: pick 3 of 10 unupgraded character cards (BlitzRunModel.GiveNeowRewards)."
         }
       }
     },
