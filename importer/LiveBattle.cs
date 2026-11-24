@@ -484,7 +484,20 @@ internal static class LiveBattle
                     value.DampenOriginalUpgrade = checked((byte)(original + 1));
                 }
                 string id = Id(card);
-                Require(id is not ("SOVEREIGN_BLADE" or "THE_SHOT" or "MAD_SCIENCE"), $"{id} 的內部狀態尚未移植");
+                // BattleImporter.ImportCards/Card: card-private state for a fresh root capture.
+                if (id == "SOVEREIGN_BLADE") value.Private = checked((short)rules.RootSwordSageAmount);
+                if (id == "THE_SHOT")
+                {
+                    decimal exhausted = Get<decimal>(card, "_cardsExhaustedByFlorescence");
+                    Require(exhausted == decimal.Truncate(exhausted) && exhausted is >= 0 and <= short.MaxValue, $"TheShot 花開計數 {exhausted}");
+                    value.Private = (short)exhausted;
+                }
+                if (id == "MAD_SCIENCE")
+                {
+                    int type = Get<int>(card, "TinkerTimeType"), rider = Get<int>(card, "TinkerTimeRider");
+                    Require(type is 1 or 2 or 3, $"MAD_SCIENCE 的 TinkerTimeType {type}");
+                    value.Private = Sts2Solver.Content.Cards.Event.MadScience.Encode(type, rider);
+                }
                 if (id == "FETCH" && history.FinishedThisTurnContains(card.Address)) value.Private |= FetchPlayedBit;
                 if (ReturnsToHandCards.Contains(id) && history.FinishedThisTurnContains(card.Address)) value.ReturnToHandNextTurn = true;
                 rowOf[card.Address] = battle.CardCount;
