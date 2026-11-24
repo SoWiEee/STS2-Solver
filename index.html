@@ -22,43 +22,68 @@
     @media(max-width:620px){.app{padding:18px 12px 36px}.topbar{height:54px;padding:0 12px}.version{font-size:12px}.hero h1{font-size:23px}.toolbar{gap:10px;padding:10px}.toolbar .spacer{display:none}.tool-group{flex:1}.select{max-width:100%}.panel-head,.panel-body{padding-left:12px;padding-right:12px}.field-grid{grid-template-columns:repeat(2,minmax(70px,1fr))}.card-top{grid-template-columns:minmax(100px,1fr) minmax(72px,.72fr) 26px}.card-fields{grid-template-columns:repeat(3,minmax(55px,1fr))}.metrics{grid-template-columns:repeat(3,1fr)}.result-body{padding:12px}.footer{padding:0 12px 22px}.hero-note{font-size:11px}.tool-label{font-size:11px}}
     [hidden]{display:none!important}
     ::selection{background:#d9e8da;color:#17281d}
-    .live-workspace{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(330px,1fr);align-items:start;gap:28px}
-    .live-rail{display:grid;gap:24px;min-width:0}
-    .live-workspace .panel{border-radius:14px;box-shadow:none;min-width:0}
-    .live-workspace .panel-head{padding:16px 20px;border-color:var(--line)}
-    .live-workspace .panel-body{padding:0 20px 16px}
+    /* Live workspace: one column ordered by what the game asks for now (data-phase). */
+    .live-workspace{display:flex;flex-direction:column;gap:14px;max-width:760px;margin:0 auto}
+    .live-workspace .panel{border-radius:14px;box-shadow:none;min-width:0;transition:opacity .2s cubic-bezier(.16,1,.3,1)}
+    .live-workspace .panel-head{padding:14px 18px;border-color:var(--line)}
+    .live-workspace .panel-body{padding:0 18px 14px}
     .live-workspace .panel-body>p:first-child{margin:12px 0;color:#48594e;line-height:1.55;overflow-wrap:anywhere}
-    .live-workspace .head-action{min-height:40px;padding:6px 11px;border:1px solid var(--line);border-radius:7px;white-space:nowrap}
+    .live-workspace .panel-title{display:flex;align-items:center;gap:9px;font-size:17px}
+    .live-workspace .head-action{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 11px;border:1px solid var(--line);border-radius:7px;white-space:nowrap}
     .live-workspace .head-action:hover:not(:disabled){background:var(--green-soft)}
     .live-workspace .head-action:disabled{cursor:wait;opacity:.55}
-    #solvePanel .panel-head{background:var(--deep2);color:#f6f3e8}
-    #solvePanel .head-action{color:#f6f3e8;border-color:#6c8475}
-    #solvePanel .head-action:hover:not(:disabled){background:#31473a}
-    #solveTitle{font-size:21px}
-    #livePanel summary{padding:13px 20px;font-size:13px}
+    .icon{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+    .head-action .icon{width:16px;height:16px}
+    .now-tag{display:none;margin-left:2px;padding:2px 8px;border-radius:999px;background:var(--accent);color:#fff;font-size:12px;font-weight:750;letter-spacing:.02em}
+    /* The panel for the current game screen leads; the others shrink to their status line. */
+    .live-workspace .panel.is-now{order:-1;border-color:#9fb8a7}
+    .live-workspace .panel.is-now .now-tag{display:inline-block}
+    .live-workspace .panel.is-now .panel-head{background:var(--deep2);color:#f6f3e8}
+    .live-workspace .panel.is-now .panel-title{color:#f6f3e8}
+    .live-workspace .panel.is-now .head-action{color:#f6f3e8;border-color:#6c8475}
+    .live-workspace .panel.is-now .head-action:hover:not(:disabled){background:#31473a}
+    .live-workspace .panel.is-idle .panel-head{padding-block:10px}
+    .live-workspace .panel.is-idle .panel-title{font-size:14px;color:var(--muted)}
+    .live-workspace .panel.is-idle [id$=Results],.live-workspace .panel.is-idle .result-only{display:none}
+    .live-workspace .panel.is-idle .panel-body>p:first-child{margin:8px 0;font-size:13px;color:var(--muted)}
+    #livePanel{order:9}
+    #livePanel summary{padding:13px 18px;font-size:13px}
     #livePanel .head-action{margin-top:10px}
-    #mapPanel .panel-title{color:#325c64}
-    #rewardPanel .panel-title{color:#76541c}
     .live-workspace .rows{gap:0}
-    .live-workspace .row-card{background:transparent;border:0;border-top:1px solid var(--line);border-radius:0;padding:12px 0}
+    .live-workspace .row-card{display:grid;grid-template-columns:24px minmax(0,1fr);column-gap:10px;background:transparent;border:0;border-top:1px solid var(--line);border-radius:0;padding:12px 0}
+    .live-workspace .row-card>.icon{grid-row:span 9;margin-top:2px;color:#5f7064}
+    .live-workspace .row-card>:not(.icon){grid-column:2}
     .live-workspace .row-card p{margin:5px 0 0}
     .live-workspace .row-caption{font-size:12px;font-variant-numeric:tabular-nums}
-    .turn-now{padding:14px 16px;margin-bottom:10px;background:var(--green-soft);color:#163d2a;border-radius:9px}
-    .turn-title{margin:0;font-size:15px}
-    .turn-play{display:grid;gap:0;margin:7px 0 0;padding-inline-start:22px}
-    .turn-play li{padding:6px 0;overflow-wrap:anywhere}
+    /* The single best choice on a choice screen. */
+    .live-workspace .row-card.pick{margin-bottom:8px;padding:14px 16px;border:0;border-radius:10px;background:var(--gold-soft);color:#3d2d0c}
+    .live-workspace .row-card.pick>.icon{color:#8a6420;width:24px;height:24px}
+    .live-workspace .row-card.pick strong{font-size:18px}
+    .live-workspace .row-card.pick .row-caption{color:#6b5016}
+    .pick-label{display:block;margin-bottom:2px;font-size:12px;font-weight:750;color:#8a6420}
+    /* Combat: this turn first, the next action largest. */
+    .turn-now{padding:14px 16px;margin-bottom:10px;background:var(--green-soft);color:#163d2a;border-radius:10px}
+    .turn-title{margin:0;font-size:13px;color:#3b5c4d}
+    .turn-play{display:grid;gap:0;margin:6px 0 0;padding:0;list-style:none}
+    .turn-play li{display:grid;grid-template-columns:22px minmax(0,1fr);column-gap:10px;align-items:start;padding:7px 0;overflow-wrap:anywhere}
     .turn-play li+li{border-top:1px solid #80978742}
-    .turn-context{display:block;color:#3b5c4d;font-size:12px}
+    .turn-play li .icon{margin-top:2px;color:#2e6a4c}
+    .turn-play li.next{padding:4px 0 10px}
+    .turn-play li.next strong{font-size:21px;line-height:1.25}
+    .turn-play li.next .icon{width:24px;height:24px}
+    .turn-context{display:block;color:#3b5c4d;font-size:13px}
     .turn-potion{color:#2d5d68}
-    .turn-end{margin:8px 0 0;font-size:12px;color:#3b5c4d}
+    .turn-end{display:flex;align-items:center;gap:10px;margin:8px 0 0;padding-top:8px;border-top:1px solid #80978742;font-size:14px;font-weight:700;color:#3b5c4d}
+    .turn-end .icon{color:#2e6a4c}
     .later-turns{margin:4px 0 0;background:transparent}
     .later-turns summary{padding:12px 0;color:#385a48}
     .live-notes{margin:10px 0;color:#685323;font-size:12px}
-    @media(max-width:800px){.live-workspace{grid-template-columns:minmax(0,1fr);gap:20px}.live-rail{gap:16px}}
-    @media(max-width:480px){.live-workspace .panel-head{padding:12px 14px}.live-workspace .panel-body{padding:0 14px 12px}}
-    /* ?overlay: the always-on-top advice window shows only the route and the reward/event advice. */
-    body.overlay .topbar, body.overlay #livePanel, body.overlay #mapPanel, body.overlay .footer { display: none; }
+    @media(max-width:480px){.live-workspace .panel-head{padding:12px 14px}.live-workspace .panel-body{padding:0 14px 12px}.turn-play li.next strong{font-size:19px}}
+    @media(prefers-reduced-motion:reduce){.live-workspace .panel{transition:none}}
+    /* ?overlay: the always-on-top advice window drops the page chrome and the backup model. */
+    body.overlay .topbar, body.overlay #livePanel, body.overlay .footer { display: none; }
     body.overlay main, body.overlay .app { padding: 8px; gap: 8px; }
+    body.overlay .live-workspace { gap: 8px; }
   </style>
 </head>
 <body>
@@ -67,17 +92,49 @@
     <span class="version">v0.113.1</span>
   </header>
   <main class="app">
+    <!-- Icons: authored after Lucide (ISC), one 1.75 stroke on a 24 grid. -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <symbol id="i-combat" viewBox="0 0 24 24"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M14.5 6.5 18 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3M3 19l2 2"/></symbol>
+      <symbol id="i-card" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M12 8.5 14.5 12 12 15.5 9.5 12z"/></symbol>
+      <symbol id="i-potion" viewBox="0 0 24 24"><path d="M10 2v7.5a2 2 0 0 1-.2.9L4.7 20.6a1 1 0 0 0 .9 1.4h12.8a1 1 0 0 0 .9-1.4l-5.1-10.2a2 2 0 0 1-.2-.9V2M8.5 2h7M7 16h10"/></symbol>
+      <symbol id="i-end" viewBox="0 0 24 24"><path d="M5 22h14M5 2h14M17 22v-4.2a2 2 0 0 0-.6-1.4L12 12l-4.4 4.4a2 2 0 0 0-.6 1.4V22M7 2v4.2a2 2 0 0 0 .6 1.4L12 12l4.4-4.4A2 2 0 0 0 17 6.2V2"/></symbol>
+      <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/></symbol>
+      <symbol id="i-shop" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0"/></symbol>
+      <symbol id="i-rest" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4.1 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
+      <symbol id="i-event" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+      <symbol id="i-map" viewBox="0 0 24 24"><path d="M14.1 5.6a2 2 0 0 0 1.8 0l3.7-1.9a1 1 0 0 1 1.4.9v12.8a1 1 0 0 1-.6.9l-4.5 2.3a2 2 0 0 1-1.8 0l-4.2-2.1a2 2 0 0 0-1.8 0l-3.7 1.9A1 1 0 0 1 3 19.4V6.6a1 1 0 0 1 .6-.9l4.5-2.3a2 2 0 0 1 1.8 0zM15 5.8v15M9 3.2v15"/></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.8 9.8 0 0 1 6.7 2.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.8 9.8 0 0 1-6.7-2.7L3 16M8 16H3v5"/></symbol>
+    </svg>
     <div class="live-workspace" id="liveWorkspace" hidden>
-    <div class="live-rail">
     <section class="panel" id="solvePanel" hidden aria-labelledby="solveTitle">
       <div class="panel-head">
-        <h1 class="panel-title" id="solveTitle">出牌建議</h1>
-        <button type="button" class="head-action" id="solveRefresh">重新搜尋</button>
+        <h1 class="panel-title" id="solveTitle"><svg class="icon"><use href="#i-combat"/></svg>戰鬥<span class="now-tag">現在</span></h1>
+        <button type="button" class="head-action" id="solveRefresh"><svg class="icon"><use href="#i-refresh"/></svg>重新搜尋</button>
       </div>
       <div class="panel-body">
-        <p id="solveStatus" role="status">等待玩家回合。</p>
+        <p id="solveStatus" role="status">輪到你出牌時，這裡會列出本回合的出牌順序。</p>
         <div id="solveResults" class="rows"></div>
-        <p class="row-caption"><a href="docs/live-import.md">模型支援範圍</a></p>
+        <p class="row-caption result-only"><a href="docs/live-import.md">模型支援範圍</a></p>
+      </div>
+    </section>
+    <section class="panel" id="rewardPanel" hidden aria-labelledby="rewardTitle">
+      <div class="panel-head">
+        <h2 class="panel-title" id="rewardTitle"><svg class="icon"><use href="#i-gift"/></svg>選擇<span class="now-tag">現在</span></h2>
+        <button type="button" class="head-action" id="rewardRefresh"><svg class="icon"><use href="#i-refresh"/></svg>重新讀取</button>
+      </div>
+      <div class="panel-body">
+        <p id="rewardStatus" role="status">打開獎勵、商店、營火或事件時，這裡會排出最佳選項。</p>
+        <div id="rewardResults" class="rows"></div>
+      </div>
+    </section>
+    <section class="panel" id="mapPanel" hidden aria-labelledby="mapTitle">
+      <div class="panel-head">
+        <h2 class="panel-title" id="mapTitle"><svg class="icon"><use href="#i-map"/></svg>地圖<span class="now-tag">現在</span></h2>
+        <button type="button" class="head-action" id="mapRefresh"><svg class="icon"><use href="#i-refresh"/></svg>重新讀取</button>
+      </div>
+      <div class="panel-body">
+        <p id="mapStatus" role="status">打開地圖時，這裡會建議下一站與整條路線。</p>
+        <div id="mapResults" class="rows"></div>
       </div>
     </section>
     <details class="panel" id="livePanel" hidden>
@@ -88,29 +145,6 @@
         <div id="liveResults" aria-live="polite"></div>
       </div>
     </details>
-    </div>
-    <div class="live-rail">
-    <section class="panel" id="mapPanel" hidden aria-labelledby="mapTitle">
-      <div class="panel-head">
-        <h2 class="panel-title" id="mapTitle">章節路線</h2>
-        <button type="button" class="head-action" id="mapRefresh">讀取地圖</button>
-      </div>
-      <div class="panel-body">
-        <p id="mapStatus" role="status">請在遊戲開啟地圖。</p>
-        <div id="mapResults" class="rows"></div>
-      </div>
-    </section>
-    <section class="panel" id="rewardPanel" hidden aria-labelledby="rewardTitle">
-      <div class="panel-head">
-        <h2 class="panel-title" id="rewardTitle">獎勵與商店</h2>
-        <button type="button" class="head-action" id="rewardRefresh">比較選項</button>
-      </div>
-      <div class="panel-body">
-        <p id="rewardStatus" role="status">請在遊戲開啟獎勵、商品清單、營火或事件。</p>
-        <div id="rewardResults" class="rows"></div>
-      </div>
-    </section>
-    </div>
     </div>
     <div id="manualApp" hidden>
     <section class="hero" aria-labelledby="page-title">
@@ -361,6 +395,14 @@
     $("#rewardPanel").hidden=!livePage;
     $("#manualApp").hidden=livePage;
     let autoEnabled=livePage, liveBusy=false, previousState="", solvedState="";
+    const icon=name=>`<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+    // The panel for the screen the game shows now leads the page; the other two shrink to their status.
+    function setPhase(phase){
+      for(const [id,p] of [["solvePanel","combat"],["rewardPanel","choice"],["mapPanel","map"]]){
+        $("#"+id).classList.toggle("is-now",p===phase);
+        $("#"+id).classList.toggle("is-idle",p!==phase);
+      }
+    }
     async function refreshLive() {
       if(!autoEnabled||liveBusy||document.hidden)return;
       liveBusy=true;
@@ -370,6 +412,7 @@
         const snapshot=await response.json();
         if(!autoEnabled)return;
         if(!response.ok)throw new Error(snapshot.error||"無法擷取戰鬥。");
+        setPhase("combat");
         const {capturedAt,...state}=snapshot;
         const stateKey=JSON.stringify(state);
         if(stateKey!==solvedState){
@@ -401,7 +444,7 @@
         if(solvedState&&!solveBusy){
           solvedState="";lastPlan=null;
           $("#solveResults").replaceChildren();
-          $("#solveStatus").textContent=`等待玩家回合（${error.message}）`;
+          $("#solveStatus").textContent="戰鬥結束或輪到敵人。輪到你出牌時會自動更新。";
         }
       } finally {
         liveBusy=false;
@@ -414,7 +457,7 @@
       else $("#liveStatus").textContent="已暫停。下方建議來自最後一次擷取。";
     });
     async function refreshMap() {
-      if($("#mapRefresh").disabled)return;
+      if($("#mapRefresh").disabled)return false;
       const button=$("#mapRefresh"),status=$("#mapStatus"),output=$("#mapResults");
       button.disabled=true;
       status.textContent="正在讀取地圖…";
@@ -423,13 +466,14 @@
         const map=await response.json();
         if(!response.ok)throw new Error(map.error||"地圖讀取失敗。");
         const result=globalThis.planMap(map);
+        setPhase("map");
         const rooms=new Map(map.nodes.map(node=>[node.id,node]));
         output.innerHTML=result.paths.map(({nodes,score,counts},index)=>{
           const path=nodes.map(id=>rooms.get(id));
           const next=path[0];
           const labels=path.map(room=>`${room.name}（第 ${room.column+1} 欄）`);
-          return `<article class="row-card">
-            <strong>${index===0?"推薦":"備選"} · 下一站 ${esc(next.name)}（地圖第 ${next.column+1} 欄）</strong>
+          return `<article class="row-card${index===0?" pick":""}">${icon("map")}
+            ${index===0?'<span class="pick-label">走這條</span>':""}<strong>下一站：${esc(next.name)}（第 ${next.column+1} 欄）</strong>
             <p>${labels.map(esc).join(" → ")}</p>
             <p class="row-caption">評分 ${score} · 營火 ${counts.rest} · 精英 ${counts.elite} · 商店 ${counts.shop}</p>
           </article>`;
@@ -438,9 +482,11 @@
         status.textContent=result.paths.length
           ? `${scope} · 比較 ${result.evaluated} 條路線${result.truncated?"（部分路線未列入）":""}。評分以目前 HP 和金幣估算。`
           : `${scope} · 目前沒有後續可走的房間。`;
+        return true;
       } catch(error) {
         output.replaceChildren();
-        status.textContent=error.message;
+        status.textContent="打開地圖時，這裡會建議下一站與整條路線。";
+        return false;
       } finally {
         button.disabled=false;
       }
@@ -472,7 +518,7 @@
       solveBusy=true;
       const button=$("#solveRefresh"),status=$("#solveStatus");
       button.disabled=true;
-      status.textContent="正在搜尋出牌路線…";
+      status.textContent="正在計算本回合出牌…";
       try {
         const response=await fetch("/solve",{headers:{"X-STS2-Capture":"1"}});
         const plan=await response.json();
@@ -509,24 +555,25 @@
         }
         const renderTurn=(turn,index)=>`<section class="${index===0?"turn-now":"row-card"}">
           <h2 class="turn-title">${index===0?"本回合":`${index+1} 回合`}</h2>
-          ${turn.plays.length?`<ol class="turn-play">${turn.plays.map(step=>{
+          ${turn.plays.length?`<ol class="turn-play">${turn.plays.map((step,i)=>{
             const potion=step.kind==="potion";
             const context=[potion&&step.potionSlot!=null?`第 ${step.potionSlot+1} 格`:"",
               step.target?`目標 ${name(step.target)}`:"",
               step.choices?.length?`選擇 ${step.choices.map(name).join("、")}`:""].filter(Boolean).join(" · ");
-            return `<li><strong${potion?' class="turn-potion"':""}>${potion?"使用 ":""}${esc(name(potion?step.potion:step.card))}${step.upgrade?"+":""}</strong>${context?`<small class="turn-context">${esc(context)}</small>`:""}</li>`;
+            return `<li${index===0&&i===0?' class="next"':""}>${icon(potion?"potion":"card")}<span><strong${potion?' class="turn-potion"':""}>${potion?"使用 ":""}${esc(name(potion?step.potion:step.card))}${step.upgrade?"+":""}</strong>${context?`<small class="turn-context">${esc(context)}</small>`:""}</span></li>`;
           }).join("")}</ol>`:""}
-          ${turn.end?`<p class="turn-end">結束回合</p>`:""}
+          ${turn.end?`<p class="turn-end">${icon("end")}${turn.plays.length?"然後結束回合":"直接結束回合"}</p>`:""}
         </section>`;
         const notes=[...new Set(plan.notes)];
         output.innerHTML=(turns.length?renderTurn(turns[0],0):"")
           +(notes.length?`<p class="live-notes">${notes.map(esc).join("。")}</p>`:"")
           +(turns.length>1?`<details class="later-turns"><summary>後續 ${turns.length-1} 回合預測</summary>${turns.slice(1).map((turn,i)=>renderTurn(turn,i+1)).join("")}</details>`:"");
-        status.textContent=plan.victory?`預測獲勝 · 剩餘 ${plan.finalHp}/${plan.maxHp} HP`:"搜尋未找到勝利路線。";
+        status.textContent=plan.victory?`照這個順序出牌，預測獲勝並剩 ${plan.finalHp}/${plan.maxHp} HP。`:"找不到必勝路線；以下是損失最少的出牌。";
       }
     }
     $("#solveRefresh").addEventListener("click",runSolve);
     let eventTable=null;
+    const setRewardIcon=name=>$("#rewardTitle use").setAttribute("href",`#i-${name}`);
     // Event rooms: rank options with event-policy.js against the transcribed effects table.
     async function renderEvent(status,output){
       const response=await fetch("/event",{headers:{"X-STS2-Capture":"1"}});
@@ -536,34 +583,41 @@
       if(!gameNames){try{const r=await fetch("/names",{headers:{"X-STS2-Capture":"1"}});if(r.ok)gameNames=await r.json();}catch{}}
       const name=id=>gameNames?.cards?.[id]||gameNames?.relics?.[id]||gameNames?.potions?.[id]||id;
       const plan=globalThis.planEvent({...event,name},eventTable);
-      status.textContent=`事件「${event.title??event.eventId}」· ${event.hp}/${event.maxHp} HP · ${event.gold} 金幣。${plan.known?"依效果換算的生命等值分數排序。":"此事件尚無效果資料，僅列出選項。"}`;
+      setRewardIcon("event");
+      status.textContent=`事件「${event.title??event.eventId}」· ${event.hp}/${event.maxHp} HP · ${event.gold} 金幣。${plan.known?"分數＝效果換算成的生命值。":"這個事件還沒有效果資料，只列出選項。"}`;
       const ranked=[...plan.ranked].sort((a,b)=>(b.score??0)-(a.score??0));
-      output.innerHTML=ranked.map(o=>`<article class="row-card">
-        <strong>${o.originalIndex===plan.best?"推薦 · ":""}${esc(o.title??o.textKey)}</strong>
-        <p class="row-caption">${o.locked?"無法選擇":o.lethal?"可能致死":Number.isFinite(o.score)?`評分 ${o.score.toFixed(1)}${o.evaluated?"":"（部分未計）"}`:"未評估"}</p>
+      output.innerHTML=ranked.map(o=>`<article class="row-card${o.originalIndex===plan.best?" pick":""}">${icon("event")}
+        ${o.originalIndex===plan.best?'<span class="pick-label">選這個</span>':""}<strong>${esc(o.title??o.textKey)}</strong>
+        <p class="row-caption">${o.locked?"無法選擇":o.lethal?"可能致死":Number.isFinite(o.score)&&(o.evaluated||o.score!==0)?`評分 ${o.score.toFixed(1)}${o.evaluated?"":"（部分未計）"}`:"未評估"}</p>
         ${o.description?`<p>${esc(o.description)}</p>`:""}
         ${o.reasons.map(r=>`<p>${esc(r)}</p>`).join("")}</article>`).join("");
       return true;
     }
-    $("#rewardRefresh").addEventListener("click",async()=>{
+    // Returns true when the game shows a reward, shop, rest site or event and advice was drawn.
+    async function refreshRewards(){
       const button=$("#rewardRefresh"),status=$("#rewardStatus"),output=$("#rewardResults");
+      if(button.disabled)return false;
       button.disabled=true;
-      // Keep the last advice on screen while re-reading (the overlay refreshes every few seconds).
-      if(!output.childElementCount)status.textContent="正在讀取獎勵…";
+      // Keep the last advice on screen while re-reading (it refreshes every few seconds).
+      if(!output.childElementCount)status.textContent="正在讀取…";
       try {
         const response=await fetch("/rewards",{headers:{"X-STS2-Capture":"1"}});
         const reward=await response.json();
-        if(!response.ok&&await renderEvent(status,output))return;
+        if(!response.ok&&await renderEvent(status,output)){setPhase("choice");return true;}
         if(!response.ok)throw new Error(reward.error||"獎勵讀取失敗。");
+        setPhase("choice");
         if(reward.restSite){
+          setRewardIcon("rest");
           const rest=reward.recommendation==="rest";
-          status.textContent=`營火 · ${reward.hp}/${reward.maxHp} HP · 休息可回復 ${reward.heal} HP。建議${rest?"休息":"鍛造"}（生命低於 60% 時休息）。`;
-          output.innerHTML=reward.upgrades.length?reward.upgrades.map((u,i)=>`<article class="row-card">
-            <strong>${i===0&&!rest?"推薦鍛造 · ":""}${esc(u.name)}</strong>
+          status.textContent=`營火 · ${reward.hp}/${reward.maxHp} HP。生命低於 60% 時休息，否則鍛造。`;
+          const restRow=`<article class="row-card${rest?" pick":""}">${icon("rest")}${rest?'<span class="pick-label">選這個</span>':""}<strong>休息</strong><p class="row-caption">回復 ${reward.heal} HP</p></article>`;
+          output.innerHTML=(rest?restRow:"")+(reward.upgrades.length?reward.upgrades.map((u,i)=>`<article class="row-card${i===0&&!rest?" pick":""}">${icon("card")}
+            ${i===0&&!rest?'<span class="pick-label">鍛造這張</span>':""}<strong>${esc(u.name)}</strong>
             <p class="row-caption">升級收益 ${u.gain}</p><p>${u.reasons.map(esc).join("、")}</p></article>`).join("")
-            :`<p class="row-caption">牌組沒有可從規則目錄判斷收益的升級。</p>`;
-          return;
+            :`<p class="row-caption">牌組裡沒有能判斷升級收益的牌。</p>`)+(rest?"":restRow);
+          return true;
         }
+        setRewardIcon(reward.shop?"shop":"gift");
         if(!gameNames){try{const r=await fetch("/names",{headers:{"X-STS2-Capture":"1"}});if(r.ok)gameNames=await r.json();}catch{}}
         const ranked=globalThis.planRewards(reward);
         const labels={Cruelty:"殘酷",Inferno:"獄火",Unrelenting:"無情猛攻",MoltenFist:"熔融之拳",Glimmer:"微光",Anchor:"船錨",BagOfPreparation:"準備背包",BloodVial:"小血瓶",
@@ -572,32 +626,43 @@
           NecrobinderCardPool:"亡靈契約師",DefectCardPool:"故障機器人",FoolCardPool:"愚者",ColorlessCardPool:"無色",
           EventCardPool:"事件",CurseCardPool:"詛咒",StatusCardPool:"狀態"};
         status.textContent=reward.shop
-          ? `持有 ${reward.gold} 金幣。依每 100 金幣的估計收益排序，實際成交價請以遊戲畫面為準。`
-          : "依可計分的效果排序。未知副作用、聯動與長期收益請參照遊戲牌面。";
+          ? `持有 ${reward.gold} 金幣。依每 100 金幣的收益排序；成交價以遊戲為準。`
+          : "依可計分的效果排序；沒有數值的效果請看牌面。";
+        const kinds={card:"card",relic:"gift",potion:"potion",remove:"shop",skip:"end"};
+        const best=ranked.find(c=>c.evaluated&&c.score>0&&c.affordable!==false&&String(c.kind).toLowerCase()!=="skip");
         output.innerHTML=ranked.map(choice=>{
           const id=choice.name.replace(/([a-z0-9])([A-Z])/g,"$1_$2").toUpperCase();
           const title=choice.title||gameNames?.cards?.[id]||gameNames?.relics?.[id]||gameNames?.potions?.[id]||(Object.hasOwn(labels,choice.name)?labels[choice.name]:choice.name);
-          return `<article class="row-card"><strong>${esc(title)}</strong>
+          const pick=choice===best;
+          return `<article class="row-card${pick?" pick":""}">${icon(kinds[String(choice.kind).toLowerCase()]??"gift")}
+            ${pick?`<span class="pick-label">${reward.shop?"買這個":"選這個"}</span>`:""}<strong>${esc(title)}</strong>
             <p class="row-caption">${Object.hasOwn(pools,choice.pool)?`${pools[choice.pool]} · `:""}${choice.price==null?"":`${choice.price} 金幣 · `}${choice.affordable===false?"金幣不足":choice.evaluated?`評分 ${choice.score.toFixed(1)}`:"未評估"}</p>
             ${choice.description?`<p>${esc(choice.description)}</p>`:""}
             ${choice.reasons.filter(reason=>!reason.endsWith("依 0 分排序。")).map(reason=>`<p>${esc(reason)}</p>`).join("")}</article>`;
         }).join("");
+        return true;
       } catch(error) {
         output.replaceChildren();
-        status.textContent=error.message;
+        setRewardIcon("gift");
+        status.textContent="打開獎勵、商店、營火或事件時，這裡會排出最佳選項。";
+        return false;
       } finally {
         button.disabled=false;
       }
-    });
+    }
+    $("#rewardRefresh").addEventListener("click",refreshRewards);
     const overlay=new URLSearchParams(location.search).has("overlay");
     if(livePage){
       refreshLive();
       setInterval(refreshLive,overlay?2000:5000);
-      // Outside combat the overlay refreshes reward/shop/rest/event advice by itself.
-      if(overlay){
-        document.body.classList.add("overlay");
-        setInterval(()=>{ if(!solvedState&&!$("#rewardRefresh").disabled)$("#rewardRefresh").click(); },4000);
-      }
+      if(overlay)document.body.classList.add("overlay");
+      // Outside combat, follow the game: a choice screen first, otherwise the map.
+      let advising=false;
+      setInterval(async()=>{
+        if(solvedState||advising||!autoEnabled||document.hidden)return;
+        advising=true;
+        try { if(!(await refreshRewards()))await refreshMap(); } finally { advising=false; }
+      },4000);
       document.addEventListener("visibilitychange",refreshLive);
     } else {
       renderPlayers();calculate();
