@@ -47,6 +47,8 @@ internal static class LiveMonsterRules
                             (MoveRepeatType)(byte)option.ReadField<int>("repeatType"), option.ReadField<int>("maxTimes"), option.ReadField<int>("cooldown"));
                     }).ToArray(),
                 },
+                // The opening branch already ran when combat began; nothing later transitions back into it.
+                _ when state.Address == initial.Address => new MonsterNode { NativeId = ids[i], Kind = MonsterNodeKind.Move, FollowUp = -1 },
                 _ => throw new LiveUnsupportedException($"{monsterId} 的狀態 {ids[i]}（{kind}）需要在遊戲內求值，暫不支援"),
             };
         }
