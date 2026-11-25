@@ -343,11 +343,17 @@
       button.disabled=true;
       status.textContent="正在計算本回合出牌…";
       try {
-        const response=await fetch("/solve",{headers:{"X-STS2-Capture":"1"}});
-        const plan=await response.json();
-        if(!response.ok)throw new Error(plan.error||"搜尋失敗。");
-        lastPlan=plan;
-        await renderPlan(plan);
+        // A quick search (~1.5 s) shows a first route; the full search then replaces it.
+        const key=solvedState;
+        for(const quick of [true,false]){
+          const response=await fetch(`/solve${quick?"?quick=1":""}`,{headers:{"X-STS2-Capture":"1"}});
+          const plan=await response.json();
+          if(!response.ok)throw new Error(plan.error||"搜尋失敗。");
+          if(key!==solvedState)break; // the game moved on; the next search takes over
+          lastPlan=plan;
+          await renderPlan(plan);
+          if(quick)status.textContent+=" 初步建議，正在精算…";
+        }
       } catch(error) {
         lastPlan=null;
         $("#solveResults").replaceChildren();

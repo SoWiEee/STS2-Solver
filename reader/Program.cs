@@ -52,7 +52,7 @@ app.MapGet("/event", (HttpContext request) => ReadSnapshot(request, GameReader.C
 app.MapGet("/names", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureNames));
 // Searches take seconds; their own lock keeps /capture polling responsive meanwhile (each read takes its own snapshot).
 var solveLock = new object();
-app.MapGet("/solve", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureSolve, solveLock));
+app.MapGet("/solve", (HttpContext request) => ReadSnapshot(request, () => GameReader.CaptureSolve(request.Request.Query["quick"] == "1"), solveLock));
 app.Run();
 
 static class GameReader
@@ -80,15 +80,18 @@ static class GameReader
     // rank-Yu beam search over the whole remaining fight from the current root (~10 s).
     static string? solvedKey;
     static object? solvedResult;
+    static bool solvedFull;
     // Several clients (page, overlay) poll /solve: the same combat state is searched once and shared.
-    public static object CaptureSolve() => WithRuntime(runtime =>
+    // ?quick=1 answers within ~1.5 s so the page can show a first route while the full search runs.
+    public static object CaptureSolve(bool quick) => WithRuntime(runtime =>
     {
         var state = System.Text.Json.JsonSerializer.SerializeToNode(ReadCombat(runtime))!.AsObject();
         state.Remove("capturedAt");
         string key = state.ToJsonString();
-        if (key == solvedKey) return solvedResult!;
-        var result = Sts2Solver.LiveImport.LiveImporter.Solve(runtime, Catalog.Value, Templates, TimeSpan.FromSeconds(30)); // easy fights end early (frontier empty); elites and bosses need the room
-        (solvedKey, solvedResult) = (key, result);
+        if (key == solvedKey && (solvedFull || quick)) return solvedResult!;
+        var budget = TimeSpan.FromSeconds(quick ? 1.5 : 30); // easy fights end early (frontier empty); elites and bosses need the room
+        var result = Sts2Solver.LiveImport.LiveImporter.Solve(runtime, Catalog.Value, Templates, budget);
+        (solvedKey, solvedResult, solvedFull) = (key, result, !quick);
         return result;
     });
 
