@@ -514,6 +514,8 @@ static class GameReader
             "SwordOfJade" => new RewardOption(name, "relic", OpeningStrength: Value("StrengthPower", 3)),
             "OddlySmoothStone" => new RewardOption(name, "relic", OpeningDexterity: Value("DexterityPower", 1)),
             "Akabeko" => new RewardOption(name, "relic", OpeningVigor: Value("VigorPower", 8)),
+            // shortcut: any other relic with a Damage var (e.g. combat-start damage) scores that damage once per fight.
+            _ when values.TryGetValue("Damage", out decimal relicDamage) => new RewardOption(name, "relic", Damage: relicDamage),
             _ => new RewardOption(name, "relic")
         };
         return option with { Title = text.GetValueOrDefault(id + ".title"),

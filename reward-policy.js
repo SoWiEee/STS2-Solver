@@ -134,6 +134,12 @@
         if (name === "TrueGrit") reasons.push("這張牌可能隨機消耗一張手牌，分數只估格擋。");
         if (kind === "card" && cost > 1) reasons.push(`費用 ${cost} 帶來 ${costPenalty.toFixed(1)} 分可玩性折減。`);
         if (reasons.length === 0) reasons.push("沒有可評分的數值效果。");
+        // shortcut: past 25 cards each added card dilutes the deck; a flat 0.2 per extra card, not a draw model.
+        if (kind === "card" && count > 25) {
+          const dilution = (count - 25) * 0.2;
+          score -= dilution;
+          reasons.push(`目前牌組 ${count} 張；大牌組稀釋扣 ${dilution.toFixed(1)} 分。`);
+        }
         if (act <= 1 && kind === "card") {
           const bonus = smallDeckBonus;
           score += bonus;
