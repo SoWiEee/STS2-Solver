@@ -458,13 +458,14 @@
           EventCardPool:"事件",CurseCardPool:"詛咒",StatusCardPool:"狀態"};
         status.textContent=reward.shop
           ? `持有 ${reward.gold} 金幣。依每 100 金幣的收益排序；成交價以遊戲為準。`
-          : "依可計分的效果排序；沒有數值的效果請看牌面。";
+          : `${reward.pick>1?`選 ${reward.pick} 張。`:""}依可計分的效果排序；沒有數值的效果請看牌面。`;
         const kinds={card:"card",relic:"gift",potion:"potion",remove:"shop",skip:"end"};
-        const best=ranked.find(c=>c.evaluated&&c.score>0&&c.affordable!==false&&String(c.kind).toLowerCase()!=="skip");
+        // A grid screen may ask for several cards (reward.pick); mark that many of the best.
+        const picks=ranked.filter(c=>c.evaluated&&c.score>0&&c.affordable!==false&&String(c.kind).toLowerCase()!=="skip").slice(0,reward.pick||1);
         output.innerHTML=ranked.map(choice=>{
           const id=choice.name.replace(/([a-z0-9])([A-Z])/g,"$1_$2").toUpperCase();
           const title=choice.title||gameNames?.cards?.[id]||gameNames?.relics?.[id]||gameNames?.potions?.[id]||(Object.hasOwn(labels,choice.name)?labels[choice.name]:choice.name);
-          const pick=choice===best;
+          const pick=picks.includes(choice);
           return `<article class="row-card${pick?" pick":""}">${icon(kinds[String(choice.kind).toLowerCase()]??"gift")}
             ${pick?`<span class="pick-label">${reward.shop?"買這個":"選這個"}</span>`:""}<strong>${esc(title)}</strong>
             <p class="row-caption">${Object.hasOwn(pools,choice.pool)?`${pools[choice.pool]} · `:""}${choice.price==null?"":`${choice.price} 金幣 · `}${choice.affordable===false?"金幣不足":choice.evaluated?`評分 ${choice.score.toFixed(1)}`:"未評估"}</p>

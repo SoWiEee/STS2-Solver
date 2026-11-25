@@ -260,11 +260,17 @@ static class GameReader
         var model = events[me]; // EventSynchronizer.GetEventForPlayer: one event per player slot
         string id = Object(model, Backing("Id")).ReadStringField(Backing("Entry")) ?? "";
         var vars = new Dictionary<string, decimal>();
+        var words = new Dictionary<string, string>(); // StringVar values such as a relic's title
         foreach (var entry in DynamicVarEntries(model))
-                if (entry.ReadObjectField("value").TryReadField<decimal>("_baseValue", out var amount))
-                    vars[entry.ReadObjectField("key").AsString() ?? ""] = amount;
+        {
+            var value = entry.ReadObjectField("value");
+            string name = entry.ReadObjectField("key").AsString() ?? "";
+            if (ShortName(value) == "StringVar") words[name] = value.ReadStringField(Backing("StringValue")) ?? "";
+            else if (value.TryReadField<decimal>("_baseValue", out var amount)) vars[name] = amount;
+        }
         var text = RelicText.Load(gameDirectory, "events");
         foreach (var (key, value) in RelicText.Load(gameDirectory, "ancients")) text.TryAdd(key, value);
+        string? Fill(string? template) => template == null ? null : words.Aggregate(template, (t, w) => t.Replace("{" + w.Key + "}", w.Value));
         var optionList = Object(model, "_currentOptions");
         Require(!optionList.IsNull, "事件目前沒有可選的選項。");
         var options = List(optionList, 16, allowEmpty: true).Select(option =>
@@ -274,8 +280,8 @@ static class GameReader
             return new
             {
                 textKey = key,
-                title = RelicText.Describe(text.GetValueOrDefault(key + ".title"), vars),
-                description = RelicText.Describe(text.GetValueOrDefault(key + ".description"), vars),
+                title = RelicText.Describe(Fill(text.GetValueOrDefault(key + ".title")), vars),
+                description = RelicText.Describe(Fill(text.GetValueOrDefault(key + ".description")), vars),
                 locked = Field<bool>(option, Backing("IsLocked")),
                 proceed = Field<bool>(option, Backing("IsProceed")),
                 relic = relic.IsNull ? null : ShortName(relic),
@@ -317,6 +323,7 @@ static class GameReader
         var relicText = new Lazy<Dictionary<string, string>>(() => RelicText.Load(gameDirectory));
         var cardText = new Lazy<Dictionary<string, string>>(() => RelicText.Load(gameDirectory, "cards"));
         bool shop = false;
+        int pick = 1;
         if (ShortName(top) == "NCardRewardSelectionScreen")
         {
             var active = runtime.Heap.EnumerateObjects().FirstOrDefault(obj =>
@@ -329,6 +336,13 @@ static class GameReader
                 options.Add(ReadRewardCard(card.IsNull ? Object(choice, "originalCard") : card, cardText.Value));
             }
             if (Field<bool>(active, Backing("CanSkip"))) options.Add(new RewardOption("略過", "skip"));
+        }
+        else if (ShortName(top) == "NSimpleCardSelectScreen")
+        {
+            // Event "choose N of M cards to add" grid (EventModel.SelectCardsToAddToDeckFromGrid).
+            foreach (var card in List(Object(top, "_cards"), 64))
+                options.Add(ReadRewardCard(card, cardText.Value));
+            pick = top.ReadValueTypeField("_prefs").ReadField<int>(Backing("MaxSelect"));
         }
         else if (ShortName(top) == "NRewardsScreen")
         {
@@ -385,8 +399,9 @@ static class GameReader
         Require(options.Count > 0, "請在遊戲開啟卡牌選擇、戰利品、寶箱遺物、商店商品或營火畫面。");
         return new
         {
-            deck = List(Object(Object(player, Backing("Deck")), "_cards"), 256).Select(card => ReadRewardCard(card)).ToArray(),
+            deck = List(Object(Object(player, Backing("Deck")), "_cards"), 256).Select(card => ReadRewardCard(card, cardText.Value)).ToArray(),
             options,
+            pick,
             shop,
             gold = Field<int>(player, "_gold"),
             character = ShortName(Object(player, Backing("Character"))),
@@ -515,6 +530,15 @@ static class GameReader
         if (blockPerTurn == null && values.TryGetValue("StretchPower", out decimal stretch))
             hints["block"] = hints.GetValueOrDefault("block") + stretch;
         string? description = text == null ? null : RelicText.Describe(text.GetValueOrDefault(id + ".description"), values);
+        // A "Cards" var is a count of anything (upgrade 2 cards, ...); it is draw only when the text puts cards in hand.
+        if (description != null && hints.ContainsKey("draw") && !description.Contains('抽') && !description.Contains("手牌")) hints.Remove("draw");
+        // shortcut: Doom kills at the end of the enemy turn once it reaches the enemy's HP, so it counts as
+        // 3/4 of the same damage (delayed, all-or-nothing); a real model would track Doom against enemy HP.
+        decimal doom = values.GetValueOrDefault("DoomPower")
+            + 2 * values.GetValueOrDefault("CountdownPower") // Doom on a random enemy each turn, ~2 turns per fight counted
+            + (id == "NO_ESCAPE" ? values.GetValueOrDefault("CalculationBase") : 0)
+            + (id == "BLIGHT_STRIKE" ? hints.GetValueOrDefault("damage") : 0); // Doom equal to the damage dealt
+        if (doom > 0) hints["damage"] = hints.GetValueOrDefault("damage") + doom * 0.75m;
         return new RewardOption(name, "card",
             energyCost,
             hints.TryGetValue("damage", out decimal damage) ? damage : null,
