@@ -57,8 +57,13 @@ app.Run();
 
 static class GameReader
 {
-    const string Version = "0.113.1";
-    const string DllHash = "62ECBE91093E1FA862DE4329AAC865209DCB297804CAF0F0520D92D8C0B4A9C3";
+    // sts2.dll SHA-256 of each supported build.
+    static readonly Dictionary<string, string> SupportedBuilds = new()
+    {
+        ["62ECBE91093E1FA862DE4329AAC865209DCB297804CAF0F0520D92D8C0B4A9C3"] = "0.113.1",
+        ["DDCEB87905B6096DEB7BE975922E24A53992453675DF26DF545B1C46B1826C5D"] = "0.114.0",
+    };
+    static string Version = "0.114.0";
 
     // The page polls this every few seconds only to notice changes; reading without suspending keeps
     // combat smooth. The search (/solve) re-reads under a snapshot, so it always sees a consistent state.
@@ -124,11 +129,15 @@ static class GameReader
             string dir = Path.GetDirectoryName(active!.MainModule!.FileName)!;
             string data = Path.Combine(dir, "data_sts2_windows_x86_64");
             string dllPath = Path.Combine(data, "sts2.dll");
-            if (verifiedDll != dllPath)
+            string dllKey = dllPath + File.GetLastWriteTimeUtc(dllPath).Ticks; // re-check after a game update
+            if (verifiedDll != dllKey)
             {
-                using (var dll = File.OpenRead(dllPath))
-                    Require(Convert.ToHexString(SHA256.HashData(dll)) == DllHash, "目前的遊戲組件版本未支援。");
-                verifiedDll = dllPath;
+                string hash;
+                using (var dll = File.OpenRead(dllPath)) hash = Convert.ToHexString(SHA256.HashData(dll));
+                Require(SupportedBuilds.TryGetValue(hash, out var build), "目前的遊戲組件版本未支援。");
+                Version = build!;
+                Sts2Solver.LiveImport.RulesCatalog.GameVersion = build!;
+                verifiedDll = dllKey;
             }
 
             using var snapshot = suspend

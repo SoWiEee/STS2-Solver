@@ -7,7 +7,7 @@
 
 ## 啟動
 
-需要 Windows x64、.NET 9 SDK 和 Steam 版 STS2 v0.113.1。初次 clone 後先取得子模組，再在專案目錄執行：
+需要 Windows x64、.NET 9 SDK 和 Steam 版 STS2 v0.114.0（v0.113.1 仍可用）。v0.114.0 調整了測試版愚者：45 張牌的數值由 `tools/card-stats/parse.mjs` 從反編譯程式碼讀出（`reader/data/card-overrides-0.114.0.json`），但新牌 Twin Shot、Optimism 與部分機制改動要等 rank-Yu 上游更新才會模擬。初次 clone 後先取得子模組，再在專案目錄執行：
 
 ```powershell
 git submodule update --init

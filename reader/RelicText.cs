@@ -5,40 +5,64 @@ using System.Text.RegularExpressions;
 
 static class RelicText
 {
-    // REA inventory (research-data/rea-research/sts2-pck-evidence.json) for localization/zht/*.json
-    // in the supported v0.113.1 PCK: offset, length and MD5 of each file.
-    static readonly Dictionary<string, (long Offset, int Length, string Md5)> Tables = new()
-    {
-        ["relics"] = (2130609984, 93298, "FE75EF550A7D430469F69F135653D76A"),
-        ["cards"] = (2130102128, 124182, "A0FD26C6E233BEE1FDD816EEC8C08823"),
-        ["potions"] = (2130503616, 11323, "EE59B4BCFD174535C323D5013A90BD3F"),
-        ["monsters"] = (2130476304, 25370, "3D0117DDA1B0B5AF8A73F4EBE16C092B"),
-        ["powers"] = (2130515408, 94567, "5461AA990E11D1143C8BD7A1B42FCD90"),
-        ["events"] = (2130302464, 124247, "53B0485C6C8AFFF26E45E0FAA0730CCF"),
-        ["ancients"] = (2130055600, 36003, "7B94339D3BED9B4BF975BEB997676FCD"),
-    };
-
     public static Dictionary<string, string> Load(string gameDirectory) => Load(gameDirectory, "relics");
 
-    /// <summary>One zht localization table; empty when the PCK is not the supported build.</summary>
+    /// <summary>One zht localization table (localization/zht/{table}.json); empty when it cannot be read.</summary>
     public static Dictionary<string, string> Load(string gameDirectory, string table)
     {
-        var (Offset, Length, Md5) = Tables[table];
         try
         {
-            using var pack = File.OpenRead(Path.Combine(gameDirectory, "SlayTheSpire2.pck"));
-            if (pack.Length < Offset + Length) return new();
-            pack.Position = Offset;
-            byte[] bytes = new byte[Length];
+            string path = Path.Combine(gameDirectory, "SlayTheSpire2.pck");
+            var index = PackIndex(path);
+            if (!index.TryGetValue($"localization/zht/{table}.json", out var entry)) return new();
+            using var pack = File.OpenRead(path);
+            pack.Position = entry.Offset;
+            byte[] bytes = new byte[entry.Size];
             pack.ReadExactly(bytes);
-            return Convert.ToHexString(MD5.HashData(bytes)) == Md5
+            return MD5.HashData(bytes).AsSpan().SequenceEqual(entry.Md5)
                 ? JsonSerializer.Deserialize<Dictionary<string, string>>(bytes) ?? new()
                 : new();
         }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException)
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
         {
             return new();
         }
+    }
+
+    static (string Key, Dictionary<string, (long Offset, int Size, byte[] Md5)> Index)? packCache;
+
+    /// <summary>
+    /// Godot 4 PCK (format 3) directory: header "GDPC", version, engine version, flags, file base,
+    /// directory offset; each entry is path, offset (from the file base), size, MD5 and flags.
+    /// </summary>
+    static Dictionary<string, (long Offset, int Size, byte[] Md5)> PackIndex(string path)
+    {
+        string key = path + File.GetLastWriteTimeUtc(path).Ticks;
+        if (packCache is { } cached && cached.Key == key) return cached.Index;
+        using var reader = new BinaryReader(File.OpenRead(path));
+        if (reader.ReadUInt32() != 0x43504447 || reader.ReadUInt32() != 3) throw new InvalidDataException("不支援的 PCK 格式");
+        reader.BaseStream.Position += 12; // engine major, minor, patch
+        uint flags = reader.ReadUInt32();
+        long fileBase = (long)reader.ReadUInt64();
+        long directory = (long)reader.ReadUInt64();
+        if ((flags & 1) != 0) throw new InvalidDataException("加密的 PCK 目錄");
+        long baseOffset = (flags & 2) != 0 ? fileBase : 0; // PACK_REL_FILEBASE
+        reader.BaseStream.Position = directory;
+        int count = reader.ReadInt32();
+        var index = new Dictionary<string, (long, int, byte[])>(count);
+        for (int i = 0; i < count; i++)
+        {
+            int length = reader.ReadInt32();
+            string name = System.Text.Encoding.UTF8.GetString(reader.ReadBytes(length)).TrimEnd('\0');
+            long offset = (long)reader.ReadUInt64();
+            long size = (long)reader.ReadUInt64();
+            byte[] md5 = reader.ReadBytes(16);
+            reader.ReadUInt32(); // flags
+            if (name.StartsWith("res://", StringComparison.Ordinal)) name = name[6..];
+            if (size <= int.MaxValue) index[name] = (baseOffset + offset, (int)size, md5);
+        }
+        packCache = (key, index);
+        return index;
     }
 
     public static string? Describe(string? template, IReadOnlyDictionary<string, decimal> values)

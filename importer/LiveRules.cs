@@ -12,11 +12,28 @@ namespace Sts2Solver.LiveImport;
 
 public sealed class RulesCatalog
 {
+    /// <summary>Build of the running game (set by the reader); newer builds patch card stats from card-overrides-{version}.json.</summary>
+    public static string GameVersion { get; set; } = "0.113.1";
+    readonly string _dataDirectory;
+    readonly Dictionary<string, Dictionary<string, ParsedCard>> _overrides = new(StringComparer.Ordinal);
+
+    /// <summary>The frozen 0.113.1 stats of a card adjusted to <see cref="GameVersion"/>.</summary>
+    public CardStats? Adjust(string nativeId, int level, CardStats? stats)
+    {
+        if (stats == null || !Registry.TryCard(nativeId, out ushort id)) return stats;
+        if (!_overrides.TryGetValue(GameVersion, out var cards))
+            _overrides[GameVersion] = cards = CardOverrides.Load(Path.Combine(_dataDirectory, $"card-overrides-{GameVersion}.json"));
+        return cards.TryGetValue(nativeId, out var card)
+            ? CardOverrides.Apply(stats, card, level, Registry.Card(id).VarNames) ?? stats
+            : stats;
+    }
+
     readonly Rules _content;
     readonly Dictionary<string, List<MonsterRules>> _monsters = new(StringComparer.Ordinal);
 
     public RulesCatalog(string path)
     {
+        _dataDirectory = Path.GetDirectoryName(path)!;
         Rules? content = null;
         foreach (RulesCatalogEntry entry in RulesCatalogFile.Read(path))
         {
@@ -62,12 +79,12 @@ public sealed class RulesCatalog
     public CardStats? CardStats(string nativeId, int upgrade)
     {
         if (!Registry.TryCard(nativeId, out ushort id)) return null;
-        try { return _content.Card(id, upgrade); } catch (UnsupportedException) { return CardSupplement.Stats(nativeId, upgrade); }
+        try { return Adjust(nativeId, upgrade, _content.Card(id, upgrade)); } catch (UnsupportedException) { return Adjust(nativeId, upgrade, CardSupplement.Stats(nativeId, upgrade)); }
     }
     public CardStats? RewardCardStats(string nativeId, int upgrade)
     {
         if (!Registry.TryCard(nativeId, out ushort id)) return null;
-        try { return _content.Card(id, upgrade); }
+        try { return Adjust(nativeId, upgrade, _content.Card(id, upgrade)); }
         catch (UnsupportedException) { return null; }
     }
     internal IReadOnlyList<MonsterRules> Variants(string monster) =>
@@ -116,7 +133,9 @@ internal static class LiveRules
         }
         List<ushort> spawnClosure = SpawnClosure(live);
         Require(live.Enemies.Count + spawnClosure.Count <= Limits.MonsterRules, $"怪物規則 {live.Enemies.Count}+{spawnClosure.Count}");
-        AddCardClosure(live, draft, cards, catalogPools, content, spawnClosure);
+        AddCardClosure(live, draft, cards, catalogPools, content, spawnClosure, catalog);
+        if (RulesCatalog.GameVersion != "0.113.1" && live.Character == "FOOL")
+            notes.Add($"v{RulesCatalog.GameVersion} 調整了愚者：卡牌數值已更新，但部分機制（旋律、箭矢、伸展等）仍依 0.113.1 模擬");
 
         // ---- Root facts (RulesCompiler.Compile) ----
         bool identity = live.Character is "REGENT" or "NECROBINDER" or "SILENT";
@@ -267,7 +286,7 @@ internal static class LiveRules
     }
 
     static void AddCardClosure(LiveState live, RulesDraft draft, CardStats?[][] catalogCards,
-        Dictionary<string, ushort[]> catalogPools, Rules content, List<ushort> spawnClosure)
+        Dictionary<string, ushort[]> catalogPools, Rules content, List<ushort> spawnClosure, RulesCatalog catalog)
     {
         var pendingCards = new Queue<(string Card, int Upgrade)>();
         var pendingPools = new Queue<string>();
@@ -282,8 +301,8 @@ internal static class LiveRules
         void AddStats(ushort id, int upgrade)
         {
             string name = Registry.Card(id).NativeId;
-            CardStats? Stat(int level) => (level < catalogCards[id].Length ? catalogCards[id][level] : null)
-                ?? CardSupplement.Stats(name, level);
+            CardStats? Stat(int level) => catalog.Adjust(name, level, (level < catalogCards[id].Length ? catalogCards[id][level] : null)
+                ?? CardSupplement.Stats(name, level));
             if (name == "DINGY_DAGGER")
             {
                 for (int level = 0; level < catalogCards[id].Length; level++)

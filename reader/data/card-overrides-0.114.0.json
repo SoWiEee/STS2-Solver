@@ -1,0 +1,970 @@
+{
+ "ALL_IS_WELL": {
+  "cost": 1,
+  "type": "Power",
+  "rarity": "Uncommon",
+  "target": "Self",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "AllIsWellPower": 4
+  },
+  "upgrade": {
+   "vars": {
+    "AllIsWellPower": 2
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "ARCHERY": {
+  "cost": 1,
+  "type": "Power",
+  "rarity": "Rare",
+  "target": "Self",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "AimPower": 6
+  },
+  "upgrade": {
+   "vars": {
+    "AimPower": 2
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "ARROW_STAB": {
+  "cost": 2,
+  "type": "Attack",
+  "rarity": "Common",
+  "target": "AnyEnemy",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "Damage": 13,
+   "AimPower": 6
+  },
+  "upgrade": {
+   "vars": {
+    "Damage": 2,
+    "AimPower": 2
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "BOUNCE": {
+  "cost": 1,
+  "type": "Skill",
+  "rarity": "Rare",
+  "target": "Self",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "StretchPower": 8
+  },
+  "upgrade": {
+   "vars": {
+    "StretchPower": 3
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "CHO_BARBS": {
+  "cost": 1,
+  "type": "Skill",
+  "rarity": "Common",
+  "target": "Self",
+  "keywords": [],
+  "tags": [
+   "Cho"
+  ],
+  "vars": {
+   "Block": 8,
+   "ChoBarbsPower": 2
+  },
+  "upgrade": {
+   "vars": {
+    "Block": 2,
+    "ChoBarbsPower": 1
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "CHO_CHORUS": {
+  "cost": 3,
+  "type": "Skill",
+  "rarity": "Rare",
+  "target": "Self",
+  "keywords": [],
+  "tags": [
+   "Cho"
+  ],
+  "vars": {
+   "Block": 14
+  },
+  "upgrade": {
+   "vars": {
+    "Block": 4
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "CHO_FIRM": {
+  "cost": 1,
+  "type": "Skill",
+  "rarity": "Common",
+  "target": "Self",
+  "keywords": [],
+  "tags": [
+   "Cho"
+  ],
+  "vars": {
+   "Block": 5
+  },
+  "upgrade": {
+   "vars": {
+    "Block": 2
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "CHO_READY": {
+  "cost": 1,
+  "type": "Skill",
+  "rarity": "Common",
+  "target": "Self",
+  "keywords": [],
+  "tags": [
+   "Cho"
+  ],
+  "vars": {
+   "Block": 7,
+   "AimPower": 3
+  },
+  "upgrade": {
+   "vars": {
+    "Block": 2,
+    "AimPower": 1
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "DEATH": {
+  "cost": 0,
+  "type": "Skill",
+  "rarity": "Token",
+  "target": "AnyEnemy",
+  "keywords": [
+   "Exhaust"
+  ],
+  "tags": [],
+  "vars": {
+   "DoomPower": 66
+  },
+  "upgrade": {
+   "vars": {
+    "DoomPower": 15
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "EXPLOSIVE_ARROWS": {
+  "cost": 1,
+  "type": "Power",
+  "rarity": "Uncommon",
+  "target": "Self",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "ExplosiveArrowsPower": 8
+  },
+  "upgrade": {
+   "vars": {
+    "ExplosiveArrowsPower": 3
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "FLORESCENCE": {
+  "cost": 1,
+  "type": "Skill",
+  "rarity": "Rare",
+  "target": "Self",
+  "keywords": [],
+  "tags": [],
+  "vars": {},
+  "upgrade": {
+   "vars": {},
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "GROWTH": {
+  "cost": 1,
+  "type": "Skill",
+  "rarity": "Uncommon",
+  "target": "Self",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "Block": 8
+  },
+  "upgrade": {
+   "vars": {
+    "Block": 3
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "HARMONIC_SHIELD": {
+  "cost": 1,
+  "type": "Skill",
+  "rarity": "Uncommon",
+  "target": "Self",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "CalculationBase": 4,
+   "CalculationExtra": 4
+  },
+  "upgrade": {
+   "vars": {
+    "CalculationBase": 2,
+    "CalculationExtra": 2
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "HEAVY_SHOT": {
+  "cost": 2,
+  "type": "Attack",
+  "rarity": "Uncommon",
+  "target": "AnyEnemy",
+  "keywords": [],
+  "tags": [
+   "Shoot"
+  ],
+  "vars": {
+   "Damage": 16,
+   "AimMultiplier": 3
+  },
+  "upgrade": {
+   "vars": {
+    "Damage": 1,
+    "AimMultiplier": 1
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "HONING": {
+  "cost": 3,
+  "type": "Power",
+  "rarity": "Rare",
+  "target": "Self",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "HoningPower": 100
+  },
+  "upgrade": {
+   "vars": {},
+   "cost": -1,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "JEST": {
+  "cost": 2,
+  "type": "Skill",
+  "rarity": "Common",
+  "target": "Self",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "Block": 15,
+   "Cards": 1
+  },
+  "upgrade": {
+   "vars": {
+    "Block": 4
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "KI_REST": {
+  "cost": 2,
+  "type": "Skill",
+  "rarity": "Uncommon",
+  "target": "Self",
+  "keywords": [],
+  "tags": [
+   "Ki"
+  ],
+  "vars": {
+   "Energy": 4
+  },
+  "upgrade": {
+   "vars": {
+    "Energy": 1
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "LULLABY": {
+  "cost": 1,
+  "type": "Power",
+  "rarity": "Rare",
+  "target": "Self",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "LullabyPower": 12
+  },
+  "upgrade": {
+   "vars": {
+    "LullabyPower": 4
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "MELODIC_SHOT": {
+  "cost": 1,
+  "type": "Attack",
+  "rarity": "Rare",
+  "target": "AnyEnemy",
+  "keywords": [],
+  "tags": [
+   "Shoot"
+  ],
+  "vars": {
+   "Damage": 12,
+   "CalculationBase": 1,
+   "CalculationExtra": 1
+  },
+  "upgrade": {
+   "vars": {
+    "Damage": 2
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "MOTIF": {
+  "cost": 2,
+  "type": "Power",
+  "rarity": "Rare",
+  "target": "Self",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "MotifPower": 1
+  },
+  "upgrade": {
+   "vars": {},
+   "cost": -1,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "MY_SHINIES": {
+  "cost": 1,
+  "type": "Attack",
+  "rarity": "Rare",
+  "target": "AnyEnemy",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "Damage": 2,
+   "CalculationBase": 1,
+   "Gold": 25,
+   "CalculationExtra": 1
+  },
+  "upgrade": {
+   "vars": {
+    "Damage": 1
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "MYTHIC_FORM": {
+  "cost": 3,
+  "type": "Power",
+  "rarity": "Rare",
+  "target": "Self",
+  "keywords": [
+   "Ethereal"
+  ],
+  "tags": [],
+  "vars": {},
+  "upgrade": {
+   "vars": {},
+   "cost": 0,
+   "add": [],
+   "remove": [
+    "Ethereal"
+   ]
+  },
+  "maxUpgrade": 1
+ },
+ "PUNCH_OF_JOY": {
+  "cost": 2,
+  "type": "Attack",
+  "rarity": "Uncommon",
+  "target": "AnyEnemy",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "Damage": 14,
+   "Cards": 1
+  },
+  "upgrade": {
+   "vars": {
+    "Damage": 2,
+    "Cards": 1
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "QUIVER": {
+  "cost": 1,
+  "type": "Power",
+  "rarity": "Uncommon",
+  "target": "Self",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "Repeat": 1
+  },
+  "upgrade": {
+   "vars": {},
+   "cost": 0,
+   "add": [
+    "Innate"
+   ],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "RECALL": {
+  "cost": 0,
+  "type": "Skill",
+  "rarity": "Common",
+  "target": "AnyEnemy",
+  "keywords": [
+   "Exhaust",
+   "Retain"
+  ],
+  "tags": [],
+  "vars": {},
+  "upgrade": {
+   "vars": {},
+   "cost": 0,
+   "add": [],
+   "remove": [
+    "Exhaust"
+   ]
+  },
+  "maxUpgrade": 1
+ },
+ "REPEAT_SHOT": {
+  "cost": 0,
+  "type": "Attack",
+  "rarity": "Rare",
+  "target": "AnyEnemy",
+  "keywords": [],
+  "tags": [
+   "Shoot"
+  ],
+  "vars": {
+   "Damage": 13
+  },
+  "upgrade": {
+   "vars": {
+    "Damage": 3
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "SELF_DEPRECATE": {
+  "cost": 1,
+  "type": "Skill",
+  "rarity": "Rare",
+  "target": "AllAllies",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "Joy": 1,
+   "Sadness": 1
+  },
+  "upgrade": {
+   "vars": {
+    "Joy": 1
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "SERRATED_ARROWS": {
+  "cost": 1,
+  "type": "Power",
+  "rarity": "Uncommon",
+  "target": "Self",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "SerratedArrowsPower": 50
+  },
+  "upgrade": {
+   "vars": {
+    "SerratedArrowsPower": 25
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "SHOW_OFF": {
+  "cost": 0,
+  "type": "Skill",
+  "rarity": "Rare",
+  "target": "Self",
+  "keywords": [
+   "Exhaust"
+  ],
+  "tags": [],
+  "vars": {
+   "BaseAim": 5,
+   "ShowOffPower": 2
+  },
+  "upgrade": {
+   "vars": {
+    "ShowOffPower": 1
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "SIMPLETON": {
+  "cost": 2,
+  "type": "Power",
+  "rarity": "Rare",
+  "target": "Self",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "SimpletonPower": 1
+  },
+  "upgrade": {
+   "vars": {
+    "SimpletonPower": 1
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "SONG_PATH": {
+  "cost": 1,
+  "type": "Power",
+  "rarity": "Uncommon",
+  "target": "Self",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "SongPathPower": 4
+  },
+  "upgrade": {
+   "vars": {
+    "SongPathPower": 2
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "SORROWFUL_STRIKE": {
+  "cost": 1,
+  "type": "Attack",
+  "rarity": "Common",
+  "target": "AnyEnemy",
+  "keywords": [],
+  "tags": [
+   "Strike"
+  ],
+  "vars": {
+   "Damage": 13,
+   "Cards": 1
+  },
+  "upgrade": {
+   "vars": {
+    "Damage": 4
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "TEMPERANCE": {
+  "cost": 0,
+  "type": "Skill",
+  "rarity": "Token",
+  "target": "Self",
+  "keywords": [
+   "Exhaust"
+  ],
+  "tags": [],
+  "vars": {
+   "Block": 20
+  },
+  "upgrade": {
+   "vars": {
+    "Block": 5
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "THE_EMPEROR": {
+  "cost": 0,
+  "type": "Skill",
+  "rarity": "Token",
+  "target": "Self",
+  "keywords": [
+   "Exhaust"
+  ],
+  "tags": [],
+  "vars": {
+   "Energy": 3
+  },
+  "upgrade": {
+   "vars": {
+    "Energy": 1
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "THE_HERMIT": {
+  "cost": 0,
+  "type": "Skill",
+  "rarity": "Token",
+  "target": "Self",
+  "keywords": [
+   "Exhaust"
+  ],
+  "tags": [],
+  "vars": {
+   "Cards": 3
+  },
+  "upgrade": {
+   "vars": {
+    "Cards": 1
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "THE_SHOT": {
+  "cost": 0,
+  "type": "Attack",
+  "rarity": "Token",
+  "target": "AnyEnemy",
+  "keywords": [
+   "Exhaust"
+  ],
+  "tags": [
+   "Shoot"
+  ],
+  "vars": {
+   "Damage": 20
+  },
+  "upgrade": {
+   "vars": {
+    "Damage": 5
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "THE_TOWER": {
+  "cost": 0,
+  "type": "Attack",
+  "rarity": "Token",
+  "target": "AnyEnemy",
+  "keywords": [
+   "Exhaust"
+  ],
+  "tags": [],
+  "vars": {
+   "CalculationBase": 0,
+   "ExtraDamage": 1
+  },
+  "upgrade": {
+   "vars": {
+    "ExtraDamage": 1
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "TRICK_SHOT": {
+  "cost": 1,
+  "type": "Attack",
+  "rarity": "Uncommon",
+  "target": "AnyEnemy",
+  "keywords": [],
+  "tags": [
+   "Shoot"
+  ],
+  "vars": {
+   "Damage": 12,
+   "Cards": 2
+  },
+  "upgrade": {
+   "vars": {
+    "Damage": 2,
+    "Cards": 1
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "TUNE": {
+  "cost": 1,
+  "type": "Power",
+  "rarity": "Uncommon",
+  "target": "Self",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "Cards": 1
+  },
+  "upgrade": {
+   "vars": {
+    "Cards": 1
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "UPROOT": {
+  "cost": 0,
+  "type": "Skill",
+  "rarity": "Uncommon",
+  "target": "AnyEnemy",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "VulnerablePower": 3
+  },
+  "upgrade": {
+   "vars": {
+    "VulnerablePower": 1
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "VIOLENT_CHORD": {
+  "cost": 1,
+  "type": "Power",
+  "rarity": "Uncommon",
+  "target": "Self",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "ViolentChordPower": 7
+  },
+  "upgrade": {
+   "vars": {
+    "ViolentChordPower": 2
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "VITRIOL": {
+  "cost": 0,
+  "type": "Skill",
+  "rarity": "Uncommon",
+  "target": "AnyEnemy",
+  "keywords": [],
+  "tags": [],
+  "vars": {
+   "WeakPower": 2,
+   "Cards": 2
+  },
+  "upgrade": {
+   "vars": {
+    "WeakPower": 1
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "WAH_CHO_KI": {
+  "cost": 2,
+  "type": "Attack",
+  "rarity": "Rare",
+  "target": "AnyEnemy",
+  "keywords": [],
+  "tags": [
+   "Wah",
+   "Cho",
+   "Ki"
+  ],
+  "vars": {
+   "Damage": 8,
+   "Block": 8,
+   "Cards": 1
+  },
+  "upgrade": {
+   "vars": {
+    "Damage": 2,
+    "Block": 2,
+    "Cards": 1
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "WAH_HAMMER": {
+  "cost": 1,
+  "type": "Attack",
+  "rarity": "Common",
+  "target": "AnyEnemy",
+  "keywords": [],
+  "tags": [
+   "Wah"
+  ],
+  "vars": {
+   "Damage": 9
+  },
+  "upgrade": {
+   "vars": {
+    "Damage": 2
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ },
+ "WAH_KI": {
+  "cost": 1,
+  "type": "Attack",
+  "rarity": "Uncommon",
+  "target": "AnyEnemy",
+  "keywords": [],
+  "tags": [
+   "Wah",
+   "Ki"
+  ],
+  "vars": {
+   "Damage": 3,
+   "HitCount": 2
+  },
+  "upgrade": {
+   "vars": {
+    "Damage": 1
+   },
+   "cost": 0,
+   "add": [],
+   "remove": []
+  },
+  "maxUpgrade": 1
+ }
+}
