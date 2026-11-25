@@ -324,6 +324,7 @@ static class GameReader
         var cardText = new Lazy<Dictionary<string, string>>(() => RelicText.Load(gameDirectory, "cards"));
         bool shop = false;
         int pick = 1;
+        bool remove = false;
         if (ShortName(top) == "NCardRewardSelectionScreen")
         {
             var active = runtime.Heap.EnumerateObjects().FirstOrDefault(obj =>
@@ -343,6 +344,17 @@ static class GameReader
             foreach (var card in List(Object(top, "_cards"), 64))
                 options.Add(ReadRewardCard(card, cardText.Value));
             pick = top.ReadValueTypeField("_prefs").ReadField<int>(Backing("MaxSelect"));
+        }
+        else if (ShortName(top) == "NDeckCardSelectScreen")
+        {
+            // CardSelectCmd.FromDeckForRemoval: the prompt is card_selection/TO_REMOVE; other deck picks are not advised.
+            var prefs = top.ReadValueTypeField("_prefs");
+            var prompt = prefs.ReadObjectField(Backing("Prompt"));
+            Require(!prompt.IsNull && (prompt.ReadStringField("<locEntryKey>P") ?? "").Contains("REMOVE"), "這個選牌畫面不是移除卡牌，工具尚未支援。");
+            foreach (var card in List(Object(top, "_cards"), 256))
+                options.Add(ReadRewardCard(card, cardText.Value));
+            pick = prefs.ReadField<int>(Backing("MaxSelect"));
+            remove = true;
         }
         else if (ShortName(top) == "NRewardsScreen")
         {
@@ -402,6 +414,7 @@ static class GameReader
             deck = List(Object(Object(player, Backing("Deck")), "_cards"), 256).Select(card => ReadRewardCard(card, cardText.Value)).ToArray(),
             options,
             pick,
+            remove,
             shop,
             gold = Field<int>(player, "_gold"),
             character = ShortName(Object(player, Backing("Character"))),
@@ -451,7 +464,7 @@ static class GameReader
         decimal? OpeningDexterity = null, decimal? OpeningVigor = null, string? Pool = null,
         int? StarCost = null, bool StarCostsX = false, decimal? DrawPutBack = null, bool GeneratesStars = false,
         decimal? NextTurnEnergy = null, int? Price = null, decimal? BlockPerTurn = null, bool ReturnsToHand = false,
-        string? Unmodeled = null);
+        string? Unmodeled = null, decimal? EnergyPerTurn = null, decimal? DrawPerTurn = null);
 
     static RewardOption? ReadMerchantEntry(ClrObject entry, Lazy<Dictionary<string, string>> relicText,
         Lazy<Dictionary<string, string>> cardText)
@@ -534,11 +547,19 @@ static class GameReader
         if (description != null && hints.ContainsKey("draw") && !description.Contains('抽') && !description.Contains("手牌")) hints.Remove("draw");
         // shortcut: Doom kills at the end of the enemy turn once it reaches the enemy's HP, so it counts as
         // 3/4 of the same damage (delayed, all-or-nothing); a real model would track Doom against enemy HP.
+        // CalculatedDamageVar (Squeeze, ...): CalculationBase plus extras that depend on game state; score the base.
+        if (!hints.ContainsKey("damage") && values.TryGetValue("CalculationBase", out decimal calculated)
+            && DynamicVarEntries(card).Any(e => ShortName(e.ReadObjectField("value")) == "CalculatedDamageVar"))
+            hints["damage"] = calculated;
         decimal doom = values.GetValueOrDefault("DoomPower")
             + 2 * values.GetValueOrDefault("CountdownPower") // Doom on a random enemy each turn, ~2 turns per fight counted
             + (id == "NO_ESCAPE" ? values.GetValueOrDefault("CalculationBase") : 0)
             + (id == "BLIGHT_STRIKE" ? hints.GetValueOrDefault("damage") : 0); // Doom equal to the damage dealt
         if (doom > 0) hints["damage"] = hints.GetValueOrDefault("damage") + doom * 0.75m;
+        // A power whose text starts "at the start of your turn" repeats its draw/energy every turn.
+        bool everyTurn = stats?.Type == Sts2Solver.Simulation.Combat.CardType.Power && description?.Contains("回合開始時") == true;
+        decimal? drawPerTurn = everyTurn && hints.Remove("draw", out decimal turnDraw) ? turnDraw : null;
+        decimal? energyPerTurn = everyTurn && hints.TryGetValue("energy", out decimal turnEnergy) ? turnEnergy : null;
         return new RewardOption(name, "card",
             energyCost,
             hints.TryGetValue("damage", out decimal damage) ? damage : null,
@@ -554,7 +575,8 @@ static class GameReader
             BlockPerTurn: blockPerTurn,
             // GetResultLocationForCardPlay sends these back to hand instead of the discard pile (Trick Shot only while arrows remain).
             ReturnsToHand: id is "MOURNING_BLOW" or "PARTICLE_WALL" or "TRICK_SHOT",
-            Unmodeled: id == "RECALL" ? "效果依賴箭矢與抽牌堆順序，無法換算分數，請參照牌面。" : null);
+            Unmodeled: id == "RECALL" ? "效果依賴箭矢與抽牌堆順序，無法換算分數，請參照牌面。" : null,
+            EnergyPerTurn: energyPerTurn, DrawPerTurn: drawPerTurn);
     }
 
     // Cards whose OnPlay applies EnergyNextTurnPower with their Energy var (decompiled 0.113.1).
@@ -692,7 +714,7 @@ static class GameReader
         {
             var value = entry.ReadObjectField("value");
             string? type = value.Type?.Name?.Split('.').Last();
-            string? key = type switch { "DamageVar" => "damage", "BlockVar" => "block",
+            string? key = type switch { "DamageVar" or "OstyDamageVar" => "damage", "BlockVar" => "block",
                 "EnergyVar" when entry.ReadObjectField("key").AsString() == "Energy" => "energy",
                 "CardsVar" when entry.ReadObjectField("key").AsString() == "Cards" => "draw", _ => null };
             if (key != null && value.TryReadField<decimal>("_baseValue", out var amount) &&

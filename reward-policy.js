@@ -66,6 +66,17 @@
         reasons.push(input.shop ? "維持目前牌組並保留金幣。" : "略過選項：基準分 0。");
         return { ...option, name, score, evaluated: true, reasons, originalIndex: index };
       }
+      if (kind === "remove") {
+        // Same HP-equivalent values as event-policy: a curse costs 7, a basic Strike/Defend removal is worth 6.
+        const curse = deck.find(card => card?.pool === "CurseCardPool");
+        const basic = deck.some(card => /^(Strike|Defend)[A-Z]/.test(cleanName(card?.name)));
+        score = curse ? 7 : basic ? 6 : 0;
+        reasons.push(curse ? `移除詛咒「${curse.title || curse.name}」。` : basic ? "移除一張基本打擊或防禦。" : "牌組沒有詛咒或基本牌可移除。");
+        const affordable = !input.shop || option.price <= input.gold;
+        if (input.shop && affordable) score *= 100 / Math.max(1, option.price);
+        if (!affordable) reasons.unshift("按讀取價格估算，金幣不足。");
+        return { ...option, name, score, evaluated: score > 0, affordable, reasons, originalIndex: index };
+      }
       if (name === "TheGambit") {
         reasons.push("在本場戰鬥受到未格擋的攻擊傷害會立刻死亡，暫不以格擋量評分。");
         return { ...option, name, score, evaluated: false, affordable: !input.shop || option.price <= input.gold,
@@ -73,7 +84,7 @@
       }
 
       const hasNumbers = ["damage", "block", "draw", "combatStartHeal", "openingEnergy",
-        "openingStrength", "openingDexterity", "openingVigor", "nextTurnEnergy", "blockPerTurn"].some(key => option[key] != null);
+        "openingStrength", "openingDexterity", "openingVigor", "nextTurnEnergy", "blockPerTurn", "energyPerTurn", "drawPerTurn"].some(key => option[key] != null);
       const usesStars = kind === "card" && (number(option.starCost, 0) > 0 || option.starCostsX);
       const evaluated = hasNumbers && (kind === "card" || kind === "relic");
       if (evaluated) {
@@ -88,6 +99,10 @@
         const vigor = Math.max(0, number(option.openingVigor, 0));
         const cost = Math.max(0, number(option.cost, 1));
         const blockPerTurn = Math.max(0, number(option.blockPerTurn, 0));
+        // A power repeating every turn: counted over ~3 turns of a fight (shortcut: fight length is not modelled).
+        const energyPerTurn = Math.max(0, number(option.energyPerTurn, 0));
+        const drawPerTurn = Math.max(0, number(option.drawPerTurn, 0));
+        const everyTurnValue = 3 * (energyPerTurn * 2 + drawPerTurn * (4 + 2 * missingDraw));
         // Weighted utility is deliberately limited to normalized numerical data.
         const damageValue = damage * (0.55 + 0.35 * missingDamage);
         const blockValue = block * (0.38 + 0.35 * missingBlock) * (hpRatio < 0.45 ? 1.35 : 1);
@@ -98,7 +113,7 @@
         const replay = option.returnsToHand ? 0.5 * (damageValue + blockValue) : 0;
         // Block every turn is worth about one Dexterity on a deck of average block density.
         const perTurnValue = blockPerTurn * (0.38 + 0.35 * missingBlock) * 2.5;
-        score = damageValue + blockValue + drawValue + replay + perTurnValue + heal * (hpRatio < 0.45 ? 1.8 : 1.2) - costPenalty
+        score = damageValue + blockValue + drawValue + replay + perTurnValue + everyTurnValue + heal * (hpRatio < 0.45 ? 1.8 : 1.2) - costPenalty
           + energy * 3 + nextTurnEnergy * 2 + strength * 6 * attackDensity
           + dexterity * 5 * blockDensity + vigor * 0.7 * Math.min(1, 5 * attackDensity);
         if (damage > 0) reasons.push(`已知傷害 ${damage}，依牌組傷害缺口計分。`);
@@ -107,6 +122,7 @@
           ? `抽 ${draw} 張、放回 ${putBack} 張，依淨抽牌數估分。`
           : `抽 ${draw} 張，依牌組抽牌缺口估分。`);
         if (replay > 0) reasons.push(`打出後回到手牌，可重複使用，加 ${replay.toFixed(1)} 分。`);
+        if (energyPerTurn > 0 || drawPerTurn > 0) reasons.push(`每回合${energyPerTurn > 0 ? ` ${energyPerTurn} 點能量` : ""}${drawPerTurn > 0 ? ` 抽 ${drawPerTurn} 張` : ""}，以約 3 回合估分。`);
         if (blockPerTurn > 0) reasons.push(`每回合多 ${blockPerTurn} 點格擋（伸展），以持續效果估分。`);
         if (heal > 0) reasons.push(`每場戰鬥開始時恢復 ${heal} HP。`);
         if (energy > 0) reasons.push(`首回合額外 ${energy} 點能量。`);

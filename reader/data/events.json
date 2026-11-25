@@ -823,7 +823,6 @@
                 "relics": [
                   "OBSIDIAN_VICE"
                 ],
-                "maxHp": "-$MaxHp",
                 "randomCurses": 1
               }
             },
@@ -833,7 +832,6 @@
                 "relics": [
                   "THUMBSCREW"
                 ],
-                "maxHp": "-$MaxHp",
                 "randomCurses": 1
               }
             },
@@ -843,16 +841,17 @@
                 "relics": [
                   "TORMENTOUS_COLLAR"
                 ],
-                "maxHp": "-$MaxHp",
                 "randomCurses": 1
               }
             }
           ],
-          "note": "Relic rolled uniformly among 3 when event is generated. Loses $MaxHp=10 max HP and gains a random curse card from the curse pool."
+          "note": "Relic rolled uniformly among 3 when event is generated (MuseumOfTorture.OfferedRelic); gains it and a random curse card (0.114.0 TakeRelic)."
         },
         "MUSEUM_OF_TORTURE.pages.DISPLAY.options.BREAK_OUT": {
-          "proceed": true,
-          "note": "No effect in handler."
+          "effects": {
+            "maxHp": "-$MaxHp"
+          },
+          "note": "0.114.0 BreakOut: loses $MaxHp max HP."
         }
       }
     },
