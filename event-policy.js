@@ -129,7 +129,8 @@
         hpAfter = worstHp;
       }
       if (data.note) reasons.push(`未計入：${data.note}`);
-      const lethal = option.mayKill || hpAfter <= 0;
+      // mayKill only says the option carries a WillKillPlayer check; trust it when the HP effect is not modelled.
+      const lethal = hpAfter <= 0 || (option.mayKill && unknown);
       if (lethal) reasons.unshift("可能致死，排除。");
       return { ...base, score: lethal ? -Infinity : score, evaluated: !unknown, lethal, reasons };
     });

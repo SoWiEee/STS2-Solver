@@ -8,11 +8,11 @@ const table = { events: { WELLSPRING: { options: {
   E: { proceed: true } } } } };
 const r = P.planEvent({ eventId: "WELLSPRING", vars: { BatheCurses: 1, Dmg: 10 }, hp: 60, maxHp: 80, gold: 0,
   deck: [{ name: "StrikeFool" }], potions: ["X"], potionSlots: 3,
-  options: ["A", "B", "C", "D", "E"].map(k => ({ textKey: k })) }, table);
+  options: ["A", "B", "C", "D", "E"].map(k => ({ textKey: k, mayKill: k === "C" })) }, table);
 const s = Object.fromEntries(r.ranked.map(o => [o.textKey, o.score]));
 assert.equal(s.A, 3);            // one free potion slot used
 assert.equal(s.B, 6 - 7);        // remove a basic card, gain one curse
-assert.equal(s.C, -10 + 8);      // 10 HP for 100 gold
+assert.equal(s.C, -10 + 8);      // 10 HP for 100 gold; a WillKillPlayer check on a survivable known loss is not lethal
 assert.equal(s.D, -Infinity);    // a possible lethal outcome is excluded
 assert.equal(s.E, 0);
 assert.equal(P.resolve("-$Dmg*2", { Dmg: 3 }), -6);

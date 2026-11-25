@@ -60,6 +60,22 @@ public sealed class RulesCatalog
         BlitzMode ? BlitzLevels.Take(Math.Min(ascension, BlitzLevels.Length)).Contains(level) : ascension >= level;
     readonly Dictionary<string, Dictionary<string, StaticGetter>> _statics = [];
 
+    /// <summary>An AI register from memory, else the REA table. Follows NativeAccess.MonsterInt: the
+    /// Waterfall Giant keeps raw damage fields, and its base gun damage is a computed (table) getter.</summary>
+    internal bool TryRegister(ClrObject monster, string monsterId, string name, int ascension, out int value)
+    {
+        value = 0;
+        if (TypeName(monster) == "WaterfallGiant" && name is "PressureGunBonus" or "SteamEruptionDamage")
+        {
+            if (name == "SteamEruptionDamage") return LiveRules.TryMonsterInt(monster, "_steamEruptionDamage", out value);
+            if (!LiveRules.TryMonsterInt(monster, "_currentPressureGunDamage", out int current)
+                || !TryStatic(monsterId, "BasePressureGunDamage", ascension, out int baseDamage)) return false;
+            value = current - baseDamage;
+            return true;
+        }
+        return LiveRules.TryMonsterInt(monster, name, out value) || TryStatic(monsterId, name, ascension, out value);
+    }
+
     internal bool TryStatic(string monster, string name, int ascension, out int value)
     {
         value = 0;
@@ -567,8 +583,7 @@ internal static class LiveRules
             }
         int[] registers = new int[def.AiRegisterNames.Count];
         for (int i = 0; i < registers.Length; i++)
-            Require(TryMonsterInt(monster, def.AiRegisterNames[i], out registers[i])
-                || catalog.TryStatic(monsterId, def.AiRegisterNames[i], ascension, out registers[i]),
+            Require(catalog.TryRegister(monster, monsterId, def.AiRegisterNames[i], ascension, out registers[i]),
                 $"{monsterId} 的 AI 狀態 {def.AiRegisterNames[i]} 無法讀取");
         int[] rootPowers = new int[def.RootPowerAmountNames.Count];
         var powers = LiveState.Powers(creature);

@@ -437,11 +437,13 @@
         setPhase("choice");
         if(reward.restSite){
           setRewardIcon("rest");
+          if(!gameNames){try{const r=await fetch("/names",{headers:{"X-STS2-Capture":"1"}});if(r.ok)gameNames=await r.json();}catch{}}
+          const cardName=id=>gameNames?.cards?.[id.replace(/([a-z0-9])([A-Z])/g,"$1_$2").toUpperCase()]||id; // deck entries carry PascalCase class names
           const rest=reward.recommendation==="rest";
           status.textContent=`營火 · ${reward.hp}/${reward.maxHp} HP。生命低於 60% 時休息，否則鍛造。`;
           const restRow=`<article class="row-card${rest?" pick":""}">${icon("rest")}${rest?'<span class="pick-label">選這個</span>':""}<strong>休息</strong><p class="row-caption">回復 ${reward.heal} HP</p></article>`;
           output.innerHTML=(rest?restRow:"")+(reward.upgrades.length?reward.upgrades.map((u,i)=>`<article class="row-card${i===0&&!rest?" pick":""}">${icon("card")}
-            ${i===0&&!rest?'<span class="pick-label">鍛造這張</span>':""}<strong>${esc(u.name)}</strong>
+            ${i===0&&!rest?'<span class="pick-label">鍛造這張</span>':""}<strong>${esc(cardName(u.name))}</strong>
             <p class="row-caption">升級收益 ${u.gain}</p><p>${u.reasons.map(esc).join("、")}</p></article>`).join("")
             :`<p class="row-caption">牌組裡沒有能判斷升級收益的牌。</p>`)+(rest?"":restRow);
           return true;

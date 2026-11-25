@@ -70,8 +70,7 @@ internal static class LiveMonsterRules
                 $"{monsterId}.{def.StaticIntNames[i]} 無法從記憶體或 REA 數值表讀取");
         int[] registers = new int[def.AiRegisterNames.Count];
         for (int i = 0; i < registers.Length; i++)
-            Require(LiveRules.TryMonsterInt(monster, def.AiRegisterNames[i], out registers[i])
-                || catalog.TryStatic(monsterId, def.AiRegisterNames[i], ascension, out registers[i]),
+            Require(catalog.TryRegister(monster, monsterId, def.AiRegisterNames[i], ascension, out registers[i]),
                 $"{monsterId} 的 AI 狀態 {def.AiRegisterNames[i]} 無法讀取");
         int[] rootPowers = new int[def.RootPowerAmountNames.Count];
         var powers = LiveState.Powers(creature);
