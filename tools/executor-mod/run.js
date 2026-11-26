@@ -243,7 +243,7 @@ async function rest() {
 async function shop() {
   for (let n = 0; n < 14; n++) {
     const r = await get(READER, "/rewards");
-    if (r.error || !r.shop) break;
+    if (r.error || !r.shop) { log("shop: reader has no shop data:", r.error || Object.keys(r).join(",")); break; }
     const ranked = globalThis.planRewards(r);
     const best = ranked.find(c => c.evaluated && c.score > 5 && c.affordable !== false && String(c.kind).toLowerCase() !== "skip");
     if (!best) { log("shop: nothing worth buying; top:", ranked.slice(0, 3).map(c => `${c.name}=${c.score?.toFixed?.(1)}${c.affordable === false ? "(no gold)" : ""}`).join(", "), `gold ${r.gold}`); break; }
