@@ -242,7 +242,11 @@ async function rest() {
 
 async function shop() {
   for (let n = 0; n < 14; n++) {
-    const r = await get(READER, "/rewards");
+    let r = await get(READER, "/rewards");
+    if ((r.error || !r.shop) && n === 0) {   // the merchant slots are visible in the room before the inventory is open; the reader only reads the open inventory
+      log("opening shop inventory"); await get(MOD, "/openshop", true); await sleep(1500);
+      r = await get(READER, "/rewards");
+    }
     if (r.error || !r.shop) { log("shop: reader has no shop data:", r.error || Object.keys(r).join(",")); break; }
     const ranked = globalThis.planRewards(r);
     const best = ranked.find(c => c.evaluated && c.score > 5 && c.affordable !== false && String(c.kind).toLowerCase() !== "skip");
