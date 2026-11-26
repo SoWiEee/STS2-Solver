@@ -39,7 +39,7 @@ async function playCombat() {
     const solve = b => get(READER, `/solve?budget=${b}`);
     let solved = await solve(solveBudget);
     if (solved.error && /請等/.test(solved.error) && await mulligan()) solved = await solve(solveBudget);
-    for (let i = 0; solved.error && /結算|請等|snapshot|1450/.test(solved.error) && i < 90; i++) { await sleep(800); solved = await solve(solveBudget); }   // an enemy turn or long animation can take a minute
+    for (let i = 0; solved.error && /結算|請等|snapshot|1450/.test(solved.error) && i < 90; i++) { await sleep(800); if (/請等/.test(solved.error) && i % 3 === 2) await mulligan(); solved = await solve(solveBudget); }   // an enemy turn or long animation can take a minute
     // A short search is enough while the fight is comfortable; search longer when it predicts a loss or a close call.
     if (!solved.error && (!solved.victory || solved.finalHp < 0.35 * solved.maxHp)) { log(`  hard turn: re-solving with ${hardBudget}s`); solved = await solve(hardBudget); }
     if (solved.error) {
@@ -87,6 +87,7 @@ async function playCombat() {
       const s = await get(MOD, "/state").catch(() => ({ ok: false }));
       if (!s.ok) return;
       if (s.turn > state.turn) { await sleep(700); break; }
+      if (i % 5 === 4) await mulligan();   // an enemy effect can open a choose-a-card screen mid-turn
       const cap = await get(READER, "/capture").catch(() => ({}));
       if (cap.error && /進入一場戰鬥/.test(cap.error)) return;
     }
@@ -167,7 +168,9 @@ async function handleChoice(step) {
   }
   const u = await ui();
   if (!wanted.length && (u.items || []).some(i => i.type === "card")) {   // a generated-card pick the route does not name: take the first
-    const first = u.items.find(i => i.type === "card"); await click(first.i); log("choice (first card)", first.id); await sleep(600);
+    const cards = u.items.filter(i => i.type === "card");
+    const first = cards.find(i => i.id !== "DISINTEGRATION") || cards[0];   // Disintegration costs HP every turn: avoid it when there is another option
+    await click(first.i); log("choice (first card)", first.id); await sleep(600);
   }
   await clickWhere(i => i.type === "NConfirmButton", "confirm");
   await sleep(800);
