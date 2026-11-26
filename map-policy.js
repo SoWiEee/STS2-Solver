@@ -11,7 +11,6 @@
     const number = value => Number.isFinite(Number(value)) ? Number(value) : 0;
     const health = Math.max(0, Math.min(number(hp), Math.max(1, number(maxHp))));
     const healthRatio = health / Math.max(1, number(maxHp));
-    const lowHp = 1 - healthRatio;
     const coins = Math.max(0, number(gold));
     const source = Array.isArray(nodes) ? nodes : [];
     let truncated = source.length > MAX_NODES;
@@ -38,10 +37,16 @@
     let visits = 0;
     const candidates = [];
 
-    function nodeScore(type, step) {
+    // Expected HP ratio is simulated along the path (shortcut: flat per-node costs from observed fights,
+    // not a combat model): monster -10%, elite -30%, unknown -5%, rest +30%.
+    const HP_AFTER = { monster: -0.10, elite: -0.30, unknown: -0.05, rest: 0.30 };
+    function nodeScore(type, step, hpRatio) {
+      const lowHp = 1 - hpRatio;
+      // An elite entered below ~45% HP, or any fight below ~15%, is a likely death.
+      const danger = (type === "elite" && hpRatio < 0.45 ? -40 : 0) + (type === "monster" && hpRatio < 0.15 ? -20 : 0);
       switch (type) {
-        case "monster": return 2 - 8 * lowHp;
-        case "elite": return 10 - 20 * lowHp;
+        case "monster": return 2 - 8 * lowHp + danger;
+        case "elite": return 10 - 20 * lowHp + danger;
         case "rest": return 1 + 14 * lowHp + 5 * lowHp / (1 + step);
         case "shop": return 0.5 + Math.min(4, coins / 100) + 2 * lowHp;
         case "treasure": return 6;
@@ -70,7 +75,7 @@
       });
     }
 
-    function walk(id, path, seen, score, counts) {
+    function walk(id, path, seen, score, counts, hpRatio) {
       if (visits >= MAX_VISITS || evaluated >= MAX_PATHS || path.length >= MAX_DEPTH) {
         truncated = true;
         return;
@@ -82,7 +87,8 @@
       const nextSeen = new Set(seen);
       nextSeen.add(id);
       const nextCounts = { ...counts, [node.type]: counts[node.type] + 1 };
-      const nextScore = score + nodeScore(node.type, path.length);
+      const nextScore = score + nodeScore(node.type, path.length, hpRatio);
+      const nextHp = Math.max(0.01, Math.min(1, hpRatio + (HP_AFTER[node.type] || 0)));
       const children = node.children.filter(child => {
         if (!byId.has(child)) { truncated = true; return false; }
         if (nextSeen.has(child)) { truncated = true; return false; }
@@ -97,14 +103,14 @@
           truncated = true;
           break;
         }
-        walk(child, nextPath, nextSeen, nextScore, nextCounts);
+        walk(child, nextPath, nextSeen, nextScore, nextCounts, nextHp);
       }
     }
 
     const emptyCounts = Object.fromEntries(TYPES.map(type => [type, 0]));
     for (const id of starts) {
       if (visits >= MAX_VISITS || evaluated >= MAX_PATHS) { truncated = true; break; }
-      walk(id, [], new Set(), 0, emptyCounts);
+      walk(id, [], new Set(), 0, emptyCounts, healthRatio);
     }
     candidates.sort(compare);
     const selected = [];
