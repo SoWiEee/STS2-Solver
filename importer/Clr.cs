@@ -72,7 +72,9 @@ internal static class Clr
     public static string Id(ClrObject model)
     {
         ClrObject id = Obj(model, "Id");
-        return Str(id, "Entry") ?? throw new LiveUnsupportedException($"{model.Type?.Name} 沒有內容 id");
+        string entry = Str(id, "Entry") ?? throw new LiveUnsupportedException($"{model.Type?.Name} 沒有內容 id");
+        // 0.114 Sadness (unplayable, retained status) is not in the 0.113.1 kernel: Wound is the same dead hand card, and it keeps the hand size honest.
+        return entry == "SADNESS" ? "WOUND" : entry;
     }
 
     public static string TypeName(ClrObject obj) => obj.Type?.Name?.Split('.').Last() ?? "?";

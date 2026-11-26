@@ -38,7 +38,8 @@ async function playCombat() {
     if (!state.ok) return;
     const solve = b => get(READER, `/solve?budget=${b}`);
     let solved = await solve(solveBudget);
-    for (let i = 0; solved.error && /結算|請等|snapshot|1450/.test(solved.error) && i < 25; i++) { await sleep(800); solved = await solve(solveBudget); }
+    if (solved.error && /請等/.test(solved.error) && await mulligan()) solved = await solve(solveBudget);
+    for (let i = 0; solved.error && /結算|請等|snapshot|1450/.test(solved.error) && i < 90; i++) { await sleep(800); if (/請等/.test(solved.error) && i % 3 === 2) await mulligan(); solved = await solve(solveBudget); }   // an enemy turn or long animation can take a minute
     // A short search is enough while the fight is comfortable; search longer when it predicts a loss or a close call.
     if (!solved.error && (!solved.victory || solved.finalHp < 0.35 * solved.maxHp)) { log(`  hard turn: re-solving with ${hardBudget}s`); solved = await solve(hardBudget); }
     if (solved.error) {
@@ -50,6 +51,7 @@ async function playCombat() {
         await waitNextTurn(state);
         continue;
       }
+      if (/請等/.test(solved.error)) { await sleep(2000); continue; }   // still not the player's turn: look again
       throw new Error("solve: " + solved.error);
     }
     if (state.turn === 1 && !solved.victory && solved.finalHp <= 0 && !process.argv.includes("--fight-on")) {
@@ -85,10 +87,32 @@ async function playCombat() {
       const s = await get(MOD, "/state").catch(() => ({ ok: false }));
       if (!s.ok) return;
       if (s.turn > state.turn) { await sleep(700); break; }
+
       const cap = await get(READER, "/capture").catch(() => ({}));
       if (cap.error && /進入一場戰鬥/.test(cap.error)) return;
+      if (cap.error && /請等/.test(cap.error)) await mulligan();   // a prompt (hand swap, choose-a-card) is blocking; the reader only says "wait" then
     }
   }
+}
+
+// A relic can open "choose any number of cards to replace" on the hand at combat start: swap the basic Strikes/Defends, then confirm.
+let lastMulliganTurn;
+async function mulligan() {
+  const u = await ui().catch(() => ({}));
+  if (u.room !== "Monster" && u.room !== "Elite" && u.room !== "Boss") return false;
+  const items = u.items || [];
+  // A choose-a-card screen the fight itself opens (boss start: pick one of two debuff cards): take the first.
+  if (/ChooseACard|CardSelect/.test(u.scope || "") && items.some(i => i.type === "card")) { await handleChoice({}); return true; }
+  if (!items.some(i => i.type === "NConfirmButton") || !items.some(i => i.type === "card")) return false;
+  // Swapping can draw more basics and the prompt may come back: swap once per turn, then confirm with nothing selected.
+  const turn = (await get(MOD, "/state").catch(() => ({}))).turn;
+  const basics = turn !== undefined && turn === lastMulliganTurn ? [] : items.filter(i => i.type === "card" && /^(STRIKE|DEFEND)_/.test(i.id || ""));
+  lastMulliganTurn = turn;
+  for (const c of basics) { await click(c.i); await sleep(250); }
+  log("mulligan: replaced", basics.map(c => c.id).join(",") || "nothing");
+  await clickWhere(i => i.type === "NConfirmButton", "confirm");
+  await sleep(2500);
+  return true;
 }
 
 // 0.114 cards the kernel cannot model (importer LiveState.LeftOut) are left out of the solved state; spend what energy is left on them.
@@ -149,7 +173,9 @@ async function handleChoice(step) {
   }
   const u = await ui();
   if (!wanted.length && (u.items || []).some(i => i.type === "card")) {   // a generated-card pick the route does not name: take the first
-    const first = u.items.find(i => i.type === "card"); await click(first.i); log("choice (first card)", first.id); await sleep(600);
+    const cards = u.items.filter(i => i.type === "card");
+    const first = cards.find(i => i.id !== "DISINTEGRATION") || cards[0];   // Disintegration costs HP every turn: avoid it when there is another option
+    await click(first.i); log("choice (first card)", first.id); await sleep(600);
   }
   await clickWhere(i => i.type === "NConfirmButton", "confirm");
   await sleep(800);
@@ -160,6 +186,7 @@ async function handleChoice(step) {
 async function rewards() {
   // Claim gold/relics first, then potions (each at most once, since a full belt leaves the reward in place),
   // the card reward last (its screen replaces the list).
+  let skipped = false;
   let potionTries = ((await ui()).items || []).filter(i => i.kind === "PotionReward").length;
   for (let n = 0; n < 14; n++) {
     const u = await ui();
@@ -167,11 +194,11 @@ async function rewards() {
     const items = u.items || [];
     const pick = items.find(i => i.type === "reward" && i.enabled && !/Card/.test(i.kind || "") && i.kind !== "PotionReward")
       || (potionTries > 0 && items.find(i => i.type === "reward" && i.enabled && i.kind === "PotionReward"))
-      || items.find(i => i.type === "reward" && i.enabled && /Card/.test(i.kind || ""));
+      || (!skipped && items.find(i => i.type === "reward" && i.enabled && /Card/.test(i.kind || "")));   // a skipped card reward stays in the list
     if (!pick) break;
     if (pick.kind === "PotionReward") potionTries--;
     await click(pick.i); log("reward", pick.kind); await sleep(900);
-    if (/Card/.test(pick.kind || "")) await cardReward();
+    if (/Card/.test(pick.kind || "") && (await cardReward()) === "skip") skipped = true;
   }
   await clickWhere(i => i.type === "NProceedButton", "proceed");
 }
@@ -188,7 +215,7 @@ async function cardReward() {
   if (!take.length) {
     log("card reward: skip");
     if (!(await clickWhere(i => /Skip|Alternative/.test(i.type), "skip"))) log("  no skip button found");
-    return;
+    return "skip";
   }
   for (const c of take) {
     const id = snake(c.name);
@@ -232,17 +259,51 @@ async function rest() {
   await clickWhere(i => i.type === "rest" && i.enabled && (i.id || "").toUpperCase().includes(id), "rest option " + id);
   if (id === "SMITH") {
     await sleep(900);
-    const up = r.upgrades?.[0];
-    if (up) { const want = snake(up.name); await clickWhere(i => i.type === "card" && (i.id || "").toUpperCase() === want, "upgrade " + up.name); await sleep(500); await clickWhere(i => i.type === "NConfirmButton", "confirm"); }
+    await pickUpgrade(r.upgrades?.[0]);
   }
   await sleep(800);
   await clickWhere(i => i.type === "NProceedButton", "proceed");
   return true;
 }
 
+// On the deck's upgrade screen: the reader's best upgrade if it has one, else the first non-basic card that can still be upgraded.
+async function pickUpgrade(up) {
+  const u = await ui();
+  const cards = (u.items || []).filter(i => i.type === "card");
+  const want = up && snake(up.name);
+  const pick = cards.find(i => want && (i.id || "").toUpperCase() === want && !i.up)
+    || cards.find(i => !i.up && !/^(STRIKE|DEFEND)_/.test(i.id || "")) || cards.find(i => !i.up) || cards[0];
+  if (!pick) return;
+  await click(pick.i); log("upgrade", pick.id); await sleep(500);
+  await clickWhere(i => i.type === "NConfirmButton", "confirm");
+}
+
+// "Choose N cards to enchant": N distinct non-basic cards (the enchant prompt reads "選擇 3 張牌"), then confirm.
+async function pickEnchant(n) {
+  const u = await ui();
+  const cards = (u.items || []).filter(i => i.type === "card");
+  const picks = [];
+  for (const c of cards.filter(c => !/^(STRIKE|DEFEND)_/.test(c.id || "")).concat(cards)) {
+    if (picks.length >= n) break;
+    if (!picks.includes(c) && !picks.some(p => p.id === c.id && cards.some(o => !picks.includes(o) && o.id !== c.id))) picks.push(c);
+  }
+  for (const c of picks) { await click(c.i); await sleep(300); }
+  log("enchant", picks.map(c => c.id).join(","));
+  await clickWhere(i => i.type === "NConfirmButton", "confirm");
+  // The preview screen stacks a second confirm on top of the picker's; the topmost is the last in the list.
+  await sleep(800);
+  const after = ((await ui()).items || []).filter(i => i.type === "NConfirmButton");
+  if (after.length > 1) { await click(after[after.length - 1].i); log("click confirm (preview)"); await sleep(900); }
+}
+
 async function shop() {
+  let reopened = false;   // buying a removal closes the inventory: reopen it once to keep shopping
   for (let n = 0; n < 14; n++) {
-    const r = await get(READER, "/rewards");
+    let r = await get(READER, "/rewards");
+    if ((r.error || !r.shop) && (n === 0 || !reopened)) {   // the merchant slots are visible in the room before the inventory is open; the reader only reads the open inventory
+      reopened = true; log("opening shop inventory"); await get(MOD, "/openshop", true); await sleep(1500);
+      r = await get(READER, "/rewards");
+    }
     if (r.error || !r.shop) { log("shop: reader has no shop data:", r.error || Object.keys(r).join(",")); break; }
     const ranked = globalThis.planRewards(r);
     const best = ranked.find(c => c.evaluated && c.score > 5 && c.affordable !== false && String(c.kind).toLowerCase() !== "skip");
@@ -261,7 +322,7 @@ async function shop() {
 
 // ---- main loop -----------------------------------------------------------
 async function main() {
-  let idle = 0, shopDone = false;
+  let idle = 0, shopDone = false, chestOpened = false;
   for (;;) {
     const s = await get(MOD, "/state").catch(() => ({ ok: false }));
     const cap = await get(READER, "/capture").catch(() => ({ error: "reader down" }));
@@ -271,12 +332,19 @@ async function main() {
     const types = new Set((u.items || []).map(i => i.type));
     let handled = false;
     if (/RewardsScreen/.test(scope)) { await rewards(); handled = true; }
+    else if (/DeckEnchantSelect/.test(scope)) { await pickEnchant(3); handled = true; }
+    else if (/DeckUpgradeSelect/.test(scope)) { await pickUpgrade(); handled = true; }
+    else if (s.ok && /ChooseACard|CardSelect/.test(scope) && /Monster|Elite|Boss/.test(u.room || "")) { await handleChoice({}); handled = true; }   // opened by the fight itself
     else if (/CardReward|SimpleCardSelect|DeckCardSelect|ChooseACard/.test(scope)) { await cardReward(); handled = true; }
-    else if (types.has("map")) { shopDone = false; await map(); handled = true; }
+    else if (types.has("map")) { shopDone = false; chestOpened = false; await map(); handled = true; }
     else if (types.has("event")) { handled = await event(); }
     else if (types.has("rest")) { handled = await rest(); }
     else if (types.has("shop") || types.has("removal")) { await shop(); shopDone = true; handled = true; }
     else if (u.room === "Shop" && !shopDone) { log("opening shop"); await get(MOD, "/openshop", true); await sleep(1200); handled = true; }
+    else if (types.has("chest") || types.has("relic")) { if (!(await clickWhere(i => i.type === "relic" && i.enabled, "relic"))) {
+        if (!chestOpened) { chestOpened = true; await clickWhere(i => i.type === "chest", "chest"); }   // the chest node stays listed after it opens
+        else await clickWhere(i => i.type === "NProceedButton", "proceed");
+      } handled = true; }
     else if (types.has("NProceedButton")) { await clickWhere(i => i.type === "NProceedButton", "proceed"); handled = true; }
     if (handled) { idle = 0; await sleep(1200); continue; }
     if (++idle > 8) throw new Error(`nothing to do on screen "${scope}" with items ${JSON.stringify([...types])}`);
