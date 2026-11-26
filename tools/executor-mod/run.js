@@ -181,6 +181,7 @@ async function handleChoice(step) {
 async function rewards() {
   // Claim gold/relics first, then potions (each at most once, since a full belt leaves the reward in place),
   // the card reward last (its screen replaces the list).
+  let skipped = false;
   let potionTries = ((await ui()).items || []).filter(i => i.kind === "PotionReward").length;
   for (let n = 0; n < 14; n++) {
     const u = await ui();
@@ -188,11 +189,11 @@ async function rewards() {
     const items = u.items || [];
     const pick = items.find(i => i.type === "reward" && i.enabled && !/Card/.test(i.kind || "") && i.kind !== "PotionReward")
       || (potionTries > 0 && items.find(i => i.type === "reward" && i.enabled && i.kind === "PotionReward"))
-      || items.find(i => i.type === "reward" && i.enabled && /Card/.test(i.kind || ""));
+      || (!skipped && items.find(i => i.type === "reward" && i.enabled && /Card/.test(i.kind || "")));   // a skipped card reward stays in the list
     if (!pick) break;
     if (pick.kind === "PotionReward") potionTries--;
     await click(pick.i); log("reward", pick.kind); await sleep(900);
-    if (/Card/.test(pick.kind || "")) await cardReward();
+    if (/Card/.test(pick.kind || "") && (await cardReward()) === "skip") skipped = true;
   }
   await clickWhere(i => i.type === "NProceedButton", "proceed");
 }
@@ -209,7 +210,7 @@ async function cardReward() {
   if (!take.length) {
     log("card reward: skip");
     if (!(await clickWhere(i => /Skip|Alternative/.test(i.type), "skip"))) log("  no skip button found");
-    return;
+    return "skip";
   }
   for (const c of take) {
     const id = snake(c.name);
