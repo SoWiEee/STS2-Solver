@@ -52,19 +52,28 @@ app.MapGet("/event", (HttpContext request) => ReadSnapshot(request, GameReader.C
 app.MapGet("/names", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureNames));
 // Searches take seconds; their own lock keeps /capture polling responsive meanwhile (each read takes its own snapshot).
 var solveLock = new object();
-app.MapGet("/solve", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureSolve, solveLock));
+app.MapGet("/solve", (HttpContext request) => ReadSnapshot(request, () => GameReader.CaptureSolve(request.Request.Query["quick"] == "1", double.TryParse(request.Request.Query["budget"], out double budget) ? budget : null), solveLock));
 app.Run();
 
 static class GameReader
 {
-    const string Version = "0.113.1";
-    const string DllHash = "62ECBE91093E1FA862DE4329AAC865209DCB297804CAF0F0520D92D8C0B4A9C3";
+    // sts2.dll SHA-256 of each supported build.
+    static readonly Dictionary<string, string> SupportedBuilds = new()
+    {
+        ["62ECBE91093E1FA862DE4329AAC865209DCB297804CAF0F0520D92D8C0B4A9C3"] = "0.113.1",
+        ["DDCEB87905B6096DEB7BE975922E24A53992453675DF26DF545B1C46B1826C5D"] = "0.114.0",
+    };
+    static string Version = "0.114.0";
 
-    public static object Capture() => WithRuntime(ReadCombat);
+    // The page polls this every few seconds only to notice changes; reading without suspending keeps
+    // combat smooth. The search (/solve) re-reads under a snapshot, so it always sees a consistent state.
+    public static object Capture() => WithRuntime((r, _) => ReadCombat(r), suspend: false);
 
-    public static object CaptureMap() => WithRuntime(ReadMap);
-    public static object CaptureRewards() => WithRuntime(ReadRewards);
-    public static object CaptureEvent() => WithRuntime(ReadEvent);
+    // Map, reward and event screens are static: read them live without suspending the game, so the
+    // page's polling outside combat does not stutter it. Combat keeps the consistent snapshot.
+    public static object CaptureMap() => WithRuntime((r, _) => ReadMap(r), suspend: false);
+    public static object CaptureRewards() => WithRuntime(ReadRewards, suspend: false);
+    public static object CaptureEvent() => WithRuntime(ReadEvent, suspend: false);
 
     static readonly Lazy<Sts2Solver.LiveImport.RulesCatalog> Catalog = new(() =>
         new Sts2Solver.LiveImport.RulesCatalog(Path.Combine(AppContext.BaseDirectory, "data", "rules-catalog.br")));
@@ -76,15 +85,18 @@ static class GameReader
     // rank-Yu beam search over the whole remaining fight from the current root (~10 s).
     static string? solvedKey;
     static object? solvedResult;
+    static bool solvedFull;
     // Several clients (page, overlay) poll /solve: the same combat state is searched once and shared.
-    public static object CaptureSolve() => WithRuntime(runtime =>
+    // ?quick=1 answers within ~1.5 s so the page can show a first route while the full search runs.
+    public static object CaptureSolve(bool quick, double? budgetSeconds = null) => WithRuntime(runtime =>
     {
         var state = System.Text.Json.JsonSerializer.SerializeToNode(ReadCombat(runtime))!.AsObject();
         state.Remove("capturedAt");
         string key = state.ToJsonString();
-        if (key == solvedKey) return solvedResult!;
-        var result = Sts2Solver.LiveImport.LiveImporter.Solve(runtime, Catalog.Value, Templates, TimeSpan.FromSeconds(30)); // easy fights end early (frontier empty); elites and bosses need the room
-        (solvedKey, solvedResult) = (key, result);
+        if (key == solvedKey && (solvedFull || quick) && budgetSeconds == null) return solvedResult!;
+        var budget = TimeSpan.FromSeconds(budgetSeconds ?? (quick ? 1.5 : 30)); // easy fights end early (frontier empty); elites and bosses need the room
+        var result = Sts2Solver.LiveImport.LiveImporter.Solve(runtime, Catalog.Value, Templates, budget);
+        if (budgetSeconds == null) (solvedKey, solvedResult, solvedFull) = (key, result, !quick); // a custom budget is not shared with the page
         return result;
     });
 
@@ -105,7 +117,8 @@ static class GameReader
 
     static object WithRuntime(Func<ClrRuntime, object> read) => WithRuntime((runtime, _) => read(runtime));
 
-    static object WithRuntime(Func<ClrRuntime, string, object> read)
+    static string? verifiedDll;
+    static object WithRuntime(Func<ClrRuntime, string, object> read, bool suspend = true)
     {
         var games = Process.GetProcessesByName("SlayTheSpire2");
         try
@@ -115,15 +128,41 @@ static class GameReader
             Require(active != null, "請開啟一個 Slay the Spire 2 遊戲視窗。");
             string dir = Path.GetDirectoryName(active!.MainModule!.FileName)!;
             string data = Path.Combine(dir, "data_sts2_windows_x86_64");
-            using (var dll = File.OpenRead(Path.Combine(data, "sts2.dll")))
-            using (var sha = SHA256.Create())
-                Require(Convert.ToHexString(sha.ComputeHash(dll)) == DllHash, "目前的遊戲組件版本未支援。");
+            string dllPath = Path.Combine(data, "sts2.dll");
+            string dllKey = dllPath + File.GetLastWriteTimeUtc(dllPath).Ticks; // re-check after a game update
+            if (verifiedDll != dllKey)
+            {
+                string hash;
+                using (var dll = File.OpenRead(dllPath)) hash = Convert.ToHexString(SHA256.HashData(dll));
+                Require(SupportedBuilds.TryGetValue(hash, out var build), "目前的遊戲組件版本未支援。");
+                Version = build!;
+                Sts2Solver.LiveImport.RulesCatalog.GameVersion = build!;
+                verifiedDll = dllKey;
+            }
 
-            using var snapshot = DataTarget.CreateSnapshotAndAttach(active.Id);
+            using var snapshot = suspend
+                ? DataTarget.CreateSnapshotAndAttach(active.Id)
+                : DataTarget.AttachToProcess(active.Id, suspend: false);
             var runtime = snapshot.ClrVersions.Single().CreateRuntime(Path.Combine(data, "mscordaccore.dll"));
             return read(runtime, dir);
         }
         finally { foreach (var game in games) game.Dispose(); }
+    }
+
+    /// <summary>
+    /// The player on this machine. Over Steam a player's NetId is their SteamID64
+    /// (SteamClient/SteamHost.NetId), and Steam records the signed-in account under
+    /// HKCU\Software\Valve\Steam\ActiveProcess\ActiveUser (32-bit account id).
+    /// </summary>
+    static int LocalPlayerIndex(ClrRuntime runtime, ClrObject[] players)
+    {
+        if (players.Length == 1) return 0;
+        object? account = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\Valve\Steam\ActiveProcess", "ActiveUser", null);
+        Require(account is int id && id != 0, "讀不到目前登入的 Steam 帳號。");
+        ulong me = 76561197960265728UL + (uint)(int)account!;
+        int index = Array.FindIndex(players, p => Field<ulong>(p, Backing("NetId")) == me);
+        Require(index >= 0, "多人遊戲中找不到本機玩家（目前只支援 Steam 連線）。");
+        return index;
     }
 
     static ClrObject FindManager(ClrRuntime runtime, string type)
@@ -139,17 +178,18 @@ static class GameReader
             var manager = FindManager(runtime, "MegaCrit.Sts2.Core.Combat.CombatManager");
             var turn = Object(manager, "_turnState");
             Require(!turn.IsNull && Field<bool>(turn, Backing("IsInProgress")), "請進入一場戰鬥。");
-            Require(!Field<bool>(manager, "_playerActionsDisabled") &&
-                !Field<bool>(turn, Backing("IsStarting")) &&
-                !Field<bool>(turn, Backing("IsEnemyTurnStarted")) &&
-                !Field<bool>(turn, Backing("EndingPlayerTurnPhaseOne")) &&
-                !Field<bool>(turn, Backing("EndingPlayerTurnPhaseTwo")),
-                "戰鬥正在結算。請等到可出牌時擷取。");
+            foreach (var (obj, flag) in new[] { (manager, "_playerActionsDisabled"), (turn, Backing("IsStarting")),
+                (turn, Backing("IsEnemyTurnStarted")), (turn, Backing("EndingPlayerTurnPhaseOne")), (turn, Backing("EndingPlayerTurnPhaseTwo")) })
+                Require(!Field<bool>(obj, flag), $"戰鬥正在結算（{flag.Trim('<', '>').Replace(">k__BackingField", "")}）。請等到可出牌時擷取。");
             var combat = Object(turn, Backing("State"));
             Require(Field<int>(combat, Backing("CurrentSide")) == 1, "請在玩家回合擷取。");
-            var players = List(Object(combat, "_allies"), 32)
+            var pairs = List(Object(combat, "_allies"), 32)
                 .Select(c => (creature: c, player: Object(c, Backing("Player"))))
-                .Where(pair => !pair.player.IsNull).Select(pair =>
+                .Where(pair => !pair.player.IsNull).ToList();
+            // Multiplayer: the local player comes first (the page and the search treat players[0] as "you").
+            int local = LocalPlayerIndex(runtime, pairs.Select(p => p.player).ToArray());
+            if (local > 0) { var me = pairs[local]; pairs.RemoveAt(local); pairs.Insert(0, me); }
+            var players = pairs.Select(pair =>
                 {
                     var state = Object(pair.player, Backing("PlayerCombatState"));
                     ClrObject hand = state.IsNull ? default : Object(state, Backing("Hand"));
@@ -210,21 +250,27 @@ static class GameReader
         var run = Object(runManager, Backing("State"));
         Require(!run.IsNull, "請先開始遊戲。");
         var players = List(Object(run, "_players"), 4).ToArray();
-        Require(players.Length == 1, "事件建議目前限單人。");
-        var player = players[0];
+        int me = LocalPlayerIndex(runtime, players);
+        var player = players[me];
         var creature = Object(player, Backing("Creature"));
         Require(List(Object(run, "_currentRooms"), 8).LastOrDefault() is { IsNull: false } room && ShortName(room) == "EventRoom",
             "請在遊戲進入事件。");
         var events = List(Object(Object(runManager, Backing("EventSynchronizer")), "_events"), 4).ToList();
-        Require(events.Count == 1, "事件建議目前限單人。");
-        var model = events[0];
+        Require(me < events.Count, "找不到本機玩家的事件。");
+        var model = events[me]; // EventSynchronizer.GetEventForPlayer: one event per player slot
         string id = Object(model, Backing("Id")).ReadStringField(Backing("Entry")) ?? "";
         var vars = new Dictionary<string, decimal>();
+        var words = new Dictionary<string, string>(); // StringVar values such as a relic's title
         foreach (var entry in DynamicVarEntries(model))
-                if (entry.ReadObjectField("value").TryReadField<decimal>("_baseValue", out var amount))
-                    vars[entry.ReadObjectField("key").AsString() ?? ""] = amount;
+        {
+            var value = entry.ReadObjectField("value");
+            string name = entry.ReadObjectField("key").AsString() ?? "";
+            if (ShortName(value) == "StringVar") words[name] = value.ReadStringField(Backing("StringValue")) ?? "";
+            else if (value.TryReadField<decimal>("_baseValue", out var amount)) vars[name] = amount;
+        }
         var text = RelicText.Load(gameDirectory, "events");
         foreach (var (key, value) in RelicText.Load(gameDirectory, "ancients")) text.TryAdd(key, value);
+        string? Fill(string? template) => template == null ? null : words.Aggregate(template, (t, w) => t.Replace("{" + w.Key + "}", w.Value));
         var optionList = Object(model, "_currentOptions");
         Require(!optionList.IsNull, "事件目前沒有可選的選項。");
         var options = List(optionList, 16, allowEmpty: true).Select(option =>
@@ -234,8 +280,8 @@ static class GameReader
             return new
             {
                 textKey = key,
-                title = RelicText.Describe(text.GetValueOrDefault(key + ".title"), vars),
-                description = RelicText.Describe(text.GetValueOrDefault(key + ".description"), vars),
+                title = RelicText.Describe(Fill(text.GetValueOrDefault(key + ".title")), vars),
+                description = RelicText.Describe(Fill(text.GetValueOrDefault(key + ".description")), vars),
                 locked = Field<bool>(option, Backing("IsLocked")),
                 proceed = Field<bool>(option, Backing("IsProceed")),
                 relic = relic.IsNull ? null : ShortName(relic),
@@ -268,8 +314,7 @@ static class GameReader
         var run = Object(runManager, Backing("State"));
         Require(!run.IsNull, "請先開始遊戲。");
         var players = List(Object(run, "_players"), 4).ToArray();
-        Require(players.Length == 1, "獎勵建議目前限單人。");
-        var player = players[0];
+        var player = players[LocalPlayerIndex(runtime, players)];
         var creature = Object(player, Backing("Creature"));
         var stack = FindManager(runtime, "MegaCrit.Sts2.Core.Nodes.Screens.Overlays.NOverlayStack");
         var overlays = List(Object(stack, "_overlays"), 32).ToArray();
@@ -278,6 +323,8 @@ static class GameReader
         var relicText = new Lazy<Dictionary<string, string>>(() => RelicText.Load(gameDirectory));
         var cardText = new Lazy<Dictionary<string, string>>(() => RelicText.Load(gameDirectory, "cards"));
         bool shop = false;
+        int pick = 1;
+        bool remove = false;
         if (ShortName(top) == "NCardRewardSelectionScreen")
         {
             var active = runtime.Heap.EnumerateObjects().FirstOrDefault(obj =>
@@ -290,6 +337,24 @@ static class GameReader
                 options.Add(ReadRewardCard(card.IsNull ? Object(choice, "originalCard") : card, cardText.Value));
             }
             if (Field<bool>(active, Backing("CanSkip"))) options.Add(new RewardOption("略過", "skip"));
+        }
+        else if (ShortName(top) == "NSimpleCardSelectScreen")
+        {
+            // Event "choose N of M cards to add" grid (EventModel.SelectCardsToAddToDeckFromGrid).
+            foreach (var card in List(Object(top, "_cards"), 64))
+                options.Add(ReadRewardCard(card, cardText.Value));
+            pick = top.ReadValueTypeField("_prefs").ReadField<int>(Backing("MaxSelect"));
+        }
+        else if (ShortName(top) == "NDeckCardSelectScreen")
+        {
+            // CardSelectCmd.FromDeckForRemoval: the prompt is card_selection/TO_REMOVE; other deck picks are not advised.
+            var prefs = top.ReadValueTypeField("_prefs");
+            var prompt = prefs.ReadObjectField(Backing("Prompt"));
+            Require(!prompt.IsNull && (prompt.ReadStringField("<locEntryKey>P") ?? "").Contains("REMOVE"), "這個選牌畫面不是移除卡牌，工具尚未支援。");
+            foreach (var card in List(Object(top, "_cards"), 256))
+                options.Add(ReadRewardCard(card, cardText.Value));
+            pick = prefs.ReadField<int>(Backing("MaxSelect"));
+            remove = true;
         }
         else if (ShortName(top) == "NRewardsScreen")
         {
@@ -346,8 +411,10 @@ static class GameReader
         Require(options.Count > 0, "請在遊戲開啟卡牌選擇、戰利品、寶箱遺物、商店商品或營火畫面。");
         return new
         {
-            deck = List(Object(Object(player, Backing("Deck")), "_cards"), 256).Select(card => ReadRewardCard(card)).ToArray(),
+            deck = List(Object(Object(player, Backing("Deck")), "_cards"), 256).Select(card => ReadRewardCard(card, cardText.Value)).ToArray(),
             options,
+            pick,
+            remove,
             shop,
             gold = Field<int>(player, "_gold"),
             character = ShortName(Object(player, Backing("Character"))),
@@ -397,7 +464,7 @@ static class GameReader
         decimal? OpeningDexterity = null, decimal? OpeningVigor = null, string? Pool = null,
         int? StarCost = null, bool StarCostsX = false, decimal? DrawPutBack = null, bool GeneratesStars = false,
         decimal? NextTurnEnergy = null, int? Price = null, decimal? BlockPerTurn = null, bool ReturnsToHand = false,
-        string? Unmodeled = null);
+        string? Unmodeled = null, decimal? EnergyPerTurn = null, decimal? DrawPerTurn = null, int JunkCards = 0);
 
     static RewardOption? ReadMerchantEntry(ClrObject entry, Lazy<Dictionary<string, string>> relicText,
         Lazy<Dictionary<string, string>> cardText)
@@ -447,6 +514,8 @@ static class GameReader
             "SwordOfJade" => new RewardOption(name, "relic", OpeningStrength: Value("StrengthPower", 3)),
             "OddlySmoothStone" => new RewardOption(name, "relic", OpeningDexterity: Value("DexterityPower", 1)),
             "Akabeko" => new RewardOption(name, "relic", OpeningVigor: Value("VigorPower", 8)),
+            // shortcut: any other relic with a Damage var (e.g. combat-start damage) scores that damage once per fight.
+            _ when values.TryGetValue("Damage", out decimal relicDamage) => new RewardOption(name, "relic", Damage: relicDamage),
             _ => new RewardOption(name, "relic")
         };
         return option with { Title = text.GetValueOrDefault(id + ".title"),
@@ -476,6 +545,23 @@ static class GameReader
         if (blockPerTurn == null && values.TryGetValue("StretchPower", out decimal stretch))
             hints["block"] = hints.GetValueOrDefault("block") + stretch;
         string? description = text == null ? null : RelicText.Describe(text.GetValueOrDefault(id + ".description"), values);
+        // A "Cards" var is a count of anything (upgrade 2 cards, ...); it is draw only when the text puts cards in hand.
+        if (description != null && hints.ContainsKey("draw") && !description.Contains('抽') && !description.Contains("手牌")) hints.Remove("draw");
+        // shortcut: Doom kills at the end of the enemy turn once it reaches the enemy's HP, so it counts as
+        // 3/4 of the same damage (delayed, all-or-nothing); a real model would track Doom against enemy HP.
+        // CalculatedDamageVar (Squeeze, ...): CalculationBase plus extras that depend on game state; score the base.
+        if (!hints.ContainsKey("damage") && values.TryGetValue("CalculationBase", out decimal calculated)
+            && DynamicVarEntries(card).Any(e => ShortName(e.ReadObjectField("value")) == "CalculatedDamageVar"))
+            hints["damage"] = calculated;
+        decimal doom = values.GetValueOrDefault("DoomPower")
+            + 2 * values.GetValueOrDefault("CountdownPower") // Doom on a random enemy each turn, ~2 turns per fight counted
+            + (id == "NO_ESCAPE" ? values.GetValueOrDefault("CalculationBase") : 0)
+            + (id == "BLIGHT_STRIKE" ? hints.GetValueOrDefault("damage") : 0); // Doom equal to the damage dealt
+        if (doom > 0) hints["damage"] = hints.GetValueOrDefault("damage") + doom * 0.75m;
+        // A power whose text starts "at the start of your turn" repeats its draw/energy every turn.
+        bool everyTurn = stats?.Type == Sts2Solver.Simulation.Combat.CardType.Power && description?.Contains("回合開始時") == true;
+        decimal? drawPerTurn = everyTurn && hints.Remove("draw", out decimal turnDraw) ? turnDraw : null;
+        decimal? energyPerTurn = everyTurn && hints.TryGetValue("energy", out decimal turnEnergy) ? turnEnergy : null;
         return new RewardOption(name, "card",
             energyCost,
             hints.TryGetValue("damage", out decimal damage) ? damage : null,
@@ -491,7 +577,8 @@ static class GameReader
             BlockPerTurn: blockPerTurn,
             // GetResultLocationForCardPlay sends these back to hand instead of the discard pile (Trick Shot only while arrows remain).
             ReturnsToHand: id is "MOURNING_BLOW" or "PARTICLE_WALL" or "TRICK_SHOT",
-            Unmodeled: id == "RECALL" ? "效果依賴箭矢與抽牌堆順序，無法換算分數，請參照牌面。" : null);
+            Unmodeled: id == "RECALL" ? "效果依賴箭矢與抽牌堆順序，無法換算分數，請參照牌面。" : null,
+            EnergyPerTurn: energyPerTurn, DrawPerTurn: drawPerTurn, JunkCards: JunkCount(description));
     }
 
     // Cards whose OnPlay applies EnergyNextTurnPower with their Energy var (decompiled 0.113.1).
@@ -504,10 +591,10 @@ static class GameReader
         var run = Object(manager, Backing("State"));
         Require(!run.IsNull && !Field<bool>(manager, Backing("HasRunEnded")), "請先開始一局遊戲。");
         Require(!Field<bool>(manager, Backing("IsChangingRooms")), "正在切換房間。");
-        Require(!Field<bool>(run, Backing("IsCustomGame")), "地圖規劃適用於單人標準與進階模式。");
-        var player = List(Object(run, "_players"), 4).ToArray();
-        Require(player.Length == 1, "地圖規劃目前限單人。");
-        var creature = Object(player[0], Backing("Creature"));
+        Require(!Field<bool>(run, Backing("IsCustomGame")), "地圖規劃不適用於自訂模式。");
+        var players = List(Object(run, "_players"), 4).ToArray();
+        var me = players[LocalPlayerIndex(runtime, players)];
+        var creature = Object(me, Backing("Creature"));
         var map = Object(run, Backing("Map"));
         Require(!map.IsNull, "目前章節的地圖尚未生成。");
 
@@ -547,7 +634,7 @@ static class GameReader
         {
             hp = Field<int>(creature, "_currentHp"),
             maxHp = Field<int>(creature, "_maxHp"),
-            gold = Field<int>(player[0], "_gold"),
+            gold = Field<int>(me, "_gold"),
             act = Field<int>(run, "_currentActIndex") + 1,
             ascension = Field<int>(run, Backing("AscensionLevel")),
             nodes = points.Values, startIds = starts, current = current?.id
@@ -622,6 +709,12 @@ static class GameReader
         };
     }
 
+    // shortcut: junk is recognised by the localized titles of the status/curse cards a card text adds
+    // ("將 1 張悲傷加入你的手牌"); a card id table would be exact but needs every generated-card pool.
+    static int JunkCount(string? description) => description == null ? 0 : System.Text.RegularExpressions.Regex
+        .Matches(description, @"將\s*(\d+)\s*張(?:悲傷|灼傷|暈眩|受傷|黏液|虛空|傷口|疑慮|傷痛|詛咒)")
+        .Sum(m => int.Parse(m.Groups[1].Value));
+
     static Dictionary<string, decimal> ReadCardHints(ClrObject card)
     {
         var hints = new Dictionary<string, decimal>();
@@ -629,7 +722,7 @@ static class GameReader
         {
             var value = entry.ReadObjectField("value");
             string? type = value.Type?.Name?.Split('.').Last();
-            string? key = type switch { "DamageVar" => "damage", "BlockVar" => "block",
+            string? key = type switch { "DamageVar" or "OstyDamageVar" => "damage", "BlockVar" => "block",
                 "EnergyVar" when entry.ReadObjectField("key").AsString() == "Energy" => "energy",
                 "CardsVar" when entry.ReadObjectField("key").AsString() == "Cards" => "draw", _ => null };
             if (key != null && value.TryReadField<decimal>("_baseValue", out var amount) &&

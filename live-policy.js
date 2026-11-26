@@ -1,4 +1,4 @@
-/* Turn inputs supported by the Windows snapshot policy for STS2 v0.113.1. */
+/* Turn inputs supported by the Windows snapshot policy for STS2 v0.113.1 and v0.114.0. */
 (function () {
   const safeRelics = new Set(["BurningBlood", "DowsingRod", "PrecariousShears", "SwordOfStone", "BloodVial"]);
   const attack = new Set(["StrikeIronclad", "Bash", "Cinder", "Unrelenting", "MoltenFist"]);
@@ -76,7 +76,7 @@
   }
 
   function planLiveCombat(snapshot) {
-    if (snapshot.schemaVersion !== 1 || snapshot.version !== "0.113.1") throw new Error("戰鬥快照版本未支援。");
+    if (snapshot.schemaVersion !== 1 || !["0.113.1","0.114.0"].includes(snapshot.version)) throw new Error("戰鬥快照版本未支援。");
     if (snapshot.players.length !== 1) throw new Error("即時多回合求解目前限單人。");
     const [player] = snapshot.players;
     if (!player.hand || !player.drawPile || !Number.isInteger(player.energy)) throw new Error("手牌、抽牌堆或能量尚未讀取。");

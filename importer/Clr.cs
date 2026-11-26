@@ -27,7 +27,8 @@ internal static class Clr
     {
         for (ClrType? type = obj.Type; type != null; type = type.BaseType)
             foreach (ClrInstanceField field in type.Fields)
-                if (field.Name == name || field.Name == Backing(name)) return field.Name!;
+                if (field.Name == name || field.Name == Backing(name) || field.Name == "_" + char.ToLowerInvariant(name[0]) + name[1..])
+                    return field.Name!; // property, auto-property backing field, or the C# _camelCase field behind it
         throw new LiveUnsupportedException($"{obj.Type?.Name}.{name} 欄位不存在");
     }
 
@@ -35,7 +36,7 @@ internal static class Clr
     {
         for (ClrType? type = obj.Type; type != null; type = type.BaseType)
             foreach (ClrInstanceField field in type.Fields)
-                if (field.Name == name || field.Name == Backing(name)) return true;
+                if (field.Name == name || field.Name == Backing(name) || field.Name == "_" + char.ToLowerInvariant(name[0]) + name[1..]) return true;
         return false;
     }
 

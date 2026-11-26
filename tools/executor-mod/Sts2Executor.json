@@ -1,0 +1,10 @@
+{
+  "id": "Sts2Executor",
+  "name": "Sts2 Executor",
+  "author": "STS2-Solver",
+  "description": "Plays the solver's route in-game over a localhost HTTP API (card / potion / end turn). Executes only; reading and solving stay out of process.",
+  "version": "0.1.0",
+  "has_pck": false,
+  "has_dll": true,
+  "affects_gameplay": false
+}

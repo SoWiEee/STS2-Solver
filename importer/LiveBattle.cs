@@ -15,11 +15,14 @@ internal static class LiveBattle
     public static Battle Import(LiveState live, Rules rules, List<string> notes)
     {
         var history = new LiveHistory(live, rules);
+        partnered = live.Partnered;
+        if (partnered) notes.Add("多人戰鬥：只模擬你的角色，隊友的出牌、傷害與承受的攻擊都不計入，建議僅供參考");
         var ownerOf = new Dictionary<ulong, byte> { [live.Creature.Address] = Limits.PlayerOwner };
         for (int i = 0; i < live.Enemies.Count; i++) ownerOf[live.Enemies[i].Address] = (byte)(Limits.FirstEnemyOwner + i);
         ClrObject osty = live.Pet("Osty"), wuppy = live.Pet("Wuppy");
         Require(live.Pets.All(p => p.Address == osty.Address || p.Address == wuppy.Address), "未支援的召喚物");
-        Require(List(Obj(live.Combat, "_allies")).All(a => a.Address == live.Creature.Address || live.Pets.Any(p => p.Address == a.Address)),
+        // Partners and their pets are left out of a multiplayer import (LiveState.Partnered).
+        Require(live.Partnered || List(Obj(live.Combat, "_allies")).All(a => a.Address == live.Creature.Address || live.Pets.Any(p => p.Address == a.Address)),
             "場上有其他友方生物，暫不支援");
         if (!osty.IsNull) ownerOf[osty.Address] = Limits.OstyOwner;
         if (!wuppy.IsNull) ownerOf[wuppy.Address] = Limits.WuppyOwner;
@@ -52,6 +55,7 @@ internal static class LiveBattle
         ImportRng(ref battle, live);
         ImportEnemies(ref battle, live, rules, history);
         ImportPowers(ref battle, live, ownerOf);
+        ImportTheft(ref battle, live, ownerOf, rules, notes);
         ImportCards(ref battle, live, rules, history, notes, dampen.Original);
         ImportRelics(ref battle, live, rules, history);
         ImportPotions(ref battle, live);
@@ -72,7 +76,8 @@ internal static class LiveBattle
         {
             arrowAt[arrows[i].Address] = i;
             battle.Fool.Arrows[i].SetStatus(Get<int>(arrows[i], "_status"));
-            battle.Fool.Arrows[i].DestroyAfterImpaled = Get<bool>(arrows[i], "DestroyAfterImpaled");
+            // 0.114 removed the arrow Destroyed state; 0.113.1 slots still carry DestroyAfterImpaled.
+            battle.Fool.Arrows[i].DestroyAfterImpaled = Has(arrows[i], "DestroyAfterImpaled") && Get<bool>(arrows[i], "DestroyAfterImpaled");
         }
         var slotOf = new Dictionary<ulong, int>();
         int position = 0;
@@ -93,6 +98,10 @@ internal static class LiveBattle
                         if (row < 0) break;
                         battle.Powers[row].Aux0 = Var(power, "HitCounter");
                         List<ClrObject> source = List(Obj(Obj(power, "_internalData"), "arrowSources"), 64);
+                        // Multiplayer: a partner's arrows in the same Impaled stack are not simulated; keep ours.
+                        if (live.Partnered) source = source.Where(a => arrowAt.ContainsKey(a.Address)).ToList();
+                        // Only the partner's arrows: the stack is theirs, so it is not part of this player's fight.
+                        if (live.Partnered && source.Count == 0) { Kernel.RemovePowerAt(ref battle, row); break; }
                         for (int i = 0; i < source.Count; i++)
                         {
                             Require(arrowAt.TryGetValue(source[i].Address, out int arrow), "穿刺引用了其他玩家的箭");
@@ -134,6 +143,47 @@ internal static class LiveBattle
         battle.Fool.MelodyCount = history.MelodyCount;
         battle.Fool.SadnessGenerated = history.SadnessGenerated;
         Kernel.NormalizeFoolState(ref battle);
+    }
+
+    /// <summary>
+    /// BattleImporter.ImportSwipeSelection and ScanHeldLoot: each SwipePower row holds the stolen card in a detached
+    /// slot (Aux0 = slot + 1), and the stolen gold/card counts feed the theft score.
+    /// </summary>
+    static void ImportTheft(ref Battle battle, LiveState live, Dictionary<ulong, byte> ownerOf, Rules rules, List<string> notes)
+    {
+        int gold = 0, cards = 0;
+        Registry.TryPower("SWIPE_POWER", out ushort swipeId);
+        foreach (ClrObject enemy in live.Enemies)
+        {
+            if (Get<int>(enemy, "_currentHp") <= 0) continue;
+            byte owner = ownerOf[enemy.Address];
+            int occurrence = 0;
+            foreach (ClrObject power in LiveState.Powers(enemy))
+            {
+                if (Get<int>(power, "_amount") == 0) continue;
+                switch (Id(power))
+                {
+                    case "THIEVERY_POWER": gold += Math.Max(0, Var(power, "Gold")); break;
+                    case "HEIST_POWER": gold += Math.Max(0, Get<int>(power, "_amount")); break;
+                    case "SWIPE_POWER":
+                    {
+                        int row = Kernel.FindPowerOccurrence(battle, owner, swipeId, occurrence++);
+                        ClrObject stolen = Obj(power, "_stolenCard");
+                        if (stolen.IsNull || row < 0) break;
+                        cards++;
+                        Card value = ImportCard(stolen, rules, notes);
+                        int slot = 0;
+                        while (slot < Limits.DetachedCards && battle.DetachedCards[slot].IsDetachedCardPresent) slot++;
+                        Require(slot < Limits.DetachedCards, "被偷走的牌超過可記錄數量");
+                        battle.DetachedCards[slot] = value;
+                        battle.Powers[row].Aux0 = slot + 1;
+                        break;
+                    }
+                }
+            }
+        }
+        battle.SetCounter(Counter.OutstandingStolenGold, gold);
+        battle.SetCounter(Counter.OutstandingStolenCards, cards);
     }
 
     static int Link(ref Battle battle, Dictionary<ulong, int> slotOf, ClrObject card)
@@ -285,7 +335,7 @@ internal static class LiveBattle
             string current = Str(next, "StateId") ?? throw new LiveUnsupportedException($"{monsterId} 沒有當前行動");
             // Upstream BattleImporter: a dead enemy whose next move revives it stays on the roster as Reviving.
             bool reviving = Get<int>(creature, "_currentHp") <= 0;
-            Require(!reviving || current is "REVIVE_MOVE" or "RESPAWN_MOVE", $"{monsterId} 已死亡但仍在名單中，暫不支援");
+            Require(!reviving || current is "REVIVE_MOVE" or "RESPAWN_MOVE" or "DEAD_MOVE" or "REATTACH_MOVE", $"{monsterId} 已死亡但仍在名單中，暫不支援");
             enemy.DeathPhase = reviving ? DeathPhase.Reviving : DeathPhase.None;
             if (reviving) enemy.Flags = EnemyFlags.DeathProcessed | EnemyFlags.InCombat;
             Require(current != "UNSET_MOVE", $"{monsterId} 的行動尚未決定");
@@ -357,17 +407,23 @@ internal static class LiveBattle
     static readonly HashSet<string> NoPrivateState = ["GIGANTIFICATION_POWER", "VIGOR_POWER", "RUPTURE_POWER",
         "CALAMITY_POWER", "AFTERIMAGE_POWER", "STRANGLE_POWER", "STORM_POWER", "SUBROUTINE_POWER", "OBLIVION_POWER",
         "SERPENT_FORM_POWER", "ROLLING_BOULDER_POWER"];
-    static readonly HashSet<string> ProjectedUnsupported = ["ENCORE_POWER", "THIEVERY_POWER", "CHAINS_OF_BINDING_POWER",
-        "POSSESS_STRENGTH_POWER", "POSSESS_SPEED_POWER", "TENDER_POWER",
-        "AUTOMATION_POWER", "TORIC_TOUGHNESS_POWER", "ORBIT_POWER",
-        "PALE_BLUE_DOT_POWER", "NIGHTMARE_POWER", "SOULBOUND_POWER", "CACOPHONY_POWER", "SWIPE_POWER",
-        "HEIST_POWER", "SURPRISE_POWER"];
+    static readonly HashSet<string> ProjectedUnsupported = ["CHAINS_OF_BINDING_POWER", // needs per-card Bound afflictions
+        "NIGHTMARE_POWER", "SOULBOUND_POWER", "CACOPHONY_POWER"];
 
     // BattleProjections.ProjectPower cases whose private state is a DynamicVar or a PowerModel._internalData field.
     static void ProjectPower(string powerId, ClrObject power, ref Power target)
     {
         switch (powerId)
         {
+            case "THIEVERY_POWER": target.Aux0 = Var(power, "Gold"); break; // the gold ledger of this theft row
+            case "ENCORE_POWER": target.Aux0 = Data(power, "numberOfCardsPlayedSinceApplied"); break;
+            case "POSSESS_STRENGTH_POWER": target.Aux0 = Data(power, "stolenStrength"); break;
+            case "POSSESS_SPEED_POWER": target.Aux0 = Data(power, "stolenDexterity"); break;
+            case "AUTOMATION_POWER": target.Aux0 = Data(power, "cardsLeft"); break;
+            case "ORBIT_POWER": target.Aux0 = Data(power, "energySpent") % 4; break;
+            case "TENDER_POWER": target.Aux0 = Get<int>(power, "_cardsPlayedThisTurn"); break;
+            case "TORIC_TOUGHNESS_POWER": Kernel.SetInstanceBlockValue(ref target, Var(power, "Block")); break;
+            case "PALE_BLUE_DOT_POWER": target.Aux0 = Data(power, "alreadyActivatedThisTurn"); break;
             case "LULLABY_POWER": target.Aux0 = Get<bool>(power, "_proccdThisTurn") ? 1 : 0; break;
             case "NEMESIS_POWER": target.Aux0 = Get<bool>(power, "_shouldApplyIntangible") ? 1 : 0; break;
             case "SLOTH_POWER": target.Aux0 = Get<int>(power, "_cardsPlayedThisTurn"); break;
@@ -415,7 +471,7 @@ internal static class LiveBattle
     {
         var ordered = new List<(byte Owner, ClrObject Power)>();
         foreach (ClrObject power in LiveState.Powers(live.Creature))
-            if (Get<int>(power, "_amount") != 0) ordered.Add((Limits.PlayerOwner, power));
+            if (Get<int>(power, "_amount") != 0 && Id(power) != "TUNE_POWER") ordered.Add((Limits.PlayerOwner, power)); // 0.114 Tune randomly upgrades hand cards; the 0.113.1 kernel effect (free card) would be wrong, so it is left out
         foreach (string pet in new[] { "Osty", "Wuppy" })
         {
             ClrObject creature = live.Pet(pet);
@@ -454,10 +510,13 @@ internal static class LiveBattle
         }
     }
 
+    [ThreadStatic] static bool partnered;
+
     static byte OwnerOf(ClrObject creature, Dictionary<ulong, byte> ownerOf)
     {
         if (creature.IsNull) return Limits.NoOwner;
         if (ownerOf.TryGetValue(creature.Address, out byte owner)) return owner;
+        if (partnered) return Limits.NoOwner; // applied by a partner, who is not simulated
         // shortcut: upstream keeps dead enemies as PermanentlyDead tombstones via a cross-turn tracker; the
         // live port sees only _enemies, so a dead applier/target (it never acts again) maps to no owner.
         Require(Get<int>(creature, "_currentHp") <= 0, "能力關聯到未知的生物");
@@ -484,7 +543,20 @@ internal static class LiveBattle
                     value.DampenOriginalUpgrade = checked((byte)(original + 1));
                 }
                 string id = Id(card);
-                Require(id is not ("SOVEREIGN_BLADE" or "THE_SHOT" or "MAD_SCIENCE"), $"{id} 的內部狀態尚未移植");
+                // BattleImporter.ImportCards/Card: card-private state for a fresh root capture.
+                if (id == "SOVEREIGN_BLADE") value.Private = checked((short)rules.RootSwordSageAmount);
+                if (id == "THE_SHOT")
+                {
+                    decimal exhausted = Get<decimal>(card, "_cardsExhaustedByFlorescence");
+                    Require(exhausted == decimal.Truncate(exhausted) && exhausted is >= 0 and <= short.MaxValue, $"TheShot 花開計數 {exhausted}");
+                    value.Private = (short)exhausted;
+                }
+                if (id == "MAD_SCIENCE")
+                {
+                    int type = Get<int>(card, "TinkerTimeType"), rider = Get<int>(card, "TinkerTimeRider");
+                    Require(type is 1 or 2 or 3, $"MAD_SCIENCE 的 TinkerTimeType {type}");
+                    value.Private = Sts2Solver.Content.Cards.Event.MadScience.Encode(type, rider);
+                }
                 if (id == "FETCH" && history.FinishedThisTurnContains(card.Address)) value.Private |= FetchPlayedBit;
                 if (ReturnsToHandCards.Contains(id) && history.FinishedThisTurnContains(card.Address)) value.ReturnToHandNextTurn = true;
                 rowOf[card.Address] = battle.CardCount;
@@ -558,7 +630,9 @@ internal static class LiveBattle
             var byName = HashEntries(Obj(vars, "_vars")).ToDictionary(e => e.ReadObjectField("key").AsString()!, e => e.ReadObjectField("value"));
             for (int index = 0; index < def.VarNames.Count; index++)
             {
-                Require(byName.TryGetValue(def.VarNames[index], out ClrObject variable), $"{nativeId} 沒有變數 {def.VarNames[index]}");
+                bool present = byName.TryGetValue(def.VarNames[index], out ClrObject variable);
+                if (!present && CardOverrides.Removed(nativeId, def.VarNames[index])) continue; // reads as 0 in the rules, as the live card has none
+                Require(present, $"{nativeId} 沒有變數 {def.VarNames[index]}");
                 decimal delta = Get<decimal>(variable, "_baseValue") - stats.Vars[index];
                 if (delta == 0) continue;
                 Require(index <= 1 && delta == decimal.Truncate(delta) && delta >= short.MinValue && delta <= short.MaxValue,
@@ -720,7 +794,7 @@ internal static class LiveBattle
     {
         for (ClrType? t = obj.Type; t != null; t = t.BaseType)
             foreach (ClrInstanceField f in t.Fields)
-                if (f.Name == name || f.Name == Backing(name))
+                if (f.Name == name || f.Name == Backing(name) || f.Name == "_" + char.ToLowerInvariant(name[0]) + name[1..])
                     return f.ElementType switch
                     {
                         ClrElementType.Boolean => obj.ReadField<bool>(f.Name) ? 1 : 0,

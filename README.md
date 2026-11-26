@@ -7,7 +7,7 @@
 
 ## 啟動
 
-需要 Windows x64、.NET 9 SDK 和 Steam 版 STS2 v0.113.1。初次 clone 後先取得子模組，再在專案目錄執行：
+需要 Windows x64、.NET 9 SDK 和 Steam 版 STS2 v0.114.0（v0.113.1 仍可用）。v0.114.0 調整了測試版愚者：45 張牌的數值由 `tools/card-stats/parse.mjs` 從反編譯程式碼讀出（`reader/data/card-overrides-0.114.0.json`），但新牌 Twin Shot、Optimism 與部分機制改動要等 rank-Yu 上游更新才會模擬。初次 clone 後先取得子模組，再在專案目錄執行：
 
 ```powershell
 git submodule update --init
@@ -44,7 +44,7 @@ dotnet run --project tools/overlay
 
 - **整場戰鬥出牌建議**（主要）：rank-Yu 的束搜尋從目前局面一路模擬到戰鬥結束，比較勝負、戰鬥結束生命與長期收益；敵人行動模式、亂數與抽牌順序都按遊戲實際狀態模擬。規則與評分表的來源見 [docs/live-import.md](docs/live-import.md)。搜尋不保證全域最佳，從不同回合重新搜尋可能得到不同路線。
 - **簡易模型（備用）**：本專案原本的 JS 多回合模型，最多四回合、只涵蓋少數敵人，細節見 [docs/policy.md](docs/policy.md)。
-- 目前遊戲畫面供實戰使用。直接開啟 `index.html` 則是課堂用的離線單回合沙盒，包含單人及雙人輸入，可用於比較假設。
+- 工作台只讀取執行中的遊戲；原本手動輸入的離線單回合沙盒已移除。
 
 ## 專案結構
 
@@ -55,7 +55,7 @@ dotnet run --project tools/overlay
 | [map-policy.js](map-policy.js) | 章節地圖評分與路線排序 |
 | [reward-policy.js](reward-policy.js) | 卡牌與已知遺物效果的啟發式評分 |
 | [multi-turn.js](multi-turn.js) | 跨回合搜尋與排名 |
-| [index.html](index.html) | 即時建議畫面與離線沙盒 |
+| [index.html](index.html) | 即時建議畫面 |
 | [importer/](importer/) | 從程序快照組出 rank-Yu 求解器的 `Battle`／`Rules`（[說明](docs/live-import.md)） |
 | [tools/rules-catalog/](tools/rules-catalog/) | 由上游凍結規則表產生 `reader/data/rules-catalog.br`（[涵蓋率](docs/rules-catalog.md)） |
 | `vendor/sts2-solver` | rank-Yu/sts2-solver 子模組（MIT，見 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)） |

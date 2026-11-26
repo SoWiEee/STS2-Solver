@@ -81,7 +81,7 @@
     if (effects.randomCurses) add(v("randomCurses") * VALUE.curse, `${v("randomCurses")} 張隨機詛咒`);
     for (const relic of effects.relics ?? []) add(VALUE.relic, `遺物 ${ctx.name(relic)}`);
     if (effects.randomRelics) add(v("randomRelics") * VALUE.relic, `${v("randomRelics")} 個隨機遺物`);
-    const freeSlots = ctx.potionSlots - ctx.potions;
+    const freeSlots = ctx.potionSlots + (effects.potionSlots ? v("potionSlots") : 0) - ctx.potions; // slots granted with the potions come first
     const potionCount = (effects.potions?.length ?? 0) + (effects.randomPotions ? v("randomPotions") : 0);
     if (potionCount) add(Math.min(potionCount, Math.max(0, freeSlots)) * VALUE.potion, `${potionCount} 瓶藥水${freeSlots < potionCount ? "（欄位不足）" : ""}`);
     if (effects.loseRelic) add(-(typeof effects.loseRelic === "number" ? effects.loseRelic : 1) * VALUE.relic, "失去遺物");
@@ -129,7 +129,8 @@
         hpAfter = worstHp;
       }
       if (data.note) reasons.push(`未計入：${data.note}`);
-      const lethal = option.mayKill || hpAfter <= 0;
+      // mayKill only says the option carries a WillKillPlayer check; trust it when the HP effect is not modelled.
+      const lethal = hpAfter <= 0 || (option.mayKill && unknown);
       if (lethal) reasons.unshift("可能致死，排除。");
       return { ...base, score: lethal ? -Infinity : score, evaluated: !unknown, lethal, reasons };
     });

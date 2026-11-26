@@ -12,11 +12,28 @@ namespace Sts2Solver.LiveImport;
 
 public sealed class RulesCatalog
 {
+    /// <summary>Build of the running game (set by the reader); newer builds patch card stats from card-overrides-{version}.json.</summary>
+    public static string GameVersion { get; set; } = "0.113.1";
+    readonly string _dataDirectory;
+    readonly Dictionary<string, Dictionary<string, ParsedCard>> _overrides = new(StringComparer.Ordinal);
+
+    /// <summary>The frozen 0.113.1 stats of a card adjusted to <see cref="GameVersion"/>.</summary>
+    public CardStats? Adjust(string nativeId, int level, CardStats? stats)
+    {
+        if (stats == null || !Registry.TryCard(nativeId, out ushort id)) return stats;
+        if (!_overrides.TryGetValue(GameVersion, out var cards))
+            _overrides[GameVersion] = cards = CardOverrides.Load(Path.Combine(_dataDirectory, $"card-overrides-{GameVersion}.json"));
+        return cards.TryGetValue(nativeId, out var card)
+            ? CardOverrides.Apply(stats, card, level, Registry.Card(id).VarNames, nativeId) ?? stats
+            : stats;
+    }
+
     readonly Rules _content;
     readonly Dictionary<string, List<MonsterRules>> _monsters = new(StringComparer.Ordinal);
 
     public RulesCatalog(string path)
     {
+        _dataDirectory = Path.GetDirectoryName(path)!;
         Rules? content = null;
         foreach (RulesCatalogEntry entry in RulesCatalogFile.Read(path))
         {
@@ -43,11 +60,27 @@ public sealed class RulesCatalog
         BlitzMode ? BlitzLevels.Take(Math.Min(ascension, BlitzLevels.Length)).Contains(level) : ascension >= level;
     readonly Dictionary<string, Dictionary<string, StaticGetter>> _statics = [];
 
+    /// <summary>An AI register from memory, else the REA table. Follows NativeAccess.MonsterInt: the
+    /// Waterfall Giant keeps raw damage fields, and its base gun damage is a computed (table) getter.</summary>
+    internal bool TryRegister(ClrObject monster, string monsterId, string name, int ascension, out int value)
+    {
+        value = 0;
+        if (TypeName(monster) == "WaterfallGiant" && name is "PressureGunBonus" or "SteamEruptionDamage")
+        {
+            if (name == "SteamEruptionDamage") return LiveRules.TryMonsterInt(monster, "_steamEruptionDamage", out value);
+            if (!LiveRules.TryMonsterInt(monster, "_currentPressureGunDamage", out int current)
+                || !TryStatic(monsterId, "BasePressureGunDamage", ascension, out int baseDamage)) return false;
+            value = current - baseDamage;
+            return true;
+        }
+        return LiveRules.TryMonsterInt(monster, name, out value) || TryStatic(monsterId, name, ascension, out value);
+    }
+
     internal bool TryStatic(string monster, string name, int ascension, out int value)
     {
         value = 0;
         if (!_statics.TryGetValue(monster, out var getters) || !getters.TryGetValue(name, out var g)) return false;
-        if (g.Value is int constant) { value = constant; return true; }
+        if (g.Value is int constant) { value = constant + (DreadMode ? g.Dread ?? 0 : 0); return true; }
         if (g is { Ascension: int level, High: int high, Low: int low })
         {
             value = (HasAscension(ascension, level) ? high : low) + (DreadMode ? g.Dread ?? 0 : 0);
@@ -62,12 +95,12 @@ public sealed class RulesCatalog
     public CardStats? CardStats(string nativeId, int upgrade)
     {
         if (!Registry.TryCard(nativeId, out ushort id)) return null;
-        try { return _content.Card(id, upgrade); } catch (UnsupportedException) { return CardSupplement.Stats(nativeId, upgrade); }
+        try { return Adjust(nativeId, upgrade, _content.Card(id, upgrade)); } catch (UnsupportedException) { return Adjust(nativeId, upgrade, CardSupplement.Stats(nativeId, upgrade)); }
     }
     public CardStats? RewardCardStats(string nativeId, int upgrade)
     {
         if (!Registry.TryCard(nativeId, out ushort id)) return null;
-        try { return _content.Card(id, upgrade); }
+        try { return Adjust(nativeId, upgrade, _content.Card(id, upgrade)); }
         catch (UnsupportedException) { return null; }
     }
     internal IReadOnlyList<MonsterRules> Variants(string monster) =>
@@ -116,7 +149,9 @@ internal static class LiveRules
         }
         List<ushort> spawnClosure = SpawnClosure(live);
         Require(live.Enemies.Count + spawnClosure.Count <= Limits.MonsterRules, $"怪物規則 {live.Enemies.Count}+{spawnClosure.Count}");
-        AddCardClosure(live, draft, cards, catalogPools, content, spawnClosure);
+        AddCardClosure(live, draft, cards, catalogPools, content, spawnClosure, catalog);
+        if (RulesCatalog.GameVersion != "0.113.1" && live.Character == "FOOL")
+            notes.Add($"v{RulesCatalog.GameVersion} 調整了愚者：卡牌數值已更新，但部分機制（旋律、箭矢、伸展等）仍依 0.113.1 模擬");
 
         // ---- Root facts (RulesCompiler.Compile) ----
         bool identity = live.Character is "REGENT" or "NECROBINDER" or "SILENT";
@@ -141,8 +176,7 @@ internal static class LiveRules
                 string powerId = Id(power);
                 Require(Registry.TryPower(powerId, out ushort pid), $"未支援的能力 {powerId}");
                 identity |= Registry.Power(pid).IsIdentityContent;
-                Require(powerId is not ("THIEVERY_POWER" or "HEIST_POWER" or "SWIPE_POWER" or "SURPRISE_POWER"),
-                    $"偷竊相關能力 {powerId} 暫不支援");
+                if (powerId is "THIEVERY_POWER" or "HEIST_POWER" or "SWIPE_POWER" or "SURPRISE_POWER") draft.HasTheftContent = true;
                 Require(powerId is not ("NIGHTMARE_POWER"), $"能力 {powerId} 暫不支援");
                 if (powerId == "SWORD_SAGE_POWER" && creature.Address == live.Creature.Address) swordSage = Get<int>(power, "_amount");
             }
@@ -175,7 +209,12 @@ internal static class LiveRules
 
         ClrObject encounter = Obj(live.Combat, "_encounter");
         draft.HasEncounter = !encounter.IsNull;
-        draft.EncounterSlots = encounter.IsNull ? [] : EncounterSlots(encounter, live);
+        // Encounter.Slots is a computed override (empty spawn slots such as wriggler1-4 included); the
+        // registry's encounter definition carries the same list. Without one, use the filled slots.
+        draft.EncounterSlots = encounter.IsNull ? []
+            : Registry.TryEncounter(Id(encounter), out ushort encounterDef) && Registry.Encounter(encounterDef).Slots.Count > 0
+                ? [.. Registry.Encounter(encounterDef).Slots]
+                : EncounterSlots(encounter, live);
         string? encounterId = encounter.IsNull ? null : Id(encounter);
         draft.HasTheftContent = encounterId is "GREMLIN_MERC_NORMAL" or "THIEVING_HOPPER_WEAK";
         draft.Dominion = CompileDominion(Obj(live.Combat, "Dominion"), encounterId, draft.EncounterSlots.Length);
@@ -262,7 +301,7 @@ internal static class LiveRules
     }
 
     static void AddCardClosure(LiveState live, RulesDraft draft, CardStats?[][] catalogCards,
-        Dictionary<string, ushort[]> catalogPools, Rules content, List<ushort> spawnClosure)
+        Dictionary<string, ushort[]> catalogPools, Rules content, List<ushort> spawnClosure, RulesCatalog catalog)
     {
         var pendingCards = new Queue<(string Card, int Upgrade)>();
         var pendingPools = new Queue<string>();
@@ -277,8 +316,8 @@ internal static class LiveRules
         void AddStats(ushort id, int upgrade)
         {
             string name = Registry.Card(id).NativeId;
-            CardStats? Stat(int level) => (level < catalogCards[id].Length ? catalogCards[id][level] : null)
-                ?? CardSupplement.Stats(name, level);
+            CardStats? Stat(int level) => catalog.Adjust(name, level, (level < catalogCards[id].Length ? catalogCards[id][level] : null)
+                ?? CardSupplement.Stats(name, level));
             if (name == "DINGY_DAGGER")
             {
                 for (int level = 0; level < catalogCards[id].Length; level++)
@@ -290,9 +329,54 @@ internal static class LiveRules
                 if (draft.HasCard(id, level)) continue;
                 draft.SetCard(id, level, Stat(level) ?? throw new LiveUnsupportedException($"規則目錄沒有 {name}+{level}"));
             }
+            // Combat effects (0.114 Tune, upgrade-hand cards) can raise a card past its next level, so register every level.
             CardStats current = Stat(upgrade)!;
-            if (upgrade < current.MaxUpgradeLevel && !draft.HasCard(id, upgrade + 1))
-                draft.SetCard(id, upgrade + 1, Stat(upgrade + 1) ?? throw new LiveUnsupportedException($"規則目錄沒有 {name}+{upgrade + 1}"));
+            for (int next = upgrade + 1; next <= current.MaxUpgradeLevel; next++)
+                if (!draft.HasCard(id, next) && Stat(next) is { } more) draft.SetCard(id, next, more);
+        }
+        // RulesCompiler.FreezeCardPool for pools no frozen table recorded, built from card stats.
+        // shortcut: treats every card as unlocked and skips FilterForCombat's per-card flags; read UnlockState if a run lacks cards.
+        TransformPool own = Enum.Parse<TransformPool>(CharacterPool(live.Character));
+        ushort[]? TaggedPool(string key)
+        {
+            const CardTag melody = CardTag.Wah | CardTag.Cho | CardTag.Ki;
+            static bool Character(CardStats c) => c.Pool is not (TransformPool.Colorless or TransformPool.Status or TransformPool.Curse);
+            static bool Generable(CardStats c) => c.Rarity is not (CardRarity.Basic or CardRarity.Token or CardRarity.Event or CardRarity.Ancient);
+            Func<CardStats, bool>? keep = key switch
+            {
+                CardPools.IroncladAll => c => c.Pool == TransformPool.Ironclad && Generable(c),
+                CardPools.SilentAll => c => c.Pool == TransformPool.Silent && Generable(c),
+                CardPools.DefectAll => c => c.Pool == TransformPool.Defect && Generable(c),
+                CardPools.NecrobinderAll => c => c.Pool == TransformPool.Necrobinder && Generable(c),
+                CardPools.RegentAll => c => c.Pool == TransformPool.Regent && Generable(c),
+                CardPools.FoolAll => c => c.Pool == TransformPool.Fool && Generable(c),
+                CardPools.CharacterAll => c => c.Pool == own && Generable(c),
+                CardPools.CharacterAttacks => c => c.Pool == own && Generable(c) && c.Type == CardType.Attack,
+                CardPools.CharacterPowers => c => c.Pool == own && Generable(c) && c.Type == CardType.Power,
+                CardPools.CharacterEthereal => c => c.Pool == own && Generable(c) && (c.Keywords & Keywords.Ethereal) != 0,
+                CardPools.CharacterZeroCost => c => c.Pool == own && Generable(c) && c.EnergyCost == 0 && !c.CostsX,
+                CardPools.CharacterShots => c => c.Pool == own && Generable(c) && (c.Tags & CardTag.Shoot) != 0,
+                CardPools.OtherCharacterCards => c => Character(c) && c.Pool != own && Generable(c),
+                CardPools.OtherCharacterAttacks => c => Character(c) && c.Pool != own && Generable(c) && c.Type == CardType.Attack,
+                CardPools.Melodies => c => Character(c) && (c.Tags & melody) != 0,
+                CardPools.Wah => c => Character(c) && (c.Tags & CardTag.Wah) != 0,
+                CardPools.Cho => c => Character(c) && (c.Tags & CardTag.Cho) != 0,
+                CardPools.Ki => c => Character(c) && (c.Tags & CardTag.Ki) != 0,
+                CardPools.ColorlessAll => c => c.Pool == TransformPool.Colorless && c.IsColorless && Generable(c),
+                CardPools.ColorlessExceptJackOfAllTrades => c => c.Pool == TransformPool.Colorless && c.IsColorless && Generable(c),
+                CardPools.StatusAll => c => c.Type == CardType.Status,
+                CardPools.CurseAll => c => c.Type == CardType.Curse && c.Rarity == CardRarity.Curse,
+                _ => null,
+            };
+            if (keep == null) return null;
+            var ids = new List<ushort>();
+            for (int id = 0; id < Registry.CardCount; id++)
+            {
+                string name = Registry.Card((ushort)id).NativeId;
+                CardStats? stats = (catalogCards[id].Length > 0 ? catalogCards[id][0] : null) ?? CardSupplement.Stats(name, 0);
+                if (stats != null && keep(stats) && !(key == CardPools.ColorlessExceptJackOfAllTrades && name == "JACK_OF_ALL_TRADES")) ids.Add((ushort)id);
+            }
+            return [.. ids];
         }
         void Declare(ContentDef def)
         {
@@ -352,7 +436,8 @@ internal static class LiveRules
                 while (pendingPools.Count > 0)
                 {
                     string key = pendingPools.Dequeue();
-                    Require(catalogPools.TryGetValue(key, out ushort[]? pool), $"規則目錄沒有卡池 {key}");
+                    ushort[]? pool = catalogPools.TryGetValue(key, out var frozen) ? frozen : TaggedPool(key);
+                    Require(pool != null, $"規則目錄沒有卡池 {key}");
                     draft.SetCardPool(key, pool!);
                     foreach (ushort id in pool!) { Declare(Registry.Card(id)); AddStats(id, 0); }
                 }
@@ -498,8 +583,7 @@ internal static class LiveRules
             }
         int[] registers = new int[def.AiRegisterNames.Count];
         for (int i = 0; i < registers.Length; i++)
-            Require(TryMonsterInt(monster, def.AiRegisterNames[i], out registers[i])
-                || catalog.TryStatic(monsterId, def.AiRegisterNames[i], ascension, out registers[i]),
+            Require(catalog.TryRegister(monster, monsterId, def.AiRegisterNames[i], ascension, out registers[i]),
                 $"{monsterId} 的 AI 狀態 {def.AiRegisterNames[i]} 無法讀取");
         int[] rootPowers = new int[def.RootPowerAmountNames.Count];
         var powers = LiveState.Powers(creature);

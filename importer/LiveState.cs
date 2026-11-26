@@ -18,11 +18,13 @@ internal sealed class LiveState
     public required int TurnNumber { get; init; }
     public required ulong PlayerNetId { get; init; }
     public required string Character { get; init; }
+    /// <summary>Other players share this fight: the search sees only this player (approximate).</summary>
+    public bool Partnered { get; init; }
 
     public List<ClrObject> Pets => List(Obj(PlayerState, "_pets"), 16);
     /// <summary>Player.Osty / the Wuppy pet: the player's pet whose monster model is that native type (may be dead).</summary>
     public ClrObject Pet(string monsterType) =>
-        Pets.FirstOrDefault(p => Obj(p, "Monster").Type?.Name == monsterType);
+        Pets.FirstOrDefault(p => Obj(p, "Monster").Type?.Name?.Split('.').Last() == monsterType); // ClrMD type names are namespace-qualified
 
     public static LiveState Capture(ClrRuntime runtime)
     {
@@ -36,8 +38,18 @@ internal sealed class LiveState
         ClrObject run = Obj(combat, "RunState");
         Require(Is(run, "MegaCrit.Sts2.Core.Runs.RunState"), "目前不是一般的跑局。");
         var players = List(Obj(combat, "_allies")).Where(c => !Obj(c, "Player").IsNull).ToList();
-        Require(players.Count == 1, "求解器只支援單人戰鬥。");
+        Require(players.Count is >= 1 and <= 4, $"玩家數 {players.Count}");
+        // Multiplayer: the upstream kernel simulates one player, so import the local one alone.
+        // Over Steam a NetId is the SteamID64; Steam records the signed-in account id in the registry.
         ClrObject creature = players[0];
+        if (players.Count > 1)
+        {
+            object? account = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\Valve\Steam\ActiveProcess", "ActiveUser", null);
+            Require(account is int id && id != 0, "讀不到目前登入的 Steam 帳號。");
+            ulong me = 76561197960265728UL + (uint)(int)account!;
+            creature = players.FirstOrDefault(c => Get<ulong>(Obj(c, "Player"), "NetId") == me);
+            Require(!creature.IsNull, "多人遊戲中找不到本機玩家（目前只支援 Steam 連線）。");
+        }
         ClrObject player = Obj(creature, "Player");
         ClrObject state = Obj(player, "PlayerCombatState");
         Require(!state.IsNull, "玩家沒有戰鬥狀態。");
@@ -60,6 +72,7 @@ internal sealed class LiveState
             TurnNumber = Get<int>(state, "TurnNumber"),
             PlayerNetId = Get<ulong>(player, "NetId"),
             Character = Id(character),
+            Partnered = players.Count > 1,
         };
     }
 
@@ -79,7 +92,10 @@ internal sealed class LiveState
         yield return Obj(PlayerState, "PlayPile");
     }
 
-    public static List<ClrObject> Cards(ClrObject pile) => List(Obj(pile, "_cards"), 512);
+    /// <summary>0.114 cards the 0.113.1 kernel does not have. They are left out of the solved state and the driver plays them after the route (run.js EXTRAS) instead of abandoning the whole fight to greedy play.</summary>
+    public static readonly HashSet<string> LeftOut = ["OPTIMISM", "TWIN_SHOT", "SADNESS"];
+
+    public static List<ClrObject> Cards(ClrObject pile) => List(Obj(pile, "_cards"), 512).Where(card => !LeftOut.Contains(Id(card))).ToList();
 
     public static List<ClrObject> Powers(ClrObject creature) => List(Obj(creature, "_powers"), 256);
 
