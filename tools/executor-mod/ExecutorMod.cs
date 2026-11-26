@@ -18,7 +18,7 @@ using NativeCreature = MegaCrit.Sts2.Core.Entities.Creatures.Creature;
 namespace Sts2Executor;
 
 [ModInitializer("Init")]
-public static class ExecutorMod
+public static partial class ExecutorMod
 {
     const string Prefix = "http://127.0.0.1:8766/";
     static readonly TimeSpan Wait = TimeSpan.FromSeconds(8);
@@ -76,6 +76,8 @@ public static class ExecutorMod
                     "/play" => await Play(q["card"] ?? "", int.Parse(q["up"] ?? "0"), q["target"] is { } t ? int.Parse(t) : 0),
                     "/potion" => await Potion(int.Parse(q["slot"] ?? "0"), q["target"] is { } p ? int.Parse(p) : 0),
                     "/end" => await EndTurn(),
+                    "/ui" => await OnMain(Ui),
+                    "/click" => await OnMain(() => Click(int.Parse(q["i"] ?? "-1"))),
                     _ => new { ok = false, error = "unknown path" },
                 };
             }
@@ -104,6 +106,7 @@ public static class ExecutorMod
     static object State()
     {
         (CombatState combat, Player me) = Live();
+        if (!CombatManager.Instance.IsInProgress) return new { ok = false, error = "combat finished" };
         var pcs = me.PlayerCombatState!;
         return new
         {

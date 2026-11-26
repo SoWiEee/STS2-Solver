@@ -52,7 +52,7 @@ app.MapGet("/event", (HttpContext request) => ReadSnapshot(request, GameReader.C
 app.MapGet("/names", (HttpContext request) => ReadSnapshot(request, GameReader.CaptureNames));
 // Searches take seconds; their own lock keeps /capture polling responsive meanwhile (each read takes its own snapshot).
 var solveLock = new object();
-app.MapGet("/solve", (HttpContext request) => ReadSnapshot(request, () => GameReader.CaptureSolve(request.Request.Query["quick"] == "1"), solveLock));
+app.MapGet("/solve", (HttpContext request) => ReadSnapshot(request, () => GameReader.CaptureSolve(request.Request.Query["quick"] == "1", double.TryParse(request.Request.Query["budget"], out double budget) ? budget : null), solveLock));
 app.Run();
 
 static class GameReader
@@ -88,15 +88,15 @@ static class GameReader
     static bool solvedFull;
     // Several clients (page, overlay) poll /solve: the same combat state is searched once and shared.
     // ?quick=1 answers within ~1.5 s so the page can show a first route while the full search runs.
-    public static object CaptureSolve(bool quick) => WithRuntime(runtime =>
+    public static object CaptureSolve(bool quick, double? budgetSeconds = null) => WithRuntime(runtime =>
     {
         var state = System.Text.Json.JsonSerializer.SerializeToNode(ReadCombat(runtime))!.AsObject();
         state.Remove("capturedAt");
         string key = state.ToJsonString();
-        if (key == solvedKey && (solvedFull || quick)) return solvedResult!;
-        var budget = TimeSpan.FromSeconds(quick ? 1.5 : 30); // easy fights end early (frontier empty); elites and bosses need the room
+        if (key == solvedKey && (solvedFull || quick) && budgetSeconds == null) return solvedResult!;
+        var budget = TimeSpan.FromSeconds(budgetSeconds ?? (quick ? 1.5 : 30)); // easy fights end early (frontier empty); elites and bosses need the room
         var result = Sts2Solver.LiveImport.LiveImporter.Solve(runtime, Catalog.Value, Templates, budget);
-        (solvedKey, solvedResult, solvedFull) = (key, result, !quick);
+        if (budgetSeconds == null) (solvedKey, solvedResult, solvedFull) = (key, result, !quick); // a custom budget is not shared with the page
         return result;
     });
 
