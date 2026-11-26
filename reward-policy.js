@@ -70,7 +70,8 @@
         // Same HP-equivalent values as event-policy: a curse costs 7, a basic Strike/Defend removal is worth 6.
         const curse = deck.find(card => card?.pool === "CurseCardPool");
         const basic = deck.some(card => /^(Strike|Defend)[A-Z]/.test(cleanName(card?.name)));
-        score = curse ? 7 : basic ? 6 : 0;
+        // Thinning matters more as the deck grows: +0.3 per card past 15.
+        score = (curse ? 7 : basic ? 6 : 0) + (curse || basic ? Math.max(0, count - 15) * 0.3 : 0);
         reasons.push(curse ? `移除詛咒「${curse.title || curse.name}」。` : basic ? "移除一張基本打擊或防禦。" : "牌組沒有詛咒或基本牌可移除。");
         const affordable = !input.shop || option.price <= input.gold;
         if (input.shop && affordable) score *= 100 / Math.max(1, option.price);
@@ -134,11 +135,11 @@
         if (name === "TrueGrit") reasons.push("這張牌可能隨機消耗一張手牌，分數只估格擋。");
         if (kind === "card" && cost > 1) reasons.push(`費用 ${cost} 帶來 ${costPenalty.toFixed(1)} 分可玩性折減。`);
         if (reasons.length === 0) reasons.push("沒有可評分的數值效果。");
-        // shortcut: past 25 cards each added card dilutes the deck; a flat 0.2 per extra card, not a draw model.
-        if (kind === "card" && count > 25) {
-          const dilution = (count - 25) * 0.2;
+        // shortcut: every card past 15 dilutes draws by a flat 0.25 (no draw-pile model); weak cards then fall below skip.
+        if (kind === "card" && count > 15) {
+          const dilution = (count - 15) * 0.25;
           score -= dilution;
-          reasons.push(`目前牌組 ${count} 張；大牌組稀釋扣 ${dilution.toFixed(1)} 分。`);
+          reasons.push(`目前牌組 ${count} 張；牌組越大越稀釋，扣 ${dilution.toFixed(1)} 分（控制牌數）。`);
         }
         if (act <= 1 && kind === "card") {
           const bonus = smallDeckBonus;
