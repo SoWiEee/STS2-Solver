@@ -135,6 +135,9 @@
         if (name === "TrueGrit") reasons.push("這張牌可能隨機消耗一張手牌，分數只估格擋。");
         if (kind === "card" && cost > 1) reasons.push(`費用 ${cost} 帶來 ${costPenalty.toFixed(1)} 分可玩性折減。`);
         if (reasons.length === 0) reasons.push("沒有可評分的數值效果。");
+        // A card that adds a status/curse each play clogs the hand: about 4 points per junk card added.
+        const junk = Math.max(0, number(option.junkCards, 0));
+        if (junk > 0) { score -= 4 * junk; reasons.push(`每次打出會加入 ${junk} 張垃圾牌（佔手牌），扣 ${4 * junk} 分。`); }
         // shortcut: every card past 15 dilutes draws by a flat 0.25 (no draw-pile model); weak cards then fall below skip.
         if (kind === "card" && count > 15) {
           const dilution = (count - 15) * 0.25;

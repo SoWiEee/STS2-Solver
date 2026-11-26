@@ -464,7 +464,7 @@ static class GameReader
         decimal? OpeningDexterity = null, decimal? OpeningVigor = null, string? Pool = null,
         int? StarCost = null, bool StarCostsX = false, decimal? DrawPutBack = null, bool GeneratesStars = false,
         decimal? NextTurnEnergy = null, int? Price = null, decimal? BlockPerTurn = null, bool ReturnsToHand = false,
-        string? Unmodeled = null, decimal? EnergyPerTurn = null, decimal? DrawPerTurn = null);
+        string? Unmodeled = null, decimal? EnergyPerTurn = null, decimal? DrawPerTurn = null, int JunkCards = 0);
 
     static RewardOption? ReadMerchantEntry(ClrObject entry, Lazy<Dictionary<string, string>> relicText,
         Lazy<Dictionary<string, string>> cardText)
@@ -578,7 +578,7 @@ static class GameReader
             // GetResultLocationForCardPlay sends these back to hand instead of the discard pile (Trick Shot only while arrows remain).
             ReturnsToHand: id is "MOURNING_BLOW" or "PARTICLE_WALL" or "TRICK_SHOT",
             Unmodeled: id == "RECALL" ? "效果依賴箭矢與抽牌堆順序，無法換算分數，請參照牌面。" : null,
-            EnergyPerTurn: energyPerTurn, DrawPerTurn: drawPerTurn);
+            EnergyPerTurn: energyPerTurn, DrawPerTurn: drawPerTurn, JunkCards: JunkCount(description));
     }
 
     // Cards whose OnPlay applies EnergyNextTurnPower with their Energy var (decompiled 0.113.1).
@@ -708,6 +708,12 @@ static class GameReader
             vars = ReadCardHints(card)
         };
     }
+
+    // shortcut: junk is recognised by the localized titles of the status/curse cards a card text adds
+    // ("將 1 張悲傷加入你的手牌"); a card id table would be exact but needs every generated-card pool.
+    static int JunkCount(string? description) => description == null ? 0 : System.Text.RegularExpressions.Regex
+        .Matches(description, @"將\s*(\d+)\s*張(?:悲傷|灼傷|暈眩|受傷|黏液|虛空|傷口|疑慮|傷痛|詛咒)")
+        .Sum(m => int.Parse(m.Groups[1].Value));
 
     static Dictionary<string, decimal> ReadCardHints(ClrObject card)
     {
