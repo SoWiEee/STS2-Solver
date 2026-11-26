@@ -329,9 +329,10 @@ internal static class LiveRules
                 if (draft.HasCard(id, level)) continue;
                 draft.SetCard(id, level, Stat(level) ?? throw new LiveUnsupportedException($"規則目錄沒有 {name}+{level}"));
             }
+            // Combat effects (0.114 Tune, upgrade-hand cards) can raise a card past its next level, so register every level.
             CardStats current = Stat(upgrade)!;
-            if (upgrade < current.MaxUpgradeLevel && !draft.HasCard(id, upgrade + 1))
-                draft.SetCard(id, upgrade + 1, Stat(upgrade + 1) ?? throw new LiveUnsupportedException($"規則目錄沒有 {name}+{upgrade + 1}"));
+            for (int next = upgrade + 1; next <= current.MaxUpgradeLevel; next++)
+                if (!draft.HasCard(id, next) && Stat(next) is { } more) draft.SetCard(id, next, more);
         }
         // RulesCompiler.FreezeCardPool for pools no frozen table recorded, built from card stats.
         // shortcut: treats every card as unlocked and skips FilterForCombat's per-card flags; read UnlockState if a run lacks cards.

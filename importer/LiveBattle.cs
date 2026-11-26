@@ -407,9 +407,7 @@ internal static class LiveBattle
     static readonly HashSet<string> NoPrivateState = ["GIGANTIFICATION_POWER", "VIGOR_POWER", "RUPTURE_POWER",
         "CALAMITY_POWER", "AFTERIMAGE_POWER", "STRANGLE_POWER", "STORM_POWER", "SUBROUTINE_POWER", "OBLIVION_POWER",
         "SERPENT_FORM_POWER", "ROLLING_BOULDER_POWER"];
-    static readonly HashSet<string> ProjectedUnsupported = ["ENCORE_POWER", "CHAINS_OF_BINDING_POWER",
-        "POSSESS_STRENGTH_POWER", "POSSESS_SPEED_POWER", "TENDER_POWER",
-        "AUTOMATION_POWER", "ORBIT_POWER",
+    static readonly HashSet<string> ProjectedUnsupported = ["CHAINS_OF_BINDING_POWER", // needs per-card Bound afflictions
         "NIGHTMARE_POWER", "SOULBOUND_POWER", "CACOPHONY_POWER"];
 
     // BattleProjections.ProjectPower cases whose private state is a DynamicVar or a PowerModel._internalData field.
@@ -418,6 +416,11 @@ internal static class LiveBattle
         switch (powerId)
         {
             case "THIEVERY_POWER": target.Aux0 = Var(power, "Gold"); break; // the gold ledger of this theft row
+            case "ENCORE_POWER": target.Aux0 = Data(power, "numberOfCardsPlayedSinceApplied"); break;
+            case "POSSESS_STRENGTH_POWER": target.Aux0 = Data(power, "stolenStrength"); break;
+            case "POSSESS_SPEED_POWER": target.Aux0 = Data(power, "stolenDexterity"); break;
+            case "AUTOMATION_POWER": target.Aux0 = Data(power, "cardsLeft"); break;
+            case "ORBIT_POWER": target.Aux0 = Data(power, "energySpent") % 4; break;
             case "TENDER_POWER": target.Aux0 = Get<int>(power, "_cardsPlayedThisTurn"); break;
             case "TORIC_TOUGHNESS_POWER": Kernel.SetInstanceBlockValue(ref target, Var(power, "Block")); break;
             case "PALE_BLUE_DOT_POWER": target.Aux0 = Data(power, "alreadyActivatedThisTurn"); break;
