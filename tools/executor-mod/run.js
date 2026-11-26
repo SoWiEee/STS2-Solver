@@ -276,7 +276,7 @@ async function shop() {
 
 // ---- main loop -----------------------------------------------------------
 async function main() {
-  let idle = 0, shopDone = false;
+  let idle = 0, shopDone = false, chestOpened = false;
   for (;;) {
     const s = await get(MOD, "/state").catch(() => ({ ok: false }));
     const cap = await get(READER, "/capture").catch(() => ({ error: "reader down" }));
@@ -288,11 +288,15 @@ async function main() {
     if (/RewardsScreen/.test(scope)) { await rewards(); handled = true; }
     else if (/DeckUpgradeSelect/.test(scope)) { await pickUpgrade(); handled = true; }
     else if (/CardReward|SimpleCardSelect|DeckCardSelect|ChooseACard/.test(scope)) { await cardReward(); handled = true; }
-    else if (types.has("map")) { shopDone = false; await map(); handled = true; }
+    else if (types.has("map")) { shopDone = false; chestOpened = false; await map(); handled = true; }
     else if (types.has("event")) { handled = await event(); }
     else if (types.has("rest")) { handled = await rest(); }
     else if (types.has("shop") || types.has("removal")) { await shop(); shopDone = true; handled = true; }
     else if (u.room === "Shop" && !shopDone) { log("opening shop"); await get(MOD, "/openshop", true); await sleep(1200); handled = true; }
+    else if (types.has("chest") || types.has("relic")) { if (!(await clickWhere(i => i.type === "relic" && i.enabled, "relic"))) {
+        if (!chestOpened) { chestOpened = true; await clickWhere(i => i.type === "chest", "chest"); }   // the chest node stays listed after it opens
+        else await clickWhere(i => i.type === "NProceedButton", "proceed");
+      } handled = true; }
     else if (types.has("NProceedButton")) { await clickWhere(i => i.type === "NProceedButton", "proceed"); handled = true; }
     if (handled) { idle = 0; await sleep(1200); continue; }
     if (++idle > 8) throw new Error(`nothing to do on screen "${scope}" with items ${JSON.stringify([...types])}`);

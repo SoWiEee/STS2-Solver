@@ -16,6 +16,7 @@ using MegaCrit.Sts2.Core.Nodes.Rewards;
 using MegaCrit.Sts2.Core.Nodes.Screens.Map;
 using MegaCrit.Sts2.Core.Nodes.Screens.Overlays;
 using MegaCrit.Sts2.Core.Nodes.Screens.Shops;
+using MegaCrit.Sts2.Core.Nodes.Screens.TreasureRoomRelic;
 
 namespace Sts2Executor;
 
@@ -32,9 +33,10 @@ public static partial class ExecutorMod
     }
 
     static bool Interesting(Node n) =>
-        n is NRewardButton or NCardHolder or NMapPoint or NRestSiteButton or NEventOptionButton or NProceedButton
+        (n is NRewardButton or NCardHolder or NMapPoint or NRestSiteButton or NEventOptionButton or NProceedButton
             or NConfirmButton or NBackButton or NMerchantSlot or CardSelection.NChoiceSelectionSkipButton
-            or CardSelection.NCardRewardAlternativeButton
+            or CardSelection.NCardRewardAlternativeButton or NTreasureRoomRelicHolder
+            || (n is NClickableControl && n.Name == "Chest" && n.GetParent() is NTreasureRoom))
         && (n is not Control c || c.IsVisibleInTree());
 
     static List<Node> Clickables()
@@ -58,6 +60,8 @@ public static partial class ExecutorMod
         NMapPoint m => new { i, type = "map", row = m.Point.coord.row, col = m.Point.coord.col, state = m.State.ToString(), enabled = m.IsEnabled },
         NRestSiteButton r => new { i, type = "rest", id = r.Option.OptionId, enabled = r.Option.IsEnabled },
         NEventOptionButton e => new { i, type = "event", key = e.Option.TextKey, text = e.Option.Title.GetFormattedText(), locked = e.Option.IsLocked, proceed = e.Option.IsProceed },
+        NTreasureRoomRelicHolder h => new { i, type = "relic", enabled = h.IsEnabled },
+        NClickableControl when n.Name == "Chest" => new { i, type = "chest" },
         NMerchantCardRemoval => new { i, type = "removal" },
         NMerchantSlot s => new { i, type = "shop", entry = Merchant(s.Entry), cost = s.Entry.Cost, stocked = s.Entry.IsStocked, enabled = s.Entry.EnoughGold },
         _ => new { i, type = n.GetType().Name },
