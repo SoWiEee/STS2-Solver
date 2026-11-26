@@ -38,7 +38,8 @@ async function playCombat() {
     if (!state.ok) return;
     const solve = b => get(READER, `/solve?budget=${b}`);
     let solved = await solve(solveBudget);
-    for (let i = 0; solved.error && /結算|請等|snapshot|1450/.test(solved.error) && i < 25; i++) { await sleep(800); solved = await solve(solveBudget); }
+    if (solved.error && /請等/.test(solved.error) && await mulligan()) solved = await solve(solveBudget);
+    for (let i = 0; solved.error && /結算|請等|snapshot|1450/.test(solved.error) && i < 90; i++) { await sleep(800); solved = await solve(solveBudget); }   // an enemy turn or long animation can take a minute
     // A short search is enough while the fight is comfortable; search longer when it predicts a loss or a close call.
     if (!solved.error && (!solved.victory || solved.finalHp < 0.35 * solved.maxHp)) { log(`  hard turn: re-solving with ${hardBudget}s`); solved = await solve(hardBudget); }
     if (solved.error) {
@@ -50,6 +51,7 @@ async function playCombat() {
         await waitNextTurn(state);
         continue;
       }
+      if (/請等/.test(solved.error)) { await sleep(2000); continue; }   // still not the player's turn: look again
       throw new Error("solve: " + solved.error);
     }
     if (state.turn === 1 && !solved.victory && solved.finalHp <= 0 && !process.argv.includes("--fight-on")) {
@@ -89,6 +91,20 @@ async function playCombat() {
       if (cap.error && /進入一場戰鬥/.test(cap.error)) return;
     }
   }
+}
+
+// A relic can open "choose any number of cards to replace" on the hand at combat start: swap the basic Strikes/Defends, then confirm.
+async function mulligan() {
+  const u = await ui().catch(() => ({}));
+  if (u.room !== "Monster" && u.room !== "Elite" && u.room !== "Boss") return false;
+  const items = u.items || [];
+  if (!items.some(i => i.type === "NConfirmButton") || !items.some(i => i.type === "card")) return false;
+  const basics = items.filter(i => i.type === "card" && /^(STRIKE|DEFEND)_/.test(i.id || ""));
+  for (const c of basics) { await click(c.i); await sleep(250); }
+  log("mulligan: replaced", basics.map(c => c.id).join(",") || "nothing");
+  await clickWhere(i => i.type === "NConfirmButton", "confirm");
+  await sleep(2500);
+  return true;
 }
 
 // 0.114 cards the kernel cannot model (importer LiveState.LeftOut) are left out of the solved state; spend what energy is left on them.
