@@ -232,12 +232,23 @@ async function rest() {
   await clickWhere(i => i.type === "rest" && i.enabled && (i.id || "").toUpperCase().includes(id), "rest option " + id);
   if (id === "SMITH") {
     await sleep(900);
-    const up = r.upgrades?.[0];
-    if (up) { const want = snake(up.name); await clickWhere(i => i.type === "card" && (i.id || "").toUpperCase() === want, "upgrade " + up.name); await sleep(500); await clickWhere(i => i.type === "NConfirmButton", "confirm"); }
+    await pickUpgrade(r.upgrades?.[0]);
   }
   await sleep(800);
   await clickWhere(i => i.type === "NProceedButton", "proceed");
   return true;
+}
+
+// On the deck's upgrade screen: the reader's best upgrade if it has one, else the first non-basic card that can still be upgraded.
+async function pickUpgrade(up) {
+  const u = await ui();
+  const cards = (u.items || []).filter(i => i.type === "card");
+  const want = up && snake(up.name);
+  const pick = cards.find(i => want && (i.id || "").toUpperCase() === want && !i.up)
+    || cards.find(i => !i.up && !/^(STRIKE|DEFEND)_/.test(i.id || "")) || cards.find(i => !i.up) || cards[0];
+  if (!pick) return;
+  await click(pick.i); log("upgrade", pick.id); await sleep(500);
+  await clickWhere(i => i.type === "NConfirmButton", "confirm");
 }
 
 async function shop() {
@@ -275,6 +286,7 @@ async function main() {
     const types = new Set((u.items || []).map(i => i.type));
     let handled = false;
     if (/RewardsScreen/.test(scope)) { await rewards(); handled = true; }
+    else if (/DeckUpgradeSelect/.test(scope)) { await pickUpgrade(); handled = true; }
     else if (/CardReward|SimpleCardSelect|DeckCardSelect|ChooseACard/.test(scope)) { await cardReward(); handled = true; }
     else if (types.has("map")) { shopDone = false; await map(); handled = true; }
     else if (types.has("event")) { handled = await event(); }
