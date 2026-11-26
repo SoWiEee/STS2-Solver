@@ -384,7 +384,8 @@ static class GameReader
                 }
             }
         }
-        if (options.Count == 0)
+        // A closed shop's inventory node can stay in the heap with IsOpen still set: only read it while the room really is the merchant's.
+        if (options.Count == 0 && List(Object(run, "_currentRooms"), 8).LastOrDefault() is { IsNull: false } shopRoom && ShortName(shopRoom) == "MerchantRoom")
         {
             foreach (var view in runtime.Heap.EnumerateObjects())
             {
