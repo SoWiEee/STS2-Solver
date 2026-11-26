@@ -272,6 +272,24 @@ async function pickUpgrade(up) {
   await clickWhere(i => i.type === "NConfirmButton", "confirm");
 }
 
+// "Choose N cards to enchant": N distinct non-basic cards (the enchant prompt reads "選擇 3 張牌"), then confirm.
+async function pickEnchant(n) {
+  const u = await ui();
+  const cards = (u.items || []).filter(i => i.type === "card");
+  const picks = [];
+  for (const c of cards.filter(c => !/^(STRIKE|DEFEND)_/.test(c.id || "")).concat(cards)) {
+    if (picks.length >= n) break;
+    if (!picks.includes(c) && !picks.some(p => p.id === c.id && cards.some(o => !picks.includes(o) && o.id !== c.id))) picks.push(c);
+  }
+  for (const c of picks) { await click(c.i); await sleep(300); }
+  log("enchant", picks.map(c => c.id).join(","));
+  await clickWhere(i => i.type === "NConfirmButton", "confirm");
+  // The preview screen stacks a second confirm on top of the picker's; the topmost is the last in the list.
+  await sleep(800);
+  const after = ((await ui()).items || []).filter(i => i.type === "NConfirmButton");
+  if (after.length > 1) { await click(after[after.length - 1].i); log("click confirm (preview)"); await sleep(900); }
+}
+
 async function shop() {
   for (let n = 0; n < 14; n++) {
     let r = await get(READER, "/rewards");
@@ -307,6 +325,7 @@ async function main() {
     const types = new Set((u.items || []).map(i => i.type));
     let handled = false;
     if (/RewardsScreen/.test(scope)) { await rewards(); handled = true; }
+    else if (/DeckEnchantSelect/.test(scope)) { await pickEnchant(3); handled = true; }
     else if (/DeckUpgradeSelect/.test(scope)) { await pickUpgrade(); handled = true; }
     else if (s.ok && /ChooseACard|CardSelect/.test(scope) && /Monster|Elite|Boss/.test(u.room || "")) { await handleChoice({}); handled = true; }   // opened by the fight itself
     else if (/CardReward|SimpleCardSelect|DeckCardSelect|ChooseACard/.test(scope)) { await cardReward(); handled = true; }
