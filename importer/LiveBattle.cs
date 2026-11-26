@@ -292,7 +292,7 @@ internal static class LiveBattle
             string current = Str(next, "StateId") ?? throw new LiveUnsupportedException($"{monsterId} 沒有當前行動");
             // Upstream BattleImporter: a dead enemy whose next move revives it stays on the roster as Reviving.
             bool reviving = Get<int>(creature, "_currentHp") <= 0;
-            Require(!reviving || current is "REVIVE_MOVE" or "RESPAWN_MOVE", $"{monsterId} 已死亡但仍在名單中，暫不支援");
+            Require(!reviving || current is "REVIVE_MOVE" or "RESPAWN_MOVE" or "DEAD_MOVE" or "REATTACH_MOVE", $"{monsterId} 已死亡但仍在名單中，暫不支援");
             enemy.DeathPhase = reviving ? DeathPhase.Reviving : DeathPhase.None;
             if (reviving) enemy.Flags = EnemyFlags.DeathProcessed | EnemyFlags.InCombat;
             Require(current != "UNSET_MOVE", $"{monsterId} 的行動尚未決定");
