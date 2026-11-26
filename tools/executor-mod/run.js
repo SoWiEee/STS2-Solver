@@ -98,6 +98,8 @@ async function mulligan() {
   const u = await ui().catch(() => ({}));
   if (u.room !== "Monster" && u.room !== "Elite" && u.room !== "Boss") return false;
   const items = u.items || [];
+  // A choose-a-card screen the fight itself opens (boss start: pick one of two debuff cards): take the first.
+  if (/ChooseACard|CardSelect/.test(u.scope || "") && items.some(i => i.type === "card")) { await handleChoice({}); return true; }
   if (!items.some(i => i.type === "NConfirmButton") || !items.some(i => i.type === "card")) return false;
   const basics = items.filter(i => i.type === "card" && /^(STRIKE|DEFEND)_/.test(i.id || ""));
   for (const c of basics) { await click(c.i); await sleep(250); }
@@ -303,6 +305,7 @@ async function main() {
     let handled = false;
     if (/RewardsScreen/.test(scope)) { await rewards(); handled = true; }
     else if (/DeckUpgradeSelect/.test(scope)) { await pickUpgrade(); handled = true; }
+    else if (s.ok && /ChooseACard|CardSelect/.test(scope) && /Monster|Elite|Boss/.test(u.room || "")) { await handleChoice({}); handled = true; }   // opened by the fight itself
     else if (/CardReward|SimpleCardSelect|DeckCardSelect|ChooseACard/.test(scope)) { await cardReward(); handled = true; }
     else if (types.has("map")) { shopDone = false; chestOpened = false; await map(); handled = true; }
     else if (types.has("event")) { handled = await event(); }
