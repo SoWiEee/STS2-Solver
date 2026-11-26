@@ -87,14 +87,16 @@ async function playCombat() {
       const s = await get(MOD, "/state").catch(() => ({ ok: false }));
       if (!s.ok) return;
       if (s.turn > state.turn) { await sleep(700); break; }
-      if (i % 5 === 4) await mulligan();   // an enemy effect can open a choose-a-card screen mid-turn
+
       const cap = await get(READER, "/capture").catch(() => ({}));
       if (cap.error && /進入一場戰鬥/.test(cap.error)) return;
+      if (cap.error && /請等/.test(cap.error)) await mulligan();   // a prompt (hand swap, choose-a-card) is blocking; the reader only says "wait" then
     }
   }
 }
 
 // A relic can open "choose any number of cards to replace" on the hand at combat start: swap the basic Strikes/Defends, then confirm.
+let lastMulliganTurn;
 async function mulligan() {
   const u = await ui().catch(() => ({}));
   if (u.room !== "Monster" && u.room !== "Elite" && u.room !== "Boss") return false;
@@ -102,7 +104,10 @@ async function mulligan() {
   // A choose-a-card screen the fight itself opens (boss start: pick one of two debuff cards): take the first.
   if (/ChooseACard|CardSelect/.test(u.scope || "") && items.some(i => i.type === "card")) { await handleChoice({}); return true; }
   if (!items.some(i => i.type === "NConfirmButton") || !items.some(i => i.type === "card")) return false;
-  const basics = items.filter(i => i.type === "card" && /^(STRIKE|DEFEND)_/.test(i.id || ""));
+  // Swapping can draw more basics and the prompt may come back: swap once per turn, then confirm with nothing selected.
+  const turn = (await get(MOD, "/state").catch(() => ({}))).turn;
+  const basics = turn !== undefined && turn === lastMulliganTurn ? [] : items.filter(i => i.type === "card" && /^(STRIKE|DEFEND)_/.test(i.id || ""));
+  lastMulliganTurn = turn;
   for (const c of basics) { await click(c.i); await sleep(250); }
   log("mulligan: replaced", basics.map(c => c.id).join(",") || "nothing");
   await clickWhere(i => i.type === "NConfirmButton", "confirm");
