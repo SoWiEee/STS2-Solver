@@ -75,7 +75,8 @@ internal static class LiveBattle
         {
             arrowAt[arrows[i].Address] = i;
             battle.Fool.Arrows[i].SetStatus(Get<int>(arrows[i], "_status"));
-            battle.Fool.Arrows[i].DestroyAfterImpaled = Get<bool>(arrows[i], "DestroyAfterImpaled");
+            // 0.114 removed the arrow Destroyed state; 0.113.1 slots still carry DestroyAfterImpaled.
+            battle.Fool.Arrows[i].DestroyAfterImpaled = Has(arrows[i], "DestroyAfterImpaled") && Get<bool>(arrows[i], "DestroyAfterImpaled");
         }
         var slotOf = new Dictionary<ulong, int>();
         int position = 0;
