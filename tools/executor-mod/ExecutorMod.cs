@@ -73,10 +73,11 @@ public static partial class ExecutorMod
                 result = ctx.Request.Url!.AbsolutePath switch
                 {
                     "/state" => await OnMain(State),
-                    "/play" => await Play(q["card"] ?? "", int.Parse(q["up"] ?? "0"), q["target"] is { } t ? int.Parse(t) : 0),
-                    "/potion" => await Potion(int.Parse(q["slot"] ?? "0"), q["target"] is { } p ? int.Parse(p) : 0),
+                    "/play" => await Play(q["card"] ?? "", int.Parse(q["up"] ?? "0"), q["target"] is { } t ? int.Parse(t) : 0, q["cid"] is { } c ? uint.Parse(c) : null),
+                    "/potion" => await Potion(int.Parse(q["slot"] ?? "0"), q["target"] is { } p ? int.Parse(p) : 0, q["cid"] is { } c2 ? uint.Parse(c2) : null),
                     "/end" => await EndTurn(),
                     "/ui" => await OnMain(Ui),
+                    "/openshop" => await OnMain(OpenShop),
                     "/click" => await OnMain(() => Click(int.Parse(q["i"] ?? "-1"))),
                     _ => new { ok = false, error = "unknown path" },
                 };
@@ -113,13 +114,18 @@ public static partial class ExecutorMod
             ok = true,
             turn = pcs.TurnNumber,
             energy = pcs.Energy,
-            hand = pcs.Hand.Cards.Select(c => new { id = c.Id.Entry, up = c.CurrentUpgradeLevel }).ToArray(),
+            hand = pcs.Hand.Cards.Select(c => new { id = c.Id.Entry, up = c.CurrentUpgradeLevel, type = c.Type.ToString() }).ToArray(),
             enemies = combat.Enemies.Select(e => new { alive = e.IsAlive, hp = e.CurrentHp }).ToArray(),
         };
     }
 
-    static NativeCreature? Enemy(CombatState combat, int oneBased)
+    static NativeCreature? Enemy(CombatState combat, int oneBased, uint? combatId = null)
     {
+        if (combatId is { } id)
+        {
+            NativeCreature? byId = combat.GetCreature(id);
+            return byId is { IsAlive: true } ? byId : throw new InvalidOperationException($"enemy CombatId {id} is gone");
+        }
         if (oneBased <= 0) return null;
         if (oneBased > combat.Enemies.Count) throw new InvalidOperationException($"enemy #{oneBased} does not exist");
         NativeCreature enemy = combat.Enemies[oneBased - 1];
@@ -127,7 +133,7 @@ public static partial class ExecutorMod
     }
 
     /// <summary>Subscribes, enqueues on the main thread, then waits for the game to run and finish the action.</summary>
-    static async Task<object> Execute(Func<GameAction, bool> matches, Action enqueue)
+    static async Task<object> Execute(Func<GameAction, bool> matches, Action enqueue, Func<bool>? happened = null)
     {
         var captured = new TaskCompletionSource<GameAction>(TaskCreationOptions.RunContinuationsAsynchronously);
         ActionExecutor executor = RunManager.Instance.ActionExecutor;
@@ -142,27 +148,33 @@ public static partial class ExecutorMod
             if (action.Exception != null) return new { ok = false, error = action.Exception.GetBaseException().Message };
             return new { ok = true };
         }
-        catch (TimeoutException) { return new { ok = false, error = "action did not enter the game queue" }; }
+        catch (TimeoutException)
+        {
+            // Some cards turn into other cards when played, so the action may not match; trust the hand instead.
+            if (happened != null && await OnMain(() => happened())) return new { ok = true, assumed = true };
+            return new { ok = false, error = "action did not enter the game queue" };
+        }
         finally { await OnMain(() => { executor.BeforeActionExecuted -= Handler; return 0; }); }
     }
 
-    static async Task<object> Play(string id, int up, int target)
+    static async Task<object> Play(string id, int up, int target, uint? cid)
     {
         CardModel? card = null; NativeCreature? enemy = null; Player? player = null;
         await OnMain(() =>
         {
             (CombatState combat, Player me) = Live();
             player = me;
-            enemy = Enemy(combat, target);
+            enemy = Enemy(combat, target, cid);
             card = me.PlayerCombatState!.Hand.Cards.FirstOrDefault(c => c.Id.Entry == id && c.CurrentUpgradeLevel == up && c.CanPlayTargeting(enemy));
             return 0;
         });
         if (card == null) return new { ok = false, error = $"no playable {id}+{up} in hand for target {target}" };
         return await Execute(a => a is PlayCardAction p && ReferenceEquals(p.Player, player) && ReferenceEquals(p.NetCombatCard.ToCardModelOrNull(), card),
-            () => { if (!card.TryManualPlay(enemy)) throw new InvalidOperationException("card could not be played"); });
+            () => { if (!card.TryManualPlay(enemy)) throw new InvalidOperationException("card could not be played"); },
+            () => !player!.PlayerCombatState!.Hand.Cards.Contains(card));
     }
 
-    static async Task<object> Potion(int slot, int target)
+    static async Task<object> Potion(int slot, int target, uint? cid)
     {
         PotionModel? potion = null; NativeCreature? enemy = null; Player? player = null;
         await OnMain(() =>
@@ -170,13 +182,16 @@ public static partial class ExecutorMod
             (CombatState combat, Player me) = Live();
             player = me;
             potion = me.GetPotionAtSlotIndex(slot) ?? throw new InvalidOperationException($"potion slot {slot} is empty");
-            enemy = Enemy(combat, target);
+            enemy = Enemy(combat, target, cid);
             if (enemy == null && potion.IsValidTarget(me.Creature)) enemy = me.Creature; // untargeted self potion
+            // The route can leave an enemy-targeted potion without a target; use the first living enemy then.
+            if (enemy == null && !potion.IsValidTarget(null)) enemy = combat.Enemies.FirstOrDefault(e => e.IsAlive && potion.IsValidTarget(e));
             if (!potion.IsValidTarget(enemy)) throw new InvalidOperationException("invalid potion target");
             return 0;
         });
         return await Execute(a => a is UsePotionAction u && ReferenceEquals(u.Player, player) && u.PotionIndex == (uint)slot,
-            () => potion!.EnqueueManualUse(enemy));
+            () => potion!.EnqueueManualUse(enemy),
+            () => !ReferenceEquals(player!.GetPotionAtSlotIndex(slot), potion));
     }
 
     static async Task<object> EndTurn()

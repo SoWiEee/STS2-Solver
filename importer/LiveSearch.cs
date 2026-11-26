@@ -36,6 +36,8 @@ public sealed record LiveSearchStep(int Turn, string Kind, string Card, string? 
     public string[]? Choices { get; init; }
     public string? Potion { get; init; }
     public int? PotionSlot { get; init; }
+    /// <summary>The game's CombatId of the target enemy; an index into the roster can drift from the game's enemy list.</summary>
+    public uint? TargetCombatId { get; init; }
 }
 
 public sealed record LiveSearchResult(bool Victory, double Score, int ExpandedNodes, int Turns, double Seconds,
@@ -88,7 +90,7 @@ internal static class LiveSearch
             Set(copy, nameof(ScoreRules.IsActEndingBoss), relief != BossHpRelief.None);
             Set(copy, nameof(ScoreRules.Act3BossStrategy), act3Boss);
             Set(copy, nameof(ScoreRules.IgnoreGrowthRewards), false);
-            Set(copy, nameof(ScoreRules.TheftPolicy), (object?)null);
+            Set(copy, nameof(ScoreRules.TheftPolicy), rules.HasTheftContent ? Sts2Solver.Ai.Combat.Policy.TheftPolicy.PreserveResources : (object?)null); // recover stolen loot
             Set(copy, nameof(ScoreRules.GremlinGoldReward), GremlinGoldReward.NotApplicable);
             Set(copy, nameof(ScoreRules.InitialEnemyCount), (int)root.EnemyCount);
             Set(copy, nameof(ScoreRules.InitialPersistentBuffValue), persistent);
@@ -161,7 +163,7 @@ internal static class LiveSearch
                             ? $"{Registry.Monster(state.Enemies[action.Target - Limits.FirstEnemyOwner].MonsterId).NativeId}#{action.Target - Limits.FirstEnemyOwner + 1}"
                             : null;
                     steps.Add(new LiveSearchStep(turn, "play", Registry.Card(card.Id).NativeId, target, card.Upgrade)
-                        { Choices = DescribeChoice(state, action, rules) });
+                        { Choices = DescribeChoice(state, action, rules), TargetCombatId = CombatIdOf(state, action.Target) });
                     break;
                 case PlayerActionKind.EndTurn:
                     steps.Add(new LiveSearchStep(turn, "end", "", null, 0));
@@ -175,7 +177,7 @@ internal static class LiveSearch
                         ? $"{Registry.Monster(state.Enemies[action.Target - Limits.FirstEnemyOwner].MonsterId).NativeId}#{action.Target - Limits.FirstEnemyOwner + 1}"
                         : null;
                     steps.Add(new LiveSearchStep(turn, "potion", "", potionTarget, 0)
-                        { Potion = potion, PotionSlot = action.PotionSlot });
+                        { Potion = potion, PotionSlot = action.PotionSlot, TargetCombatId = CombatIdOf(state, action.Target) });
                     if (action.ChoiceCount > 0)
                         notes.Add("藥水產生了選項；使用後請更新快照再執行後續步驟。");
                     break;
@@ -195,6 +197,10 @@ internal static class LiveSearch
     /// selections to get the kernel's ChoiceRequest, whose options are card rows; the selection is a
     /// bit set over them. Generated or index-encoded options are reported as unnamed.
     /// </summary>
+    static uint? CombatIdOf(Battle state, byte target) =>
+        target >= Limits.FirstEnemyOwner && target < Limits.FirstEnemyOwner + state.EnemyCount
+            ? state.Enemies[target - Limits.FirstEnemyOwner].CombatId : null;
+
     static string[]? DescribeChoice(Battle state, PlayerAction action, Rules rules)
     {
         if (action.ChoiceCount == 0) return null;

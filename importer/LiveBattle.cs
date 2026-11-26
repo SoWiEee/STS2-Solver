@@ -55,6 +55,7 @@ internal static class LiveBattle
         ImportRng(ref battle, live);
         ImportEnemies(ref battle, live, rules, history);
         ImportPowers(ref battle, live, ownerOf);
+        ImportTheft(ref battle, live, ownerOf, rules, notes);
         ImportCards(ref battle, live, rules, history, notes, dampen.Original);
         ImportRelics(ref battle, live, rules, history);
         ImportPotions(ref battle, live);
@@ -142,6 +143,47 @@ internal static class LiveBattle
         battle.Fool.MelodyCount = history.MelodyCount;
         battle.Fool.SadnessGenerated = history.SadnessGenerated;
         Kernel.NormalizeFoolState(ref battle);
+    }
+
+    /// <summary>
+    /// BattleImporter.ImportSwipeSelection and ScanHeldLoot: each SwipePower row holds the stolen card in a detached
+    /// slot (Aux0 = slot + 1), and the stolen gold/card counts feed the theft score.
+    /// </summary>
+    static void ImportTheft(ref Battle battle, LiveState live, Dictionary<ulong, byte> ownerOf, Rules rules, List<string> notes)
+    {
+        int gold = 0, cards = 0;
+        Registry.TryPower("SWIPE_POWER", out ushort swipeId);
+        foreach (ClrObject enemy in live.Enemies)
+        {
+            if (Get<int>(enemy, "_currentHp") <= 0) continue;
+            byte owner = ownerOf[enemy.Address];
+            int occurrence = 0;
+            foreach (ClrObject power in LiveState.Powers(enemy))
+            {
+                if (Get<int>(power, "_amount") == 0) continue;
+                switch (Id(power))
+                {
+                    case "THIEVERY_POWER": gold += Math.Max(0, Var(power, "Gold")); break;
+                    case "HEIST_POWER": gold += Math.Max(0, Get<int>(power, "_amount")); break;
+                    case "SWIPE_POWER":
+                    {
+                        int row = Kernel.FindPowerOccurrence(battle, owner, swipeId, occurrence++);
+                        ClrObject stolen = Obj(power, "_stolenCard");
+                        if (stolen.IsNull || row < 0) break;
+                        cards++;
+                        Card value = ImportCard(stolen, rules, notes);
+                        int slot = 0;
+                        while (slot < Limits.DetachedCards && battle.DetachedCards[slot].IsDetachedCardPresent) slot++;
+                        Require(slot < Limits.DetachedCards, "被偷走的牌超過可記錄數量");
+                        battle.DetachedCards[slot] = value;
+                        battle.Powers[row].Aux0 = slot + 1;
+                        break;
+                    }
+                }
+            }
+        }
+        battle.SetCounter(Counter.OutstandingStolenGold, gold);
+        battle.SetCounter(Counter.OutstandingStolenCards, cards);
     }
 
     static int Link(ref Battle battle, Dictionary<ulong, int> slotOf, ClrObject card)
@@ -365,17 +407,20 @@ internal static class LiveBattle
     static readonly HashSet<string> NoPrivateState = ["GIGANTIFICATION_POWER", "VIGOR_POWER", "RUPTURE_POWER",
         "CALAMITY_POWER", "AFTERIMAGE_POWER", "STRANGLE_POWER", "STORM_POWER", "SUBROUTINE_POWER", "OBLIVION_POWER",
         "SERPENT_FORM_POWER", "ROLLING_BOULDER_POWER"];
-    static readonly HashSet<string> ProjectedUnsupported = ["ENCORE_POWER", "THIEVERY_POWER", "CHAINS_OF_BINDING_POWER",
+    static readonly HashSet<string> ProjectedUnsupported = ["ENCORE_POWER", "CHAINS_OF_BINDING_POWER",
         "POSSESS_STRENGTH_POWER", "POSSESS_SPEED_POWER", "TENDER_POWER",
-        "AUTOMATION_POWER", "TORIC_TOUGHNESS_POWER", "ORBIT_POWER",
-        "PALE_BLUE_DOT_POWER", "NIGHTMARE_POWER", "SOULBOUND_POWER", "CACOPHONY_POWER", "SWIPE_POWER",
-        "HEIST_POWER", "SURPRISE_POWER"];
+        "AUTOMATION_POWER", "ORBIT_POWER",
+        "NIGHTMARE_POWER", "SOULBOUND_POWER", "CACOPHONY_POWER"];
 
     // BattleProjections.ProjectPower cases whose private state is a DynamicVar or a PowerModel._internalData field.
     static void ProjectPower(string powerId, ClrObject power, ref Power target)
     {
         switch (powerId)
         {
+            case "THIEVERY_POWER": target.Aux0 = Var(power, "Gold"); break; // the gold ledger of this theft row
+            case "TENDER_POWER": target.Aux0 = Get<int>(power, "_cardsPlayedThisTurn"); break;
+            case "TORIC_TOUGHNESS_POWER": Kernel.SetInstanceBlockValue(ref target, Var(power, "Block")); break;
+            case "PALE_BLUE_DOT_POWER": target.Aux0 = Data(power, "alreadyActivatedThisTurn"); break;
             case "LULLABY_POWER": target.Aux0 = Get<bool>(power, "_proccdThisTurn") ? 1 : 0; break;
             case "NEMESIS_POWER": target.Aux0 = Get<bool>(power, "_shouldApplyIntangible") ? 1 : 0; break;
             case "SLOTH_POWER": target.Aux0 = Get<int>(power, "_cardsPlayedThisTurn"); break;

@@ -38,12 +38,23 @@ async function playCombat() {
     if (!state.ok) return;
     const solve = b => get(READER, `/solve?budget=${b}`);
     let solved = await solve(solveBudget);
-    for (let i = 0; solved.error && /結算|請等/.test(solved.error) && i < 25; i++) { await sleep(800); solved = await solve(solveBudget); }
+    for (let i = 0; solved.error && /結算|請等|snapshot|1450/.test(solved.error) && i < 25; i++) { await sleep(800); solved = await solve(solveBudget); }
     // A short search is enough while the fight is comfortable; search longer when it predicts a loss or a close call.
     if (!solved.error && (!solved.victory || solved.finalHp < 0.35 * solved.maxHp)) { log(`  hard turn: re-solving with ${hardBudget}s`); solved = await solve(hardBudget); }
     if (solved.error) {
       if (/進入一場戰鬥/.test(solved.error)) return;
+      // Content the solver does not model: play a crude turn instead of stopping the run.
+      if (/不支持|不支援|規則表|无法|無法/.test(solved.error) && !process.argv.includes("--no-fallback")) {
+        log("FALLBACK (solver cannot handle this state):", solved.error);
+        await greedyTurn(state);
+        await waitNextTurn(state);
+        continue;
+      }
       throw new Error("solve: " + solved.error);
+    }
+    if (state.turn === 1 && !solved.victory && solved.finalHp <= 0 && !process.argv.includes("--fight-on")) {
+      const e = new Error(`PAUSED: predicted loss at the start of this fight (final HP ${solved.finalHp}/${solved.maxHp}); take over, or rerun with --fight-on`);
+      e.pause = true; throw e;
     }
     log(`combat turn ${state.turn}: predicted victory=${solved.victory} finalHp=${solved.finalHp}/${solved.maxHp} (${solved.seconds?.toFixed?.(1)}s)`);
     let ended = false, failed = false;
@@ -52,13 +63,17 @@ async function playCombat() {
       if (step.kind === "end") { r = await get(MOD, "/end", true); ended = true; }
       else if (step.kind === "play") {
         const t = step.target ? step.target.split("#")[1] : "";
-        r = await get(MOD, `/play?card=${step.card}&up=${step.upgrade ?? 0}${t ? "&target=" + t : ""}`, true);
+        r = await get(MOD, `/play?card=${step.card}&up=${step.upgrade ?? 0}${t ? "&target=" + t : ""}${step.targetCombatId != null ? "&cid=" + step.targetCombatId : ""}`, true);
         if (r.pending) r = await handleChoice(step);
       } else if (step.kind === "potion") {
         const t = step.potionTarget ? step.potionTarget.split("#")[1] : "";
-        r = await get(MOD, `/potion?slot=${step.potionSlot}${t ? "&target=" + t : ""}`, true);
+        r = await get(MOD, `/potion?slot=${step.potionSlot}${t ? "&target=" + t : ""}${step.targetCombatId != null ? "&cid=" + step.targetCombatId : ""}`, true);
         if (r.pending) r = await handleChoice(step);
       } else throw new Error("unsupported route step " + step.kind);
+      if (r.ok) {   // a played card or potion may open a selection screen (Dredge, colorless potion, ...)
+        const u = await ui().catch(() => ({}));
+        if (/Select|ChooseA/.test(u.scope || "") && !/Reward/.test(u.scope || "")) r = await handleChoice(step);
+      }
       if (!r.ok) { log(" step failed:", step.kind, step.card || step.potion, JSON.stringify(r)); failed = true; break; }
       if (ended) break;
       await sleep(120);
@@ -76,6 +91,38 @@ async function playCombat() {
   }
 }
 
+// Crude fallback turn: try every card in hand (targeting the first living enemy, else untargeted), then end the turn.
+async function greedyTurn(state0) {
+  for (let pass = 0; pass < 12; pass++) {
+    const st = await get(MOD, "/state");
+    if (!st.ok) return;
+    const enemy = (st.enemies || []).findIndex(e => e.alive) + 1;
+    let played = false;
+    // Attacks first: against thieves (SWIPE) a fast kill matters most, and a long hand gets stolen from.
+    const order = { Attack: 0, Skill: 1, Power: 2 };
+    for (const c of [...st.hand].sort((a, b) => (order[a.type] ?? 3) - (order[b.type] ?? 3))) {
+      let r = enemy ? await get(MOD, `/play?card=${c.id}&up=${c.up}&target=${enemy}`, true) : { ok: false };
+      if (!r.ok) r = await get(MOD, `/play?card=${c.id}&up=${c.up}`, true);
+      if (r.ok) {
+        const u = await ui().catch(() => ({}));
+        if (/Select|ChooseA/.test(u.scope || "") && !/Reward/.test(u.scope || "")) await handleChoice({});
+        played = true; await sleep(250); break;
+      }
+    }
+    if (!played) break;
+  }
+  await get(MOD, "/end", true);
+}
+
+async function waitNextTurn(state) {
+  for (let i = 0; i < 160; i++) {
+    await sleep(400);
+    const s = await get(MOD, "/state").catch(() => ({ ok: false }));
+    if (!s.ok) return;
+    if (s.turn > state.turn) { await sleep(700); return; }
+  }
+}
+
 // A card played into an in-combat selection (Dredge, Soul choices, ...): pick the route's named cards, then confirm.
 async function handleChoice(step) {
   const wanted = (step.choices || []).map(n => n.replace(/\+$/, ""));
@@ -83,6 +130,10 @@ async function handleChoice(step) {
   for (const name of wanted) {
     const ok = await clickWhere(i => i.type === "card" && snake(i.id || "") === snake(name).replace(/ /g, "_") || (i.id || "").toUpperCase() === name.toUpperCase(), "choice " + name);
     if (!ok) log("  could not find choice", name);
+  }
+  const u = await ui();
+  if (!wanted.length && (u.items || []).some(i => i.type === "card")) {   // a generated-card pick the route does not name: take the first
+    const first = u.items.find(i => i.type === "card"); await click(first.i); log("choice (first card)", first.id); await sleep(600);
   }
   await clickWhere(i => i.type === "NConfirmButton", "confirm");
   await sleep(800);
@@ -172,30 +223,27 @@ async function rest() {
 }
 
 async function shop() {
-  for (let n = 0; n < 12; n++) {
+  for (let n = 0; n < 14; n++) {
     const r = await get(READER, "/rewards");
     if (r.error || !r.shop) break;
     const ranked = globalThis.planRewards(r);
     const best = ranked.find(c => c.evaluated && c.score > 5 && c.affordable !== false && String(c.kind).toLowerCase() !== "skip");
-    if (!best) break;
+    if (!best) { log("shop: nothing worth buying; top:", ranked.slice(0, 3).map(c => `${c.name}=${c.score?.toFixed?.(1)}${c.affordable === false ? "(no gold)" : ""}`).join(", "), `gold ${r.gold}`); break; }
     const u = await ui();
     let target;
     if (best.kind === "remove") target = (u.items || []).find(i => i.type === "removal");
-    else target = (u.items || []).find(i => i.type === "shop" && i.stocked && (i.entry || "").toLowerCase().endsWith(":" + snake(best.name).toLowerCase()));
-    if (!target) { log("shop: cannot find", best.name); break; }
+    else target = (u.items || []).find(i => i.type === "shop" && i.stocked && i.enabled && (i.entry || "").toLowerCase().endsWith(":" + snake(best.name).toLowerCase()));
+    if (!target) { log("shop: cannot find", best.name, "in", JSON.stringify((u.items || []).filter(i => i.type === "shop").map(i => i.entry))); break; }
     await click(target.i); log("shop buy", best.name, best.price); await sleep(1200);
-    if (best.kind === "remove") {
-      const want = (await get(READER, "/rewards")).options?.[0];
-      // removal screen: choose via the card reward routine
-      await cardReward(); await sleep(800);
-    }
+    if (best.kind === "remove") { await cardReward(); await sleep(800); }
   }
+  await clickWhere(i => i.type === "NBackButton", "close inventory");
   await clickWhere(i => i.type === "NProceedButton", "leave shop");
 }
 
 // ---- main loop -----------------------------------------------------------
 async function main() {
-  let idle = 0;
+  let idle = 0, shopDone = false;
   for (;;) {
     const s = await get(MOD, "/state").catch(() => ({ ok: false }));
     const cap = await get(READER, "/capture").catch(() => ({ error: "reader down" }));
@@ -206,14 +254,15 @@ async function main() {
     let handled = false;
     if (/RewardsScreen/.test(scope)) { await rewards(); handled = true; }
     else if (/CardReward|SimpleCardSelect|DeckCardSelect|ChooseACard/.test(scope)) { await cardReward(); handled = true; }
-    else if (types.has("map")) { await map(); handled = true; }
+    else if (types.has("map")) { shopDone = false; await map(); handled = true; }
     else if (types.has("event")) { handled = await event(); }
     else if (types.has("rest")) { handled = await rest(); }
-    else if (types.has("shop") || types.has("removal")) { await shop(); handled = true; }
+    else if (types.has("shop") || types.has("removal")) { await shop(); shopDone = true; handled = true; }
+    else if (u.room === "Shop" && !shopDone) { log("opening shop"); await get(MOD, "/openshop", true); await sleep(1200); handled = true; }
     else if (types.has("NProceedButton")) { await clickWhere(i => i.type === "NProceedButton", "proceed"); handled = true; }
     if (handled) { idle = 0; await sleep(1200); continue; }
     if (++idle > 8) throw new Error(`nothing to do on screen "${scope}" with items ${JSON.stringify([...types])}`);
     await sleep(1500);
   }
 }
-main().catch(e => { console.error("stopped:", e.message); process.exit(1); });
+main().catch(e => { console.error(e.pause ? e.message : "stopped: " + e.message); process.exit(e.pause ? 3 : 1); });

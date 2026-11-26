@@ -2,6 +2,8 @@
 // The node types and the click methods (ForceClick, or the Pressed signal for card holders) are the ones the game's own
 // AutoSlay handlers use (MegaCrit.Sts2.Core.AutoSlay.Handlers); choosing what to click stays in the out-of-process driver.
 using Godot;
+using MegaCrit.Sts2.Core.Runs;
+using MegaCrit.Sts2.Core.Nodes.Rooms;
 using MegaCrit.Sts2.Core.AutoSlay.Helpers;
 using MegaCrit.Sts2.Core.Entities.Merchant;
 using CardSelection = MegaCrit.Sts2.Core.Nodes.Screens.CardSelection;
@@ -29,7 +31,7 @@ public static partial class ExecutorMod
 
     static bool Interesting(Node n) =>
         n is NRewardButton or NCardHolder or NMapPoint or NRestSiteButton or NEventOptionButton or NProceedButton
-            or NConfirmButton or NMerchantSlot or CardSelection.NChoiceSelectionSkipButton
+            or NConfirmButton or NBackButton or NMerchantSlot or CardSelection.NChoiceSelectionSkipButton
             or CardSelection.NCardRewardAlternativeButton
         && (n is not Control c || c.IsVisibleInTree());
 
@@ -66,6 +68,7 @@ public static partial class ExecutorMod
         {
             ok = true,
             scope = Scope()?.GetType().Name,
+            room = RunManager.Instance.DebugOnlyGetState()?.BaseRoom?.RoomType.ToString(),
             items = nodes.Select((n, i) => Describe(n, i)).ToArray(),
         };
     }
@@ -80,6 +83,17 @@ public static partial class ExecutorMod
             case NClickableControl control: control.ForceClick(); break;
             default: return new { ok = false, error = "not clickable" };
         }
+        return new { ok = true };
+    }
+}
+
+public static partial class ExecutorMod
+{
+    static object OpenShop()
+    {
+        NMerchantRoom? room = NMerchantRoom.Instance;
+        if (room == null || !room.Visible) return new { ok = false, error = "no merchant room" };
+        room.OpenInventory();
         return new { ok = true };
     }
 }

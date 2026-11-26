@@ -176,8 +176,7 @@ internal static class LiveRules
                 string powerId = Id(power);
                 Require(Registry.TryPower(powerId, out ushort pid), $"未支援的能力 {powerId}");
                 identity |= Registry.Power(pid).IsIdentityContent;
-                Require(powerId is not ("THIEVERY_POWER" or "HEIST_POWER" or "SWIPE_POWER" or "SURPRISE_POWER"),
-                    $"偷竊相關能力 {powerId} 暫不支援");
+                if (powerId is "THIEVERY_POWER" or "HEIST_POWER" or "SWIPE_POWER" or "SURPRISE_POWER") draft.HasTheftContent = true;
                 Require(powerId is not ("NIGHTMARE_POWER"), $"能力 {powerId} 暫不支援");
                 if (powerId == "SWORD_SAGE_POWER" && creature.Address == live.Creature.Address) swordSage = Get<int>(power, "_amount");
             }
