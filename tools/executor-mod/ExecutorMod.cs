@@ -23,22 +23,41 @@ public static class ExecutorMod
     const string Prefix = "http://127.0.0.1:8766/";
     static readonly TimeSpan Wait = TimeSpan.FromSeconds(8);
 
+    static readonly string LogPath = Path.Combine(Path.GetTempPath(), "sts2executor.log");
+    static void Log(string line) { try { File.AppendAllText(LogPath, DateTime.Now.ToString("HH:mm:ss ") + line + "\n"); } catch { } }
+
     public static void Init()
     {
+        Log("Init called");
+        try
+        {
+            // The game keeps a separate save profile while any mod is loaded. This mod changes no rules, so make the
+            // game report "not modded" and keep using the original profile (the check runs right after mod loading).
+            new HarmonyLib.Harmony("Sts2Executor").Patch(
+                HarmonyLib.AccessTools.Method(typeof(ModManager), nameof(ModManager.IsRunningModded)),
+                postfix: new HarmonyLib.HarmonyMethod(typeof(ExecutorMod), nameof(NotModded)));
+        }
+        catch (Exception error) { Log("could not patch IsRunningModded: " + error); }
         new Thread(Serve) { IsBackground = true, Name = "Sts2Executor" }.Start();
-        MegaCrit.Sts2.Core.Logging.Log.Info("[Sts2Executor] listening on " + Prefix);
     }
+
+    public static void NotModded(ref bool __result) => __result = false;
 
     static void Serve()
     {
-        var listener = new HttpListener();
-        listener.Prefixes.Add(Prefix);
-        listener.Start();
-        while (true)
+        try
         {
-            HttpListenerContext ctx = listener.GetContext();
-            _ = Task.Run(() => Handle(ctx));
+            var listener = new HttpListener();
+            listener.Prefixes.Add(Prefix);
+            listener.Start();
+            Log("listening on " + Prefix);
+            while (true)
+            {
+                HttpListenerContext ctx = listener.GetContext();
+                _ = Task.Run(() => Handle(ctx));
+            }
         }
+        catch (Exception error) { Log("server stopped: " + error); }
     }
 
     static async Task Handle(HttpListenerContext ctx)

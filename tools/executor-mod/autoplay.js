@@ -15,6 +15,9 @@ async function waitForPlayerTurn(afterTurn) {
     if (!s.ok) return s;               // not in combat any more
     if (s.turn > afterTurn && s.hand) { await sleep(1500); return s; } // let draw animations settle
   }
+  // The mod's state stays readable after the last enemy dies; the reader tells when combat is really over.
+  const cap = await get(READER, "/capture").catch(() => ({}));
+  if (cap.error) return { ok: false };
   throw new Error("timed out waiting for the next player turn");
 }
 
@@ -23,7 +26,9 @@ async function main() {
   for (;;) {
     const state = await get(MOD, "/state");
     if (!state.ok) { console.log("combat over / not in combat:", state.error || ""); return; }
-    const solved = await get(READER, "/solve");
+    let solved = await get(READER, "/solve");
+    // The reader refuses while the game is still resolving a turn; retry until it is playable.
+    for (let i = 0; solved.error && /結算|請等/.test(solved.error) && i < 20; i++) { await sleep(1500); solved = await get(READER, "/solve"); }
     if (solved.error) throw new Error("solve: " + solved.error);
     if (solved.maxHp && minHp && solved.finalHp < minHp) console.log(`warning: predicted final HP ${solved.finalHp} < ${minHp}`);
     console.log(`turn ${state.turn}: predicted victory=${solved.victory} finalHp=${solved.finalHp}/${solved.maxHp}`);
