@@ -86,6 +86,8 @@ public static partial class ExecutorMod
         switch (nodes[index])
         {
             case NCardHolder holder: holder.EmitSignal(NCardHolder.SignalName.Pressed, holder); break;
+            // Merchant slots are plain Controls: the game buys on mouse release, which calls PurchaseLocalEntry.
+            case NMerchantSlot slot: _ = RunManager.Instance.MerchantSynchronizer.PurchaseLocalEntry(slot.Entry); break;
             case NClickableControl control: control.ForceClick(); break;
             default: return new { ok = false, error = "not clickable" };
         }

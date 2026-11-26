@@ -297,10 +297,11 @@ async function pickEnchant(n) {
 }
 
 async function shop() {
+  let reopened = false;   // buying a removal closes the inventory: reopen it once to keep shopping
   for (let n = 0; n < 14; n++) {
     let r = await get(READER, "/rewards");
-    if ((r.error || !r.shop) && n === 0) {   // the merchant slots are visible in the room before the inventory is open; the reader only reads the open inventory
-      log("opening shop inventory"); await get(MOD, "/openshop", true); await sleep(1500);
+    if ((r.error || !r.shop) && (n === 0 || !reopened)) {   // the merchant slots are visible in the room before the inventory is open; the reader only reads the open inventory
+      reopened = true; log("opening shop inventory"); await get(MOD, "/openshop", true); await sleep(1500);
       r = await get(READER, "/rewards");
     }
     if (r.error || !r.shop) { log("shop: reader has no shop data:", r.error || Object.keys(r).join(",")); break; }
