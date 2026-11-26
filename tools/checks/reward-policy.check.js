@@ -13,8 +13,8 @@ assert.ok(score({ act: 2, deck: deck(10), options: [power] }, "Demesne") > 3 * 2
 const small = score({ act: 2, deck: deck(20), options: [strike] }, "StrikeX");
 assert.ok(Math.abs(small - score({ act: 2, deck: deck(30), options: [strike] }, "StrikeX") - 2.5) < 1e-9);
 console.log("reward-policy ok");
-// A card that adds junk to the hand each play is penalised by 4 per junk card.
+// A card that adds junk to the hand each play is penalised by 8 per junk card.
 const clean = score({ act: 2, deck: deck(12), options: [{ name: "Jest", kind: "card", block: 15, cost: 1 }] }, "Jest");
 const junky = score({ act: 2, deck: deck(12), options: [{ name: "Jest", kind: "card", block: 15, cost: 1, junkCards: 1 }] }, "Jest");
-assert.ok(Math.abs(clean - junky - 4) < 1e-9);
+assert.ok(Math.abs(clean - junky - 8) < 1e-9);
 console.log("reward-policy junk ok");

@@ -44,7 +44,7 @@ async function playCombat() {
     if (solved.error) {
       if (/進入一場戰鬥/.test(solved.error)) return;
       // Content the solver does not model: play a crude turn instead of stopping the run.
-      if (/不支持|不支援|規則表|无法|無法/.test(solved.error) && !process.argv.includes("--no-fallback")) {
+      if (!/結算|請等|snapshot|1450|reader down|fetch failed/.test(solved.error) && !process.argv.includes("--no-fallback")) {
         log("FALLBACK (solver cannot handle this state):", solved.error);
         await greedyTurn(state);
         await waitNextTurn(state);

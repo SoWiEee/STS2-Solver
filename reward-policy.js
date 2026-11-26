@@ -135,9 +135,11 @@
         if (name === "TrueGrit") reasons.push("這張牌可能隨機消耗一張手牌，分數只估格擋。");
         if (kind === "card" && cost > 1) reasons.push(`費用 ${cost} 帶來 ${costPenalty.toFixed(1)} 分可玩性折減。`);
         if (reasons.length === 0) reasons.push("沒有可評分的數值效果。");
-        // A card that adds a status/curse each play clogs the hand: about 4 points per junk card added.
+        // A card that adds a status/curse each play clogs the hand: about 8 points per junk card added (observed: Jest clogged 2-3 hand slots per fight).
         const junk = Math.max(0, number(option.junkCards, 0));
-        if (junk > 0) { score -= 4 * junk; reasons.push(`每次打出會加入 ${junk} 張垃圾牌（佔手牌），扣 ${4 * junk} 分。`); }
+        if (junk > 0) { score -= 8 * junk; reasons.push(`每次打出會加入 ${junk} 張垃圾牌（佔手牌），扣 ${8 * junk} 分。`); }
+        // Cards the 0.113.1 kernel cannot simulate force greedy play for the rest of the run (observed death); avoid until upstream supports 0.114.
+        if (kind === "card" && /^(Tune|Optimism|TwinShot)$/i.test(String(name))) { score -= 30; reasons.push("求解核心尚不支援此牌，牌組含有時整場退回貪婪出牌，扣 30 分。"); }
         // shortcut: every card past 15 dilutes draws by a flat 0.25 (no draw-pile model); weak cards then fall below skip.
         if (kind === "card" && count > 15) {
           const dilution = (count - 15) * 0.25;
