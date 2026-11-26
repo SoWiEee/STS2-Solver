@@ -26,7 +26,9 @@ public static partial class ExecutorMod
         // The map is not an overlay, but a finished rewards overlay can stay on the stack beneath it.
         if (NMapScreen.Instance is { IsOpen: true } map) return map;
         if (NOverlayStack.Instance?.Peek() is Control top && top.IsVisibleInTree()) return top;
-        return ((SceneTree)Engine.GetMainLoop()).Root.GetNodeOrNull("/root/Game/RootSceneContainer/Run/RoomContainer");
+        var root = ((SceneTree)Engine.GetMainLoop()).Root;
+        // Outside a run (main menu, character select) fall back to the whole game tree.
+        return root.GetNodeOrNull("/root/Game/RootSceneContainer/Run/RoomContainer") ?? root.GetNodeOrNull("/root/Game");
     }
 
     static bool Interesting(Node n) =>

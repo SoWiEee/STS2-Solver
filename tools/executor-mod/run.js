@@ -60,7 +60,7 @@ async function playCombat() {
     let ended = false, failed = false;
     for (const step of solved.route) {
       let r;
-      if (step.kind === "end") { r = await get(MOD, "/end", true); ended = true; }
+      if (step.kind === "end") { await playExtras(); r = await get(MOD, "/end", true); ended = true; }
       else if (step.kind === "play") {
         const t = step.target ? step.target.split("#")[1] : "";
         r = await get(MOD, `/play?card=${step.card}&up=${step.upgrade ?? 0}${t ? "&target=" + t : ""}${step.targetCombatId != null ? "&cid=" + step.targetCombatId : ""}`, true);
@@ -88,6 +88,22 @@ async function playCombat() {
       const cap = await get(READER, "/capture").catch(() => ({}));
       if (cap.error && /進入一場戰鬥/.test(cap.error)) return;
     }
+  }
+}
+
+// 0.114 cards the kernel cannot model (importer LiveState.LeftOut) are left out of the solved state; spend what energy is left on them.
+async function playExtras() {
+  for (let pass = 0; pass < 6; pass++) {
+    const st = await get(MOD, "/state").catch(() => ({ ok: false }));
+    if (!st.ok) return;
+    const enemy = (st.enemies || []).map((e, i) => ({ ...e, n: i + 1 })).filter(e => e.alive).sort((a, b) => a.hp - b.hp)[0];
+    const sad = st.hand.some(c => c.id === "SADNESS");
+    const pick = st.hand.find(c => c.id === "TWIN_SHOT" && enemy) || (sad && st.hand.find(c => c.id === "OPTIMISM"));
+    if (!pick) return;
+    const r = await get(MOD, `/play?card=${pick.id}&up=${pick.up}${pick.id === "TWIN_SHOT" ? "&target=" + enemy.n : ""}`, true);
+    log(" extra", pick.id, JSON.stringify(r));
+    if (!r.ok) return;
+    await sleep(300);
   }
 }
 
@@ -192,6 +208,8 @@ async function map() {
   // At an act's start only the opening (ancient) node is travelable; the planned node unlocks after it.
   if (!ok) ok = await clickWhere(i => i.type === "map" && i.row === 0 && i.enabled, "map act start node");
   if (!ok) throw new Error("map: node not clickable " + next);
+  // A second click while the room loads enters it twice (treasure room: "relic picking session already occurring" hangs the game).
+  for (let i = 0; i < 25; i++) { await sleep(1000); const u = await ui().catch(() => ({})); if (u.scope && u.scope !== "NMapScreen") break; }
 }
 
 async function event() {

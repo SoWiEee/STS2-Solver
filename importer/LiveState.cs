@@ -92,7 +92,10 @@ internal sealed class LiveState
         yield return Obj(PlayerState, "PlayPile");
     }
 
-    public static List<ClrObject> Cards(ClrObject pile) => List(Obj(pile, "_cards"), 512);
+    /// <summary>0.114 cards the 0.113.1 kernel does not have. They are left out of the solved state and the driver plays them after the route (run.js EXTRAS) instead of abandoning the whole fight to greedy play.</summary>
+    public static readonly HashSet<string> LeftOut = ["OPTIMISM", "TWIN_SHOT", "SADNESS"];
+
+    public static List<ClrObject> Cards(ClrObject pile) => List(Obj(pile, "_cards"), 512).Where(card => !LeftOut.Contains(Id(card))).ToList();
 
     public static List<ClrObject> Powers(ClrObject creature) => List(Obj(creature, "_powers"), 256);
 

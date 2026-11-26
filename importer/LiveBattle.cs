@@ -471,7 +471,7 @@ internal static class LiveBattle
     {
         var ordered = new List<(byte Owner, ClrObject Power)>();
         foreach (ClrObject power in LiveState.Powers(live.Creature))
-            if (Get<int>(power, "_amount") != 0) ordered.Add((Limits.PlayerOwner, power));
+            if (Get<int>(power, "_amount") != 0 && Id(power) != "TUNE_POWER") ordered.Add((Limits.PlayerOwner, power)); // 0.114 Tune randomly upgrades hand cards; the 0.113.1 kernel effect (free card) would be wrong, so it is left out
         foreach (string pet in new[] { "Osty", "Wuppy" })
         {
             ClrObject creature = live.Pet(pet);
@@ -630,7 +630,9 @@ internal static class LiveBattle
             var byName = HashEntries(Obj(vars, "_vars")).ToDictionary(e => e.ReadObjectField("key").AsString()!, e => e.ReadObjectField("value"));
             for (int index = 0; index < def.VarNames.Count; index++)
             {
-                Require(byName.TryGetValue(def.VarNames[index], out ClrObject variable), $"{nativeId} 沒有變數 {def.VarNames[index]}");
+                bool present = byName.TryGetValue(def.VarNames[index], out ClrObject variable);
+                if (!present && CardOverrides.Removed(nativeId, def.VarNames[index])) continue; // reads as 0 in the rules, as the live card has none
+                Require(present, $"{nativeId} 沒有變數 {def.VarNames[index]}");
                 decimal delta = Get<decimal>(variable, "_baseValue") - stats.Vars[index];
                 if (delta == 0) continue;
                 Require(index <= 1 && delta == decimal.Truncate(delta) && delta >= short.MinValue && delta <= short.MaxValue,

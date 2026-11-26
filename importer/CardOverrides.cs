@@ -37,7 +37,11 @@ public static class CardOverrides
         File.Exists(path) ? JsonSerializer.Deserialize<Dictionary<string, ParsedCard>>(File.ReadAllText(path), Options) ?? [] : [];
 
     /// <summary>The catalog's stats at <paramref name="level"/> with the parsed card's numbers applied.</summary>
-    public static CardStats? Apply(CardStats catalog, ParsedCard card, int level, IReadOnlyList<string> varNames)
+    /// <summary>Kernel vars of 0.113.1 effects that 0.114 removed; they read as 0 (Wah Ki lost its energy/draw, Tune now upgrades cards instead of granting energy).</summary>
+    public static bool Removed(string nativeId, string varName) =>
+        (nativeId, varName) is ("WAH_KI", "Energy" or "Cards") or ("TUNE", "Energy");
+
+    public static CardStats? Apply(CardStats catalog, ParsedCard card, int level, IReadOnlyList<string> varNames, string nativeId = "")
     {
         bool up = level > 0;
         var vars = new decimal[varNames.Count];
@@ -46,7 +50,7 @@ public static class CardOverrides
             // A var computed at run time (not a literal in CanonicalVars) keeps the catalog's value.
             vars[i] = card.Vars.TryGetValue(varNames[i], out decimal value)
                 ? value + (up ? card.Upgrade.Vars.GetValueOrDefault(varNames[i]) : 0)
-                : i < catalog.Vars.Length ? catalog.Vars[i] : 0;
+                : Removed(nativeId, varNames[i]) ? 0 : i < catalog.Vars.Length ? catalog.Vars[i] : 0;
         }
         var keywords = card.Keywords.Concat(up ? card.Upgrade.Add : []).Except(up ? card.Upgrade.Remove : []);
         return new CardStats

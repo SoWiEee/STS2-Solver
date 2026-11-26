@@ -24,7 +24,7 @@ public sealed class RulesCatalog
         if (!_overrides.TryGetValue(GameVersion, out var cards))
             _overrides[GameVersion] = cards = CardOverrides.Load(Path.Combine(_dataDirectory, $"card-overrides-{GameVersion}.json"));
         return cards.TryGetValue(nativeId, out var card)
-            ? CardOverrides.Apply(stats, card, level, Registry.Card(id).VarNames) ?? stats
+            ? CardOverrides.Apply(stats, card, level, Registry.Card(id).VarNames, nativeId) ?? stats
             : stats;
     }
 
